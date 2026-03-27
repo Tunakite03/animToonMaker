@@ -206,7 +206,7 @@ function AISettings() {
         <Textarea
           value={styleSuffix}
           onChange={(e) => setStyleSuffix(e.target.value)}
-          className="min-h-[60px] text-xs"
+          className="min-h-15 text-xs"
           placeholder=", cartoon style, flat color..."
         />
       </SettingRow>
@@ -218,7 +218,7 @@ function AISettings() {
         <Textarea
           value={negativePrompt}
           onChange={(e) => setNegativePrompt(e.target.value)}
-          className="min-h-[60px] text-xs"
+          className="min-h-15 text-xs"
           placeholder="blurry, low quality, text, watermark..."
         />
       </SettingRow>

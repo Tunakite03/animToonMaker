@@ -60,6 +60,12 @@ export function ExportPanel() {
   })
   const fps = useAnimationStore((state) => state.project.fps)
   const projectName = useAnimationStore((state) => state.project.name)
+  const selectedAnimationName = useAnimationStore((state) => {
+    const anim = state.project.animations.find(
+      (a) => a.id === state.project.selectedAnimationId
+    )
+    return anim?.name ?? "animation"
+  })
 
   const exportFormat = useSettingsStore((state) => state.exportFormat)
   const exportQuality = useSettingsStore((state) => state.exportQuality)
@@ -110,9 +116,13 @@ export function ExportPanel() {
       totalDurationMs,
     ]
   )
-  const baseFileName = useMemo(
+  const projectBaseFileName = useMemo(
     () => createBaseFileName(projectName || "animation"),
     [projectName]
+  )
+  const animationBaseFileName = useMemo(
+    () => createBaseFileName(selectedAnimationName || "animation"),
+    [selectedAnimationName]
   )
 
   const cancelExport = useCallback(() => {
@@ -191,13 +201,13 @@ export function ExportPanel() {
         gif.render()
       })
 
-      downloadBlob(blob, `${baseFileName}-${Date.now()}.gif`)
+      downloadBlob(blob, `${projectBaseFileName}-${Date.now()}.gif`)
       finishExport("GIF ready.")
     } catch (error) {
       failExport(error)
     }
   }, [
-    baseFileName,
+    projectBaseFileName,
     canExport,
     canvasBackground,
     exportQuality,
@@ -285,7 +295,7 @@ export function ExportPanel() {
       await stopped
 
       const blob = new Blob(chunks, { type: mimeType })
-      downloadBlob(blob, `${baseFileName}-${Date.now()}.webm`)
+      downloadBlob(blob, `${projectBaseFileName}-${Date.now()}.webm`)
       finishExport("WebM ready.")
     } catch (error) {
       failExport(error)
@@ -293,7 +303,7 @@ export function ExportPanel() {
       tracks.forEach((track) => track.stop())
     }
   }, [
-    baseFileName,
+    projectBaseFileName,
     canExport,
     canvasBackground,
     exportQuality,
@@ -319,7 +329,7 @@ export function ExportPanel() {
         width: outputWidth,
         height: outputHeight,
         background: canvasBackground,
-        baseFileName,
+        baseFileName: animationBaseFileName,
         onFrame: async ({ blob, fileName, index, total }) => {
           downloadBlob(blob, fileName)
           setProgress(Math.round(((index + 1) / total) * 100))
@@ -332,7 +342,7 @@ export function ExportPanel() {
       failExport(error)
     }
   }, [
-    baseFileName,
+    animationBaseFileName,
     canExport,
     canvasBackground,
     failExport,
@@ -361,7 +371,7 @@ export function ExportPanel() {
           width: outputWidth,
           height: outputHeight,
           background: canvasBackground,
-          baseFileName,
+          baseFileName: animationBaseFileName,
           onFrame: async ({ blob, fileName, index, total }) => {
             downloadBlob(blob, fileName)
             setProgress(Math.round(((index + 1) / total) * 100))
@@ -374,7 +384,10 @@ export function ExportPanel() {
       }
 
       const selectedDirectory = await pickerWindow.showDirectoryPicker()
-      const exportFolderName = createSequenceFolderName(baseFileName)
+      const exportFolderName = createSequenceFolderName(
+        projectBaseFileName,
+        animationBaseFileName
+      )
       const exportDirectory = await selectedDirectory.getDirectoryHandle(
         exportFolderName,
         { create: true }
@@ -385,7 +398,7 @@ export function ExportPanel() {
         width: outputWidth,
         height: outputHeight,
         background: canvasBackground,
-        baseFileName,
+        baseFileName: animationBaseFileName,
         onFrame: async ({ blob, fileName, index, total }) => {
           setProgressLabel(`Saving frame ${index + 1} of ${total}...`)
           await writeFileHandle(exportDirectory, fileName, blob)
@@ -403,10 +416,11 @@ export function ExportPanel() {
           [
             JSON.stringify(
               createFrameSequenceManifest({
-                baseFileName,
+                baseFileName: animationBaseFileName,
                 fps,
                 frameCount: playableFrames.length,
                 frames: playableFrames,
+                animationName: selectedAnimationName,
                 height: outputHeight,
                 projectName,
                 width: outputWidth,
@@ -429,7 +443,7 @@ export function ExportPanel() {
       failExport(error)
     }
   }, [
-    baseFileName,
+    animationBaseFileName,
     canExport,
     canvasBackground,
     cancelExport,
@@ -439,7 +453,9 @@ export function ExportPanel() {
     outputHeight,
     outputWidth,
     playableFrames,
+    projectBaseFileName,
     projectName,
+    selectedAnimationName,
   ])
 
   const handleExport = useCallback(() => {
@@ -909,6 +925,7 @@ function createFrameSequenceManifest({
   fps,
   frameCount,
   frames,
+  animationName,
   height,
   projectName,
   width,
@@ -917,12 +934,14 @@ function createFrameSequenceManifest({
   fps: number
   frameCount: number
   frames: Array<{ duration?: number | undefined }>
+  animationName: string
   height: number
   projectName: string
   width: number
 }) {
   return {
     projectName,
+    animationName,
     filePrefix: baseFileName,
     format: "png-sequence",
     fps,
@@ -942,8 +961,11 @@ function createSequenceFileName(baseFileName: string, index: number) {
   return `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`
 }
 
-function createSequenceFolderName(baseFileName: string) {
-  return `${baseFileName}-frames-${Date.now()}`
+function createSequenceFolderName(
+  projectBaseFileName: string,
+  animationBaseFileName: string
+) {
+  return `${projectBaseFileName}-${animationBaseFileName}-frames-${Date.now()}`
 }
 
 function supportsDirectoryExport() {

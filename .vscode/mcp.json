@@ -4,8 +4,18 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "c:\\Users\\TUAN KIET\\.vscode-insiders\\extensions\\vexp.vexp-vscode-1.2.30\\dist\\mcp-server.cjs"
-      ]
-    }
-  }
+        "c:\\Users\\TUAN KIET\\.vscode-insiders\\extensions\\vexp.vexp-vscode-1.2.30\\dist\\mcp-server.cjs",
+      ],
+    },
+    "shadcn": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"],
+    },
+    "nextDevtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+    },
+  },
 }
