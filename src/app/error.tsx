@@ -36,7 +36,7 @@ export default function Error({
 
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-semibold text-foreground">
-            Something went wrong
+             We are sorry, something went wrong.
           </h2>
           <p className="text-sm text-muted-foreground">
             An unexpected error occurred while running AnimToon Maker.

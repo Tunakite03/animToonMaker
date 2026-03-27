@@ -5,7 +5,7 @@ import { useAnimationStore } from "@/store/animation-store";
 import { useImagePreloader, usePlaybackLoop } from "@/hooks/use-playback";
 import { CANVAS_BG } from "@/lib/constants";
 
-export function AnimationPlayer() {
+export function AnimationPlayer({ children }: { children?: React.ReactNode }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -14,6 +14,7 @@ export function AnimationPlayer() {
   const isPlaying = useAnimationStore((s) => s.playback.isPlaying);
   const setCurrentFrameIndex = useAnimationStore((s) => s.setCurrentFrameIndex);
   const currentFrameIndex = useAnimationStore((s) => s.playback.currentFrameIndex);
+  const selectedFrameId = useAnimationStore((s) => s.project.selectedFrameId);
 
   const { preload, getImage } = useImagePreloader();
 
@@ -80,13 +81,24 @@ export function AnimationPlayer() {
     loop,
   });
 
-  // Draw current frame when not playing (e.g. when selecting a frame)
+  // Draw selected or current frame when not playing
   useEffect(() => {
-    if (!isPlaying && playableFrames.length > 0) {
-      const idx = Math.min(currentFrameIndex, playableFrames.length - 1);
-      drawFrame(idx);
+    if (!isPlaying) {
+      if (selectedFrameId) {
+        const selectedIdx = playableFrames.findIndex(
+          (f) => f.id === selectedFrameId,
+        );
+        if (selectedIdx >= 0) {
+          drawFrame(selectedIdx);
+          return;
+        }
+      }
+      if (playableFrames.length > 0) {
+        const idx = Math.min(currentFrameIndex, playableFrames.length - 1);
+        drawFrame(idx);
+      }
     }
-  }, [isPlaying, currentFrameIndex, playableFrames, drawFrame]);
+  }, [isPlaying, selectedFrameId, currentFrameIndex, playableFrames, drawFrame]);
 
   // Draw empty state
   useEffect(() => {
@@ -109,13 +121,16 @@ export function AnimationPlayer() {
       ref={containerRef}
       className="relative flex flex-1 items-center justify-center rounded-xl border border-border bg-gradient-to-b from-muted/40 to-muted/20 p-3"
     >
-      <canvas
-        ref={canvasRef}
-        width={512}
-        height={512}
-        className="max-h-[480px] max-w-full rounded-lg shadow-sm ring-1 ring-border/50"
-        style={{ imageRendering: "auto" }}
-      />
+      <div className="relative inline-flex">
+        <canvas
+          ref={canvasRef}
+          width={512}
+          height={512}
+          className="block max-h-[480px] max-w-full rounded-lg shadow-sm ring-1 ring-border/50"
+          style={{ imageRendering: "auto" }}
+        />
+        {children}
+      </div>
       {/* Frame counter overlay */}
       {playableFrames.length > 0 && (
         <div className="absolute bottom-5 right-5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
