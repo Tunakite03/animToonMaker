@@ -1,10 +1,23 @@
-import { useSettingsStore, type ExportFormat } from "@/store/settings-store";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSettingsStore, type ExportFormat } from "@/store/settings-store"
+import { InfoIcon } from "@/components/icons"
+import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-const formats: { id: ExportFormat; name: string; desc: string; pros: string; icon: string }[] = [
+const formats: {
+  id: ExportFormat
+  name: string
+  desc: string
+  pros: string
+  icon: string
+}[] = [
   {
     id: "gif",
     name: "GIF",
@@ -19,20 +32,20 @@ const formats: { id: ExportFormat; name: string; desc: string; pros: string; ico
     pros: "Better compression, modern format",
     icon: "🎬",
   },
-];
+]
 
 export default function ExportSettingsPage() {
-  const format = useSettingsStore((s) => s.exportFormat);
-  const quality = useSettingsStore((s) => s.exportQuality);
-  const scale = useSettingsStore((s) => s.exportScale);
-  const canvasWidth = useSettingsStore((s) => s.canvasWidth);
-  const canvasHeight = useSettingsStore((s) => s.canvasHeight);
-  const setFormat = useSettingsStore((s) => s.setExportFormat);
-  const setQuality = useSettingsStore((s) => s.setExportQuality);
-  const setScale = useSettingsStore((s) => s.setExportScale);
+  const format = useSettingsStore((s) => s.exportFormat)
+  const quality = useSettingsStore((s) => s.exportQuality)
+  const scale = useSettingsStore((s) => s.exportScale)
+  const canvasWidth = useSettingsStore((s) => s.canvasWidth)
+  const canvasHeight = useSettingsStore((s) => s.canvasHeight)
+  const setFormat = useSettingsStore((s) => s.setExportFormat)
+  const setQuality = useSettingsStore((s) => s.setExportQuality)
+  const setScale = useSettingsStore((s) => s.setExportScale)
 
-  const outputWidth = canvasWidth * scale;
-  const outputHeight = canvasHeight * scale;
+  const outputWidth = canvasWidth * scale
+  const outputHeight = canvasHeight * scale
 
   return (
     <div className="space-y-8">
@@ -46,12 +59,12 @@ export default function ExportSettingsPage() {
 
       {/* Format selection */}
       <div className="space-y-3">
-        <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <Label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
           Format
         </Label>
         <div className="grid grid-cols-2 gap-3">
           {formats.map((f) => {
-            const isActive = format === f.id;
+            const isActive = format === f.id
             return (
               <button
                 key={f.id}
@@ -60,18 +73,20 @@ export default function ExportSettingsPage() {
                 className={cn(
                   "flex flex-col items-center rounded-xl border-2 px-4 py-5 transition-all",
                   isActive
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
-                    : "border-border bg-background hover:border-primary/30 hover:bg-muted/30",
+                    ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20"
+                    : "border-border bg-background hover:border-primary/30 hover:bg-muted/30"
                 )}
               >
                 <span className="text-2xl">{f.icon}</span>
                 <span className="mt-2 text-sm font-semibold">{f.name}</span>
-                <span className="mt-0.5 text-xs text-muted-foreground">{f.desc}</span>
+                <span className="mt-0.5 text-xs text-muted-foreground">
+                  {f.desc}
+                </span>
                 <span className="mt-2 rounded-full bg-muted px-2.5 py-0.5 text-[10px] text-muted-foreground">
                   {f.pros}
                 </span>
               </button>
-            );
+            )
           })}
         </div>
       </div>
@@ -83,9 +98,11 @@ export default function ExportSettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-semibold">Quality</Label>
-              <p className="text-xs text-muted-foreground">Higher = better image, larger file</p>
+              <p className="text-xs text-muted-foreground">
+                Higher = better image, larger file
+              </p>
             </div>
-            <span className="rounded bg-muted px-2 py-0.5 text-xs font-mono font-medium">
+            <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs font-medium">
               {quality}%
             </span>
           </div>
@@ -112,7 +129,10 @@ export default function ExportSettingsPage() {
               Output: {outputWidth} × {outputHeight} px
             </p>
           </div>
-          <Select value={String(scale)} onValueChange={(v) => setScale(Number(v))}>
+          <Select
+            value={String(scale)}
+            onValueChange={(v) => setScale(Number(v))}
+          >
             <SelectTrigger className="h-9 w-40">
               <SelectValue />
             </SelectTrigger>
@@ -129,22 +149,17 @@ export default function ExportSettingsPage() {
         <InfoIcon />
         <div className="text-xs text-muted-foreground">
           <p>
-            Your animation will export as <strong className="text-foreground">{format.toUpperCase()}</strong> at{" "}
-            <strong className="text-foreground">{outputWidth}×{outputHeight}</strong> with{" "}
-            <strong className="text-foreground">{quality}%</strong> quality.
+            Your animation will export as{" "}
+            <strong className="text-foreground">{format.toUpperCase()}</strong>{" "}
+            at{" "}
+            <strong className="text-foreground">
+              {outputWidth}×{outputHeight}
+            </strong>{" "}
+            with <strong className="text-foreground">{quality}%</strong>{" "}
+            quality.
           </p>
         </div>
       </div>
     </div>
-  );
-}
-
-function InfoIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted-foreground">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
-  );
+  )
 }

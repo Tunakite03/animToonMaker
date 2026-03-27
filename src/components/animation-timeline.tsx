@@ -38,6 +38,19 @@ import {
   readImageFile,
   readImagePath,
 } from "@/lib/import-utils"
+import {
+  AddFramesIcon,
+  CloseMenuIcon,
+  CopyFrameIcon,
+  CutFrameIcon,
+  DuplicateIcon,
+  EmptyFrameIcon,
+  ErrorCircleIcon as ErrorIcon,
+  FilmStripIcon,
+  PasteFrameIcon,
+  PlusSmIcon,
+  TrashFrameIcon,
+} from "@/components/icons"
 
 // ── Frame thumbnail size ──────────────────────────────────────────────────────
 const FRAME_W = 80 // px — matches 512×512 square canvas aspect
@@ -813,7 +826,7 @@ export function AnimationTimeline() {
                 label="Duplicate frame"
                 description="Clone this frame and place the copy after it"
                 disabled={!canCreateFrame}
-                icon={<DuplicateIcon />}
+                icon={<DuplicateIcon className="text-primary" />}
                 onClick={() =>
                   runMenuAction(() => duplicateFrame(menuState.frameId!))
                 }
@@ -1138,233 +1151,4 @@ function TimelineContextMenuItem({
 
 function TimelineContextMenuDivider() {
   return <div className="my-1 h-px bg-border/70" />
-}
-
-// ── Inline icons ─────────────────────────────────────────────────────────────
-
-function FilmStripIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M7 3v18" />
-      <path d="M3 7.5h4" />
-      <path d="M3 12h18" />
-      <path d="M3 16.5h4" />
-      <path d="M17 3v18" />
-      <path d="M17 7.5h4" />
-      <path d="M17 16.5h4" />
-    </svg>
-  )
-}
-
-function EmptyFrameIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-muted-foreground/30"
-    >
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M3 9h18" />
-      <path d="M9 21V9" />
-    </svg>
-  )
-}
-
-function ErrorIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-destructive/70"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  )
-}
-
-function AddFramesIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-primary"
-    >
-      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-      <path d="M7 11h10" />
-      <path d="M7 15h10" />
-      <path d="M10 7V5" />
-    </svg>
-  )
-}
-
-function PlusSmIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  )
-}
-
-function DuplicateIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-primary"
-    >
-      <rect x="9" y="9" width="10" height="10" rx="2" />
-      <rect x="5" y="5" width="10" height="10" rx="2" />
-    </svg>
-  )
-}
-
-function CopyFrameIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-primary"
-    >
-      <rect x="9" y="9" width="10" height="10" rx="2" />
-      <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" />
-    </svg>
-  )
-}
-
-function CutFrameIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-primary"
-    >
-      <circle cx="6.5" cy="6.5" r="2.5" />
-      <circle cx="6.5" cy="17.5" r="2.5" />
-      <path d="M20 4 8.12 15.88" />
-      <path d="M14 14 20 20" />
-      <path d="M8.5 8.5 11 11" />
-    </svg>
-  )
-}
-
-function PasteFrameIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-primary"
-    >
-      <path d="M16 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2" />
-      <path d="M9 4h6" />
-      <path d="M10 2h4a1 1 0 0 1 1 1v3H9V3a1 1 0 0 1 1-1Z" />
-      <path d="M4 12h8" />
-      <path d="m8 8 4 4-4 4" />
-    </svg>
-  )
-}
-
-function TrashFrameIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-current"
-    >
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="m19 6-1 14H6L5 6" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
-    </svg>
-  )
-}
-
-function CloseMenuIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  )
 }

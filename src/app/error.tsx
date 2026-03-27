@@ -1,16 +1,20 @@
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react"
+import { Button } from "@/components/ui/button"
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+type ErrorFallbackProps = {
+  error: Error & { digest?: string }
+  reset: () => void
+}
+
+export default function ErrorFallback({ error, reset }: ErrorFallbackProps) {
   useEffect(() => {
-    console.error("[AnimToon Error]", error);
-  }, [error]);
+    console.error("[AnimToon Error]", error)
+  }, [error])
+
+  function handleGoHome() {
+    window.location.hash = "#/"
+    window.location.reload()
+  }
 
   return (
     <div className="flex h-svh w-full items-center justify-center bg-background px-4">
@@ -34,7 +38,7 @@ export default function Error({
 
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-semibold text-foreground">
-             We are sorry, something went wrong.
+            We are sorry, something went wrong.
           </h2>
           <p className="text-sm text-muted-foreground">
             An unexpected error occurred while running AnimToon Maker.
@@ -47,12 +51,12 @@ export default function Error({
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => (window.location.href = "/")}>
+          <Button variant="outline" onClick={handleGoHome}>
             Go Home
           </Button>
           <Button onClick={reset}>Try Again</Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

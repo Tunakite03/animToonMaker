@@ -1,65 +1,69 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { useAnimationStore } from "@/store/animation-store";
-import {
-  useSettingsStore,
-  type ExportFormat,
-} from "@/store/settings-store";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { useCallback, useMemo, useState, type ReactNode } from "react"
+import { useAnimationStore } from "@/store/animation-store"
+import { useSettingsStore, type ExportFormat } from "@/store/settings-store"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/dialog"
+import {
+  CheckIcon,
+  ExportIcon,
+  GifIcon,
+  SpinnerIcon,
+  VideoIcon,
+} from "@/components/icons"
+import { cn } from "@/lib/utils"
 
 const WEBM_MIME_TYPES = [
   "video/webm;codecs=vp9",
   "video/webm;codecs=vp8",
   "video/webm",
-] as const;
+] as const
 
 export function ExportPanel() {
   const frames = useAnimationStore((state) => {
-    const anim = state.project.animations.find((a) => a.id === state.project.selectedAnimationId);
-    return anim?.frames ?? [];
-  });
-  const fps = useAnimationStore((state) => state.project.fps);
-  const projectName = useAnimationStore((state) => state.project.name);
+    const anim = state.project.animations.find(
+      (a) => a.id === state.project.selectedAnimationId
+    )
+    return anim?.frames ?? []
+  })
+  const fps = useAnimationStore((state) => state.project.fps)
+  const projectName = useAnimationStore((state) => state.project.name)
 
-  const exportFormat = useSettingsStore((state) => state.exportFormat);
-  const exportQuality = useSettingsStore((state) => state.exportQuality);
-  const exportScale = useSettingsStore((state) => state.exportScale);
-  const canvasWidth = useSettingsStore((state) => state.canvasWidth);
-  const canvasHeight = useSettingsStore((state) => state.canvasHeight);
-  const canvasBackground = useSettingsStore(
-    (state) => state.canvasBackground,
-  );
-  const setExportFormat = useSettingsStore((state) => state.setExportFormat);
+  const exportFormat = useSettingsStore((state) => state.exportFormat)
+  const exportQuality = useSettingsStore((state) => state.exportQuality)
+  const exportScale = useSettingsStore((state) => state.exportScale)
+  const canvasWidth = useSettingsStore((state) => state.canvasWidth)
+  const canvasHeight = useSettingsStore((state) => state.canvasHeight)
+  const canvasBackground = useSettingsStore((state) => state.canvasBackground)
+  const setExportFormat = useSettingsStore((state) => state.setExportFormat)
 
-  const [exporting, setExporting] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [progressLabel, setProgressLabel] = useState("");
-  const [open, setOpen] = useState(false);
+  const [exporting, setExporting] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [progressLabel, setProgressLabel] = useState("")
+  const [open, setOpen] = useState(false)
 
   const playableFrames = useMemo(
     () => frames.filter((frame) => frame.imageUrl),
-    [frames],
-  );
-  const canExport = playableFrames.length > 0;
-  const outputWidth = canvasWidth * exportScale;
-  const outputHeight = canvasHeight * exportScale;
+    [frames]
+  )
+  const canExport = playableFrames.length > 0
+  const outputWidth = canvasWidth * exportScale
+  const outputHeight = canvasHeight * exportScale
   const totalDurationMs = useMemo(
     () =>
       playableFrames.reduce(
         (sum, frame) => sum + getFrameDuration(frame.duration, fps),
-        0,
+        0
       ),
-    [fps, playableFrames],
-  );
-  const durationSec = (totalDurationMs / 1000).toFixed(1);
+    [fps, playableFrames]
+  )
+  const durationSec = (totalDurationMs / 1000).toFixed(1)
   const estimatedSizeMb = useMemo(
     () =>
       estimateExportSizeMb({
@@ -77,47 +81,45 @@ export function ExportPanel() {
       outputWidth,
       playableFrames.length,
       totalDurationMs,
-    ],
-  );
+    ]
+  )
   const baseFileName = useMemo(
     () => createBaseFileName(projectName || "animation"),
-    [projectName],
-  );
+    [projectName]
+  )
 
   const finishExport = useCallback((label: string) => {
-    setProgress(100);
-    setProgressLabel(label);
+    setProgress(100)
+    setProgressLabel(label)
 
     window.setTimeout(() => {
-      setExporting(false);
-      setProgress(0);
-      setProgressLabel("");
-    }, 1200);
-  }, []);
+      setExporting(false)
+      setProgress(0)
+      setProgressLabel("")
+    }, 1200)
+  }, [])
 
   const failExport = useCallback((error: unknown) => {
-    console.error("Export failed:", error);
-    setExporting(false);
-    setProgressLabel(
-      error instanceof Error ? error.message : "Export failed.",
-    );
-  }, []);
+    console.error("Export failed:", error)
+    setExporting(false)
+    setProgressLabel(error instanceof Error ? error.message : "Export failed.")
+  }, [])
 
   const exportGif = useCallback(async () => {
-    if (!canExport) return;
+    if (!canExport) return
 
-    setExporting(true);
-    setProgress(0);
-    setProgressLabel("Loading frames...");
+    setExporting(true)
+    setProgress(0)
+    setProgressLabel("Loading frames...")
 
     try {
-      const images = await loadImages(playableFrames);
-      const { default: GIF } = await import("gif.js");
-      const canvas = createExportCanvas(outputWidth, outputHeight);
-      const context = canvas.getContext("2d");
+      const images = await loadImages(playableFrames)
+      const { default: GIF } = await import("gif.js")
+      const canvas = createExportCanvas(outputWidth, outputHeight)
+      const context = canvas.getContext("2d")
 
       if (!context) {
-        throw new Error("Canvas export is unavailable.");
+        throw new Error("Canvas export is unavailable.")
       }
 
       const gif = new GIF({
@@ -127,9 +129,9 @@ export function ExportPanel() {
         height: outputHeight,
         workerScript: "/gif.worker.js",
         background: canvasBackground,
-      });
+      })
 
-      setProgressLabel("Preparing GIF...");
+      setProgressLabel("Preparing GIF...")
 
       images.forEach((image, index) => {
         drawImageFrame(
@@ -137,29 +139,29 @@ export function ExportPanel() {
           image,
           outputWidth,
           outputHeight,
-          canvasBackground,
-        );
+          canvasBackground
+        )
         gif.addFrame(context, {
           copy: true,
           delay: getFrameDuration(playableFrames[index].duration, fps),
-        });
-        setProgress(15 + Math.round(((index + 1) / images.length) * 35));
-      });
+        })
+        setProgress(15 + Math.round(((index + 1) / images.length) * 35))
+      })
 
-      setProgressLabel("Encoding GIF...");
+      setProgressLabel("Encoding GIF...")
 
       const blob = await new Promise<Blob>((resolve) => {
         gif.on("progress", (value: number) => {
-          setProgress(50 + Math.round(value * 45));
-        });
-        gif.on("finished", resolve);
-        gif.render();
-      });
+          setProgress(50 + Math.round(value * 45))
+        })
+        gif.on("finished", resolve)
+        gif.render()
+      })
 
-      downloadBlob(blob, `${baseFileName}-${Date.now()}.gif`);
-      finishExport("GIF ready.");
+      downloadBlob(blob, `${baseFileName}-${Date.now()}.gif`)
+      finishExport("GIF ready.")
     } catch (error) {
-      failExport(error);
+      failExport(error)
     }
   }, [
     baseFileName,
@@ -172,67 +174,67 @@ export function ExportPanel() {
     outputHeight,
     outputWidth,
     playableFrames,
-  ]);
+  ])
 
   const exportWebm = useCallback(async () => {
-    if (!canExport) return;
+    if (!canExport) return
 
     if (typeof MediaRecorder === "undefined") {
-      failExport(new Error("WebM export is not supported in this environment."));
-      return;
+      failExport(new Error("WebM export is not supported in this environment."))
+      return
     }
 
-    const mimeType = getSupportedWebmMimeType();
+    const mimeType = getSupportedWebmMimeType()
     if (!mimeType) {
-      failExport(new Error("No supported WebM encoder was found."));
-      return;
+      failExport(new Error("No supported WebM encoder was found."))
+      return
     }
 
-    setExporting(true);
-    setProgress(0);
-    setProgressLabel("Loading frames...");
+    setExporting(true)
+    setProgress(0)
+    setProgressLabel("Loading frames...")
 
-    let tracks: MediaStreamTrack[] = [];
+    let tracks: MediaStreamTrack[] = []
 
     try {
-      const images = await loadImages(playableFrames);
-      const canvas = createExportCanvas(outputWidth, outputHeight);
-      const context = canvas.getContext("2d");
+      const images = await loadImages(playableFrames)
+      const canvas = createExportCanvas(outputWidth, outputHeight)
+      const context = canvas.getContext("2d")
 
       if (!context) {
-        throw new Error("Canvas export is unavailable.");
+        throw new Error("Canvas export is unavailable.")
       }
 
-      drawBlankFrame(context, outputWidth, outputHeight, canvasBackground);
+      drawBlankFrame(context, outputWidth, outputHeight, canvasBackground)
 
-      const stream = canvas.captureStream(Math.max(1, fps));
-      tracks = stream.getTracks();
-      const chunks: BlobPart[] = [];
+      const stream = canvas.captureStream(Math.max(1, fps))
+      tracks = stream.getTracks()
+      const chunks: BlobPart[] = []
       const recorder = new MediaRecorder(stream, {
         mimeType,
         videoBitsPerSecond: estimateVideoBitrate(
           outputWidth,
           outputHeight,
           exportQuality,
-          fps,
+          fps
         ),
-      });
+      })
 
       const stopped = new Promise<void>((resolve, reject) => {
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
-            chunks.push(event.data);
+            chunks.push(event.data)
           }
-        };
+        }
         recorder.onerror = () => {
-          reject(new Error("WebM export failed."));
-        };
-        recorder.onstop = () => resolve();
-      });
+          reject(new Error("WebM export failed."))
+        }
+        recorder.onstop = () => resolve()
+      })
 
-      setProgressLabel("Recording WebM...");
-      recorder.start(250);
-      await waitForNextFrame();
+      setProgressLabel("Recording WebM...")
+      recorder.start(250)
+      await waitForNextFrame()
 
       for (let index = 0; index < images.length; index += 1) {
         drawImageFrame(
@@ -240,22 +242,22 @@ export function ExportPanel() {
           images[index],
           outputWidth,
           outputHeight,
-          canvasBackground,
-        );
-        setProgress(15 + Math.round(((index + 1) / images.length) * 75));
-        await sleep(getFrameDuration(playableFrames[index].duration, fps));
+          canvasBackground
+        )
+        setProgress(15 + Math.round(((index + 1) / images.length) * 75))
+        await sleep(getFrameDuration(playableFrames[index].duration, fps))
       }
 
-      recorder.stop();
-      await stopped;
+      recorder.stop()
+      await stopped
 
-      const blob = new Blob(chunks, { type: mimeType });
-      downloadBlob(blob, `${baseFileName}-${Date.now()}.webm`);
-      finishExport("WebM ready.");
+      const blob = new Blob(chunks, { type: mimeType })
+      downloadBlob(blob, `${baseFileName}-${Date.now()}.webm`)
+      finishExport("WebM ready.")
     } catch (error) {
-      failExport(error);
+      failExport(error)
     } finally {
-      tracks.forEach((track) => track.stop());
+      tracks.forEach((track) => track.stop())
     }
   }, [
     baseFileName,
@@ -268,22 +270,22 @@ export function ExportPanel() {
     outputHeight,
     outputWidth,
     playableFrames,
-  ]);
+  ])
 
   const downloadPngSequence = useCallback(async () => {
-    if (!canExport) return;
+    if (!canExport) return
 
-    setExporting(true);
-    setProgress(0);
-    setProgressLabel("Preparing PNG sequence...");
+    setExporting(true)
+    setProgress(0)
+    setProgressLabel("Preparing PNG sequence...")
 
     try {
-      const images = await loadImages(playableFrames);
-      const canvas = createExportCanvas(outputWidth, outputHeight);
-      const context = canvas.getContext("2d");
+      const images = await loadImages(playableFrames)
+      const canvas = createExportCanvas(outputWidth, outputHeight)
+      const context = canvas.getContext("2d")
 
       if (!context) {
-        throw new Error("Canvas export is unavailable.");
+        throw new Error("Canvas export is unavailable.")
       }
 
       for (let index = 0; index < images.length; index += 1) {
@@ -292,21 +294,21 @@ export function ExportPanel() {
           images[index],
           outputWidth,
           outputHeight,
-          canvasBackground,
-        );
+          canvasBackground
+        )
 
-        const blob = await canvasToBlob(canvas, "image/png");
+        const blob = await canvasToBlob(canvas, "image/png")
         downloadBlob(
           blob,
-          `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`,
-        );
-        setProgress(Math.round(((index + 1) / images.length) * 100));
-        await sleep(32);
+          `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`
+        )
+        setProgress(Math.round(((index + 1) / images.length) * 100))
+        await sleep(32)
       }
 
-      finishExport("PNG sequence ready.");
+      finishExport("PNG sequence ready.")
     } catch (error) {
-      failExport(error);
+      failExport(error)
     }
   }, [
     baseFileName,
@@ -317,16 +319,16 @@ export function ExportPanel() {
     outputHeight,
     outputWidth,
     playableFrames,
-  ]);
+  ])
 
   const handleExport = useCallback(() => {
     if (exportFormat === "gif") {
-      void exportGif();
-      return;
+      void exportGif()
+      return
     }
 
-    void exportWebm();
-  }, [exportFormat, exportGif, exportWebm]);
+    void exportWebm()
+  }, [exportFormat, exportGif, exportWebm])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -338,10 +340,10 @@ export function ExportPanel() {
           className={cn(
             "h-7 gap-1.5 border-border/60 text-xs font-medium",
             "hover:border-primary/50 hover:bg-primary/5 hover:text-primary",
-            "disabled:opacity-40",
+            "disabled:opacity-40"
           )}
         >
-          <ExportIcon />
+          <ExportIcon size={12} />
           Export
         </Button>
       </DialogTrigger>
@@ -365,7 +367,7 @@ export function ExportPanel() {
 
         <div className="flex flex-col gap-4 p-6">
           <div className="flex flex-col gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
               Format
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -419,7 +421,7 @@ export function ExportPanel() {
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">{progressLabel}</span>
-                <span className="tabular-nums font-medium text-foreground/70">
+                <span className="font-medium text-foreground/70 tabular-nums">
                   {progress}%
                 </span>
               </div>
@@ -432,7 +434,7 @@ export function ExportPanel() {
             disabled={exporting || !canExport}
             className={cn(
               "h-9 gap-2 font-medium",
-              progress === 100 && "bg-emerald-600 hover:bg-emerald-600/90",
+              progress === 100 && "bg-emerald-600 hover:bg-emerald-600/90"
             )}
           >
             {exporting ? (
@@ -456,7 +458,7 @@ export function ExportPanel() {
           <Button
             variant="ghost"
             onClick={() => {
-              void downloadPngSequence();
+              void downloadPngSequence()
             }}
             disabled={exporting || !canExport}
             className="h-8 text-xs text-muted-foreground hover:text-foreground"
@@ -466,7 +468,7 @@ export function ExportPanel() {
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function FormatCard({
@@ -477,12 +479,12 @@ function FormatCard({
   description,
   badge,
 }: {
-  selected: boolean;
-  onSelect: () => void;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  badge?: string;
+  selected: boolean
+  onSelect: () => void
+  icon: ReactNode
+  title: string
+  description: string
+  badge?: string
 }) {
   return (
     <button
@@ -492,15 +494,15 @@ function FormatCard({
         "relative flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150",
         selected
           ? "border-primary bg-primary/8 shadow-[0_0_0_1px] shadow-primary/20"
-          : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30",
+          : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
       )}
     >
       <div
         className={cn(
-          "absolute right-2.5 top-2.5 h-4 w-4 rounded-full border-2 transition-all",
+          "absolute top-2.5 right-2.5 h-4 w-4 rounded-full border-2 transition-all",
           selected
             ? "border-primary bg-primary"
-            : "border-border/60 bg-transparent",
+            : "border-border/60 bg-transparent"
         )}
       >
         {selected ? (
@@ -525,7 +527,7 @@ function FormatCard({
           "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
           selected
             ? "bg-primary/20 text-primary"
-            : "bg-muted text-muted-foreground",
+            : "bg-muted text-muted-foreground"
         )}
       >
         {icon}
@@ -535,7 +537,7 @@ function FormatCard({
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-foreground">{title}</span>
           {badge ? (
-            <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+            <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-bold tracking-wide text-primary uppercase">
               {badge}
             </span>
           ) : null}
@@ -545,49 +547,49 @@ function FormatCard({
         </p>
       </div>
     </button>
-  );
+  )
 }
 
 function loadImages(
-  frames: Array<{ imageUrl?: string | null }>,
+  frames: Array<{ imageUrl?: string | null }>
 ): Promise<HTMLImageElement[]> {
   return Promise.all(
     frames.map((frame) => {
       if (!frame.imageUrl) {
-        return Promise.reject(new Error("A frame is missing its image data."));
+        return Promise.reject(new Error("A frame is missing its image data."))
       }
 
-      return loadImage(frame.imageUrl);
-    }),
-  );
+      return loadImage(frame.imageUrl)
+    })
+  )
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Failed to load frame: ${src}`));
-    image.src = src;
-  });
+    const image = new Image()
+    image.crossOrigin = "anonymous"
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error(`Failed to load frame: ${src}`))
+    image.src = src
+  })
 }
 
 function createExportCanvas(width: number, height: number) {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  return canvas;
+  const canvas = document.createElement("canvas")
+  canvas.width = width
+  canvas.height = height
+  return canvas
 }
 
 function drawBlankFrame(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
-  background: string,
+  background: string
 ) {
-  context.clearRect(0, 0, width, height);
-  context.fillStyle = background;
-  context.fillRect(0, 0, width, height);
+  context.clearRect(0, 0, width, height)
+  context.fillStyle = background
+  context.fillRect(0, 0, width, height)
 }
 
 function drawImageFrame(
@@ -595,35 +597,39 @@ function drawImageFrame(
   image: CanvasImageSource,
   width: number,
   height: number,
-  background: string,
+  background: string
 ) {
-  drawBlankFrame(context, width, height, background);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
-  context.drawImage(image, 0, 0, width, height);
+  drawBlankFrame(context, width, height, background)
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = "high"
+  context.drawImage(image, 0, 0, width, height)
 }
 
 function getFrameDuration(duration: number | undefined, fps: number) {
-  if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
-    return duration;
+  if (
+    typeof duration === "number" &&
+    Number.isFinite(duration) &&
+    duration > 0
+  ) {
+    return duration
   }
 
-  return Math.max(16, Math.round(1000 / Math.max(fps, 1)));
+  return Math.max(16, Math.round(1000 / Math.max(fps, 1)))
 }
 
 function mapQualityToGifSample(quality: number) {
-  const normalized = Math.min(100, Math.max(1, quality));
-  return Math.max(1, Math.round(31 - normalized * 0.3));
+  const normalized = Math.min(100, Math.max(1, quality))
+  return Math.max(1, Math.round(31 - normalized * 0.3))
 }
 
 function estimateVideoBitrate(
   width: number,
   height: number,
   quality: number,
-  fps: number,
+  fps: number
 ) {
-  const qualityFactor = 0.35 + quality / 100;
-  return Math.round(width * height * Math.max(fps, 1) * qualityFactor);
+  const qualityFactor = 0.35 + quality / 100
+  return Math.round(width * height * Math.max(fps, 1) * qualityFactor)
 }
 
 function estimateExportSizeMb({
@@ -634,27 +640,27 @@ function estimateExportSizeMb({
   format,
   quality,
 }: {
-  frameCount: number;
-  width: number;
-  height: number;
-  durationMs: number;
-  format: ExportFormat;
-  quality: number;
+  frameCount: number
+  width: number
+  height: number
+  durationMs: number
+  format: ExportFormat
+  quality: number
 }) {
-  const megapixels = (width * height) / 1_000_000;
-  const durationSec = Math.max(durationMs / 1000, frameCount / 12, 0.1);
-  const qualityFactor = 0.35 + quality / 100;
+  const megapixels = (width * height) / 1_000_000
+  const durationSec = Math.max(durationMs / 1000, frameCount / 12, 0.1)
+  const qualityFactor = 0.35 + quality / 100
 
   const estimatedMb =
     format === "gif"
       ? frameCount * megapixels * (0.4 + qualityFactor * 0.45)
-      : durationSec * megapixels * (0.7 + qualityFactor * 0.6);
+      : durationSec * megapixels * (0.7 + qualityFactor * 0.6)
 
-  return estimatedMb.toFixed(1);
+  return estimatedMb.toFixed(1)
 }
 
 function getSupportedWebmMimeType() {
-  return WEBM_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
+  return WEBM_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
 }
 
 function createBaseFileName(projectName: string) {
@@ -662,137 +668,44 @@ function createBaseFileName(projectName: string) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
 
-  return normalized || "animation";
+  return normalized || "animation"
 }
 
 function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = fileName
+  anchor.click()
 
   window.setTimeout(() => {
-    URL.revokeObjectURL(url);
-  }, 1000);
+    URL.revokeObjectURL(url)
+  }, 1000)
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        reject(new Error("Failed to encode the canvas output."));
-        return;
+        reject(new Error("Failed to encode the canvas output."))
+        return
       }
 
-      resolve(blob);
-    }, type);
-  });
+      resolve(blob)
+    }, type)
+  })
 }
 
 function sleep(durationMs: number) {
   return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, durationMs);
-  });
+    window.setTimeout(resolve, durationMs)
+  })
 }
 
 function waitForNextFrame() {
   return new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve());
-  });
-}
-
-function ExportIcon({ size = 12 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-
-function GifIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1-3 3H5V4Z" />
-      <path d="M19 4h-3v16h3" />
-      <path d="M11 4h4" />
-      <path d="M13 4v16" />
-      <path d="M15 20h-4" />
-    </svg>
-  );
-}
-
-function VideoIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="14" height="14" x="3" y="5" rx="2" />
-      <path d="m17 10 4-2v8l-4-2Z" />
-    </svg>
-  );
-}
-
-function SpinnerIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="animate-spin"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
+    window.requestAnimationFrame(() => resolve())
+  })
 }

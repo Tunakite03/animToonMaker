@@ -10,7 +10,7 @@ import {
   EditorIcon,
   ExportIcon,
   SparkleIcon,
-} from "@/assets/icons"
+} from "@/components/icons"
 import { ArrowRightIcon, FileWarningIcon, RocketIcon } from "lucide-react"
 
 export default function SettingsPage() {

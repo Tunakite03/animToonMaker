@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "react"
 import {
   Dialog,
   DialogContent,
@@ -6,27 +6,28 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import {
   useSettingsStore,
   type CanvasQuality,
   type ExportFormat,
-} from "@/store/settings-store";
+} from "@/store/settings-store"
+import { SettingsIcon } from "@/components/icons"
 
 export function SettingsDialog() {
   return (
@@ -47,7 +48,7 @@ export function SettingsDialog() {
         <SettingsTabs />
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function SettingsTabs() {
@@ -81,21 +82,21 @@ function SettingsTabs() {
         <EditorSettings />
       </TabsContent>
     </Tabs>
-  );
+  )
 }
 
 /* ─── Canvas Tab ─── */
 function CanvasSettings() {
-  const width = useSettingsStore((s) => s.canvasWidth);
-  const height = useSettingsStore((s) => s.canvasHeight);
-  const bg = useSettingsStore((s) => s.canvasBackground);
-  const quality = useSettingsStore((s) => s.canvasQuality);
-  const showGrid = useSettingsStore((s) => s.showGrid);
-  const setWidth = useSettingsStore((s) => s.setCanvasWidth);
-  const setHeight = useSettingsStore((s) => s.setCanvasHeight);
-  const setBg = useSettingsStore((s) => s.setCanvasBackground);
-  const setQuality = useSettingsStore((s) => s.setCanvasQuality);
-  const setShowGrid = useSettingsStore((s) => s.setShowGrid);
+  const width = useSettingsStore((s) => s.canvasWidth)
+  const height = useSettingsStore((s) => s.canvasHeight)
+  const bg = useSettingsStore((s) => s.canvasBackground)
+  const quality = useSettingsStore((s) => s.canvasQuality)
+  const showGrid = useSettingsStore((s) => s.showGrid)
+  const setWidth = useSettingsStore((s) => s.setCanvasWidth)
+  const setHeight = useSettingsStore((s) => s.setCanvasHeight)
+  const setBg = useSettingsStore((s) => s.setCanvasBackground)
+  const setQuality = useSettingsStore((s) => s.setCanvasQuality)
+  const setShowGrid = useSettingsStore((s) => s.setShowGrid)
 
   return (
     <>
@@ -125,15 +126,24 @@ function CanvasSettings() {
       <div className="flex gap-2">
         <PresetButton
           label="512 × 512"
-          onClick={() => { setWidth(512); setHeight(512); }}
+          onClick={() => {
+            setWidth(512)
+            setHeight(512)
+          }}
         />
         <PresetButton
           label="768 × 768"
-          onClick={() => { setWidth(768); setHeight(768); }}
+          onClick={() => {
+            setWidth(768)
+            setHeight(768)
+          }}
         />
         <PresetButton
           label="1024 × 576"
-          onClick={() => { setWidth(1024); setHeight(576); }}
+          onClick={() => {
+            setWidth(1024)
+            setHeight(576)
+          }}
         />
       </div>
 
@@ -175,21 +185,24 @@ function CanvasSettings() {
         <Switch checked={showGrid} onCheckedChange={setShowGrid} />
       </SettingRow>
     </>
-  );
+  )
 }
 
 /* ─── AI Tab ─── */
 function AISettings() {
-  const styleSuffix = useSettingsStore((s) => s.styleSuffix);
-  const negativePrompt = useSettingsStore((s) => s.negativePrompt);
-  const autoGenerate = useSettingsStore((s) => s.autoGenerate);
-  const setStyleSuffix = useSettingsStore((s) => s.setStyleSuffix);
-  const setNegativePrompt = useSettingsStore((s) => s.setNegativePrompt);
-  const setAutoGenerate = useSettingsStore((s) => s.setAutoGenerate);
+  const styleSuffix = useSettingsStore((s) => s.styleSuffix)
+  const negativePrompt = useSettingsStore((s) => s.negativePrompt)
+  const autoGenerate = useSettingsStore((s) => s.autoGenerate)
+  const setStyleSuffix = useSettingsStore((s) => s.setStyleSuffix)
+  const setNegativePrompt = useSettingsStore((s) => s.setNegativePrompt)
+  const setAutoGenerate = useSettingsStore((s) => s.setAutoGenerate)
 
   return (
     <>
-      <SettingRow label="Style Suffix" description="Appended to every frame prompt for consistent style">
+      <SettingRow
+        label="Style Suffix"
+        description="Appended to every frame prompt for consistent style"
+      >
         <Textarea
           value={styleSuffix}
           onChange={(e) => setStyleSuffix(e.target.value)}
@@ -198,7 +211,10 @@ function AISettings() {
         />
       </SettingRow>
 
-      <SettingRow label="Negative Prompt" description="Tell the AI what to avoid">
+      <SettingRow
+        label="Negative Prompt"
+        description="Tell the AI what to avoid"
+      >
         <Textarea
           value={negativePrompt}
           onChange={(e) => setNegativePrompt(e.target.value)}
@@ -209,21 +225,24 @@ function AISettings() {
 
       <Separator />
 
-      <SettingRow label="Auto-generate on Add" description="Automatically generate image when a new frame is added">
+      <SettingRow
+        label="Auto-generate on Add"
+        description="Automatically generate image when a new frame is added"
+      >
         <Switch checked={autoGenerate} onCheckedChange={setAutoGenerate} />
       </SettingRow>
     </>
-  );
+  )
 }
 
 /* ─── Export Tab ─── */
 function ExportSettings() {
-  const format = useSettingsStore((s) => s.exportFormat);
-  const quality = useSettingsStore((s) => s.exportQuality);
-  const scale = useSettingsStore((s) => s.exportScale);
-  const setFormat = useSettingsStore((s) => s.setExportFormat);
-  const setQuality = useSettingsStore((s) => s.setExportQuality);
-  const setScale = useSettingsStore((s) => s.setExportScale);
+  const format = useSettingsStore((s) => s.exportFormat)
+  const quality = useSettingsStore((s) => s.exportQuality)
+  const scale = useSettingsStore((s) => s.exportScale)
+  const setFormat = useSettingsStore((s) => s.setExportFormat)
+  const setQuality = useSettingsStore((s) => s.setExportQuality)
+  const setScale = useSettingsStore((s) => s.setExportScale)
 
   return (
     <>
@@ -268,22 +287,25 @@ function ExportSettings() {
         </Select>
       </SettingRow>
     </>
-  );
+  )
 }
 
 /* ─── Editor Tab ─── */
 function EditorSettings() {
-  const showOnionSkin = useSettingsStore((s) => s.showOnionSkin);
-  const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity);
-  const thumbnailSize = useSettingsStore((s) => s.timelineThumbnailSize);
-  const setShowOnionSkin = useSettingsStore((s) => s.setShowOnionSkin);
-  const setOnionSkinOpacity = useSettingsStore((s) => s.setOnionSkinOpacity);
-  const setThumbnailSize = useSettingsStore((s) => s.setTimelineThumbnailSize);
-  const resetToDefaults = useSettingsStore((s) => s.resetToDefaults);
+  const showOnionSkin = useSettingsStore((s) => s.showOnionSkin)
+  const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity)
+  const thumbnailSize = useSettingsStore((s) => s.timelineThumbnailSize)
+  const setShowOnionSkin = useSettingsStore((s) => s.setShowOnionSkin)
+  const setOnionSkinOpacity = useSettingsStore((s) => s.setOnionSkinOpacity)
+  const setThumbnailSize = useSettingsStore((s) => s.setTimelineThumbnailSize)
+  const resetToDefaults = useSettingsStore((s) => s.resetToDefaults)
 
   return (
     <>
-      <SettingRow label="Onion Skin" description="Show ghost of previous frame on canvas">
+      <SettingRow
+        label="Onion Skin"
+        description="Show ghost of previous frame on canvas"
+      >
         <Switch checked={showOnionSkin} onCheckedChange={setShowOnionSkin} />
       </SettingRow>
 
@@ -319,7 +341,7 @@ function EditorSettings() {
         Reset All to Defaults
       </Button>
     </>
-  );
+  )
 }
 
 /* ─── Shared UI pieces ─── */
@@ -329,9 +351,9 @@ function SettingRow({
   description,
   children,
 }: {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
+  label: string
+  description?: string
+  children: React.ReactNode
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -343,44 +365,25 @@ function SettingRow({
       </div>
       <div className="shrink-0">{children}</div>
     </div>
-  );
+  )
 }
 
 function PresetButton({
   label,
   onClick,
 }: {
-  label: string;
-  onClick: () => void;
+  label: string
+  onClick: () => void
 }) {
   return (
     <Button variant="outline" size="xs" onClick={onClick}>
       {label}
     </Button>
-  );
+  )
 }
 
 function clampInt(value: string, min: number, max: number): number {
-  const n = parseInt(value, 10);
-  if (isNaN(n)) return min;
-  return Math.max(min, Math.min(max, n));
-}
-
-function SettingsIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
+  const n = parseInt(value, 10)
+  if (isNaN(n)) return min
+  return Math.max(min, Math.min(max, n))
 }

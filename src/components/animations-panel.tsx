@@ -1,66 +1,73 @@
-import { useState, useCallback } from "react";
-import { useAnimationStore } from "@/store/animation-store";
-import type { Animation } from "@/types/animation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { useState, useCallback } from "react"
+import { useAnimationStore } from "@/store/animation-store"
+import type { Animation } from "@/types/animation"
+import {
+  DuplicateIcon,
+  PlusIcon,
+  RenameIcon,
+  TrashIcon,
+} from "@/components/icons"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 type ContextMenuState = {
-  animId: string;
-  x: number;
-  y: number;
-} | null;
+  animId: string
+  x: number
+  y: number
+} | null
 
 export function AnimationsPanel() {
-  const animations = useAnimationStore((s) => s.project.animations);
+  const animations = useAnimationStore((s) => s.project.animations)
   const selectedAnimationId = useAnimationStore(
-    (s) => s.project.selectedAnimationId,
-  );
-  const selectAnimation = useAnimationStore((s) => s.selectAnimation);
-  const addAnimation = useAnimationStore((s) => s.addAnimation);
-  const removeAnimation = useAnimationStore((s) => s.removeAnimation);
-  const renameAnimation = useAnimationStore((s) => s.renameAnimation);
-  const duplicateAnimation = useAnimationStore((s) => s.duplicateAnimation);
+    (s) => s.project.selectedAnimationId
+  )
+  const selectAnimation = useAnimationStore((s) => s.selectAnimation)
+  const addAnimation = useAnimationStore((s) => s.addAnimation)
+  const removeAnimation = useAnimationStore((s) => s.removeAnimation)
+  const renameAnimation = useAnimationStore((s) => s.renameAnimation)
+  const duplicateAnimation = useAnimationStore((s) => s.duplicateAnimation)
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [ctxMenu, setCtxMenu] = useState<ContextMenuState>(null);
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState>(null)
 
   const handleStartRename = useCallback((anim: Animation) => {
-    setEditingId(anim.id);
-    setEditValue(anim.name);
-    setCtxMenu(null);
-  }, []);
+    setEditingId(anim.id)
+    setEditValue(anim.name)
+    setCtxMenu(null)
+  }, [])
 
   const handleFinishRename = useCallback(() => {
     if (editingId && editValue.trim()) {
-      renameAnimation(editingId, editValue.trim());
+      renameAnimation(editingId, editValue.trim())
     }
-    setEditingId(null);
-  }, [editingId, editValue, renameAnimation]);
+    setEditingId(null)
+  }, [editingId, editValue, renameAnimation])
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent, animId: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-      selectAnimation(animId);
-      setCtxMenu({ animId, x: e.clientX, y: e.clientY });
+      e.preventDefault()
+      e.stopPropagation()
+      selectAnimation(animId)
+      setCtxMenu({ animId, x: e.clientX, y: e.clientY })
     },
-    [selectAnimation],
-  );
+    [selectAnimation]
+  )
 
-  const closeCtxMenu = useCallback(() => setCtxMenu(null), []);
+  const closeCtxMenu = useCallback(() => setCtxMenu(null), [])
 
   return (
-    <div
-      className="flex h-full flex-col"
-      onClick={closeCtxMenu}
-    >
+    <div className="flex h-full flex-col" onClick={closeCtxMenu}>
       {/* Header */}
       <div className="flex h-7 shrink-0 items-center justify-between border-b border-border/40 px-2.5">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+        <span className="text-[10px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
           Animations
         </span>
         <Tooltip>
@@ -82,24 +89,24 @@ export function AnimationsPanel() {
       <ScrollArea className="min-h-0 flex-1">
         <div className="p-1">
           {animations.map((anim) => {
-            const isSelected = selectedAnimationId === anim.id;
+            const isSelected = selectedAnimationId === anim.id
             return (
               <div
                 key={anim.id}
                 onClick={() => selectAnimation(anim.id)}
                 onContextMenu={(e) => handleContextMenu(e, anim.id)}
                 className={cn(
-                  "group flex h-7 items-center gap-1.5 rounded px-2 text-xs transition-colors cursor-pointer select-none",
+                  "group flex h-7 cursor-pointer items-center gap-1.5 rounded px-2 text-xs transition-colors select-none",
                   isSelected
                     ? "bg-primary/12 text-foreground"
-                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 )}
               >
                 {/* Color dot */}
                 <span
                   className={cn(
                     "h-2 w-2 shrink-0 rounded-full",
-                    isSelected ? "bg-primary" : "bg-muted-foreground/25",
+                    isSelected ? "bg-primary" : "bg-muted-foreground/25"
                   )}
                 />
 
@@ -111,8 +118,8 @@ export function AnimationsPanel() {
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={handleFinishRename}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleFinishRename();
-                      if (e.key === "Escape") setEditingId(null);
+                      if (e.key === "Enter") handleFinishRename()
+                      if (e.key === "Escape") setEditingId(null)
                     }}
                     className="h-5 flex-1 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
                   />
@@ -121,11 +128,11 @@ export function AnimationsPanel() {
                 )}
 
                 {/* Frame count */}
-                <span className="shrink-0 tabular-nums text-[9px] text-muted-foreground/50">
+                <span className="shrink-0 text-[9px] text-muted-foreground/50 tabular-nums">
                   {anim.frames.length}
                 </span>
               </div>
-            );
+            )
           })}
         </div>
       </ScrollArea>
@@ -137,25 +144,25 @@ export function AnimationsPanel() {
           y={ctxMenu.y}
           onClose={closeCtxMenu}
           onRename={() => {
-            const anim = animations.find((a) => a.id === ctxMenu.animId);
-            if (anim) handleStartRename(anim);
+            const anim = animations.find((a) => a.id === ctxMenu.animId)
+            if (anim) handleStartRename(anim)
           }}
           onDuplicate={() => {
-            duplicateAnimation(ctxMenu.animId);
-            closeCtxMenu();
+            duplicateAnimation(ctxMenu.animId)
+            closeCtxMenu()
           }}
           onDelete={
             animations.length > 1
               ? () => {
-                  removeAnimation(ctxMenu.animId);
-                  closeCtxMenu();
+                  removeAnimation(ctxMenu.animId)
+                  closeCtxMenu()
                 }
               : undefined
           }
         />
       )}
     </div>
-  );
+  )
 }
 
 // ── Context menu overlay ──────────────────────────────────────────────────────
@@ -168,33 +175,49 @@ function ContextMenu({
   onDuplicate,
   onDelete,
 }: {
-  x: number;
-  y: number;
-  onClose: () => void;
-  onRename: () => void;
-  onDuplicate: () => void;
-  onDelete?: () => void;
+  x: number
+  y: number
+  onClose: () => void
+  onRename: () => void
+  onDuplicate: () => void
+  onDelete?: () => void
 }) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-50" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }} />
+      <div
+        className="fixed inset-0 z-50"
+        onClick={onClose}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          onClose()
+        }}
+      />
       {/* Menu */}
       <div
-        className="fixed z-50 min-w-36 rounded-md border border-border/60 bg-popover py-1 shadow-lg animate-in fade-in-0 zoom-in-95"
+        className="fixed z-50 min-w-36 animate-in rounded-md border border-border/60 bg-popover py-1 shadow-lg fade-in-0 zoom-in-95"
         style={{ left: x, top: y }}
       >
         <CtxMenuItem icon={<RenameIcon />} label="Rename" onClick={onRename} />
-        <CtxMenuItem icon={<DuplicateIcon />} label="Duplicate" onClick={onDuplicate} />
+        <CtxMenuItem
+          icon={<DuplicateIcon />}
+          label="Duplicate"
+          onClick={onDuplicate}
+        />
         {onDelete && (
           <>
             <div className="my-1 h-px bg-border/50" />
-            <CtxMenuItem icon={<TrashIcon />} label="Delete" onClick={onDelete} destructive />
+            <CtxMenuItem
+              icon={<TrashIcon />}
+              label="Delete"
+              onClick={onDelete}
+              destructive
+            />
           </>
         )}
       </div>
     </>
-  );
+  )
 }
 
 function CtxMenuItem({
@@ -203,10 +226,10 @@ function CtxMenuItem({
   onClick,
   destructive,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  destructive?: boolean;
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  destructive?: boolean
 }) {
   return (
     <button
@@ -215,49 +238,13 @@ function CtxMenuItem({
         "flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors",
         destructive
           ? "text-destructive hover:bg-destructive/10"
-          : "text-foreground hover:bg-accent",
+          : "text-foreground hover:bg-accent"
       )}
     >
-      <span className="flex h-3.5 w-3.5 items-center justify-center opacity-70">{icon}</span>
+      <span className="flex h-3.5 w-3.5 items-center justify-center opacity-70">
+        {icon}
+      </span>
       {label}
     </button>
-  );
-}
-
-// ── Inline icons ──────────────────────────────────────────────────────────────
-
-function PlusIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function RenameIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  );
-}
-
-function DuplicateIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
+  )
 }

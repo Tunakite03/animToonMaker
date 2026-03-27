@@ -1,5 +1,5 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Link, Outlet, useLocation } from "react-router-dom"
+import { cn } from "@/lib/utils"
 import {
   AIIcon,
   ArrowLeftIcon,
@@ -8,19 +8,49 @@ import {
   ExportIcon,
   SettingsIcon,
   SparkleIcon,
-} from "@/assets/icons";
+} from "@/components/icons"
 
 const navItems = [
-  { href: "/settings", label: "General", icon: SettingsIcon, description: "Overview & reset" },
-  { href: "/settings/ai-provider", label: "AI Provider", icon: AIIcon, description: "API keys & models" },
-  { href: "/settings/generation", label: "Generation", icon: SparkleIcon, description: "Style & prompts" },
-  { href: "/settings/canvas", label: "Canvas", icon: CanvasIcon, description: "Size & quality" },
-  { href: "/settings/editor", label: "Editor", icon: EditorIcon, description: "Timeline & overlays" },
-  { href: "/settings/export", label: "Export", icon: ExportIcon, description: "Format & quality" },
-];
+  {
+    href: "/settings",
+    label: "General",
+    icon: SettingsIcon,
+    description: "Overview & reset",
+  },
+  {
+    href: "/settings/ai-provider",
+    label: "AI Provider",
+    icon: AIIcon,
+    description: "API keys & models",
+  },
+  {
+    href: "/settings/generation",
+    label: "Generation",
+    icon: SparkleIcon,
+    description: "Style & prompts",
+  },
+  {
+    href: "/settings/canvas",
+    label: "Canvas",
+    icon: CanvasIcon,
+    description: "Size & quality",
+  },
+  {
+    href: "/settings/editor",
+    label: "Editor",
+    icon: EditorIcon,
+    description: "Timeline & overlays",
+  },
+  {
+    href: "/settings/export",
+    label: "Export",
+    icon: ExportIcon,
+    description: "Format & quality",
+  },
+]
 
 export default function SettingsLayout() {
-  const { pathname } = useLocation();
+  const { pathname } = useLocation()
 
   return (
     <div className="flex h-svh flex-col bg-background">
@@ -50,7 +80,7 @@ export default function SettingsLayout() {
               const isActive =
                 item.href === "/settings"
                   ? pathname === "/settings"
-                  : pathname.startsWith(item.href);
+                  : pathname.startsWith(item.href)
               return (
                 <Link
                   key={item.href}
@@ -59,7 +89,7 @@ export default function SettingsLayout() {
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all",
                     isActive
                       ? "bg-primary/10 shadow-sm"
-                      : "hover:bg-background/80",
+                      : "hover:bg-background/80"
                   )}
                 >
                   <div
@@ -67,7 +97,7 @@ export default function SettingsLayout() {
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground",
+                        : "bg-muted text-muted-foreground group-hover:bg-muted/80 group-hover:text-foreground"
                     )}
                   >
                     <item.icon />
@@ -78,7 +108,7 @@ export default function SettingsLayout() {
                         "truncate text-sm transition-colors",
                         isActive
                           ? "font-semibold text-primary"
-                          : "font-medium text-foreground/80 group-hover:text-foreground",
+                          : "font-medium text-foreground/80 group-hover:text-foreground"
                       )}
                     >
                       {item.label}
@@ -88,7 +118,7 @@ export default function SettingsLayout() {
                     </p>
                   </div>
                 </Link>
-              );
+              )
             })}
           </div>
 
@@ -105,9 +135,11 @@ export default function SettingsLayout() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-2xl px-8 py-8"><Outlet /></div>
+          <div className="mx-auto max-w-2xl px-8 py-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
-  );
+  )
 }

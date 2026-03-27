@@ -1,15 +1,16 @@
-import { useSettingsStore } from "@/store/settings-store";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { useSettingsStore } from "@/store/settings-store"
+import { OnionIcon, TimelineIcon } from "@/components/icons"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 
 export default function EditorSettingsPage() {
-  const showOnionSkin = useSettingsStore((s) => s.showOnionSkin);
-  const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity);
-  const thumbnailSize = useSettingsStore((s) => s.timelineThumbnailSize);
-  const setShowOnionSkin = useSettingsStore((s) => s.setShowOnionSkin);
-  const setOnionSkinOpacity = useSettingsStore((s) => s.setOnionSkinOpacity);
-  const setThumbnailSize = useSettingsStore((s) => s.setTimelineThumbnailSize);
+  const showOnionSkin = useSettingsStore((s) => s.showOnionSkin)
+  const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity)
+  const thumbnailSize = useSettingsStore((s) => s.timelineThumbnailSize)
+  const setShowOnionSkin = useSettingsStore((s) => s.setShowOnionSkin)
+  const setOnionSkinOpacity = useSettingsStore((s) => s.setOnionSkinOpacity)
+  const setThumbnailSize = useSettingsStore((s) => s.setTimelineThumbnailSize)
 
   return (
     <div className="space-y-8">
@@ -31,7 +32,8 @@ export default function EditorSettingsPage() {
             <div>
               <Label className="text-sm font-semibold">Onion Skin</Label>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Show a semi-transparent overlay of the previous frame for animation continuity.
+                Show a semi-transparent overlay of the previous frame for
+                animation continuity.
               </p>
             </div>
           </div>
@@ -51,14 +53,16 @@ export default function EditorSettingsPage() {
               </div>
               <div className="ml-3 text-[11px] text-muted-foreground">
                 <p>Previous frame overlay</p>
-                <p className="font-medium text-foreground">{onionSkinOpacity}% opacity</p>
+                <p className="font-medium text-foreground">
+                  {onionSkinOpacity}% opacity
+                </p>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-muted-foreground">Opacity</Label>
-                <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono font-medium">
+                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-medium">
                   {onionSkinOpacity}%
                 </span>
               </div>
@@ -115,8 +119,10 @@ export default function EditorSettingsPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground">Thumbnail Size</Label>
-              <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono font-medium">
+              <Label className="text-xs text-muted-foreground">
+                Thumbnail Size
+              </Label>
+              <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-medium">
                 {thumbnailSize}px
               </span>
             </div>
@@ -135,28 +141,5 @@ export default function EditorSettingsPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function OnionIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="6" />
-      <circle cx="12" cy="12" r="2" />
-    </svg>
-  );
-}
-
-function TimelineIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect width="4" height="6" x="2" y="4" rx="1" />
-      <rect width="4" height="6" x="10" y="4" rx="1" />
-      <rect width="4" height="6" x="18" y="4" rx="1" />
-      <path d="M2 14h20" />
-      <path d="M6 14v4" />
-      <path d="M14 14v4" />
-    </svg>
-  );
+  )
 }
