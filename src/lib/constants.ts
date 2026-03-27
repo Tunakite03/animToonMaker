@@ -1,0 +1,9 @@
+export const DEFAULT_FPS = 12;
+export const MIN_FPS = 1;
+export const MAX_FPS = 60;
+export const DEFAULT_FRAME_WIDTH = 512;
+export const DEFAULT_FRAME_HEIGHT = 512;
+export const DEFAULT_FRAME_DURATION_MS = 1000 / DEFAULT_FPS;
+export const STYLE_SUFFIX = ", cartoon style, flat color, consistent lighting, clean lines";
+export const MAX_FRAMES = 120;
+export const CANVAS_BG = "#1a1a2e";

@@ -1,15 +1,23 @@
-import { Geist, Geist_Mono, Source_Sans_3 } from "next/font/google"
+import { Geist_Mono, Source_Sans_3 } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-const sourceSans3 = Source_Sans_3({subsets:['latin'],variable:'--font-sans'})
+const sourceSans3 = Source_Sans_3({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: "AnimToon Maker — AI Frame-by-Frame Animation",
+  description:
+    "Create smooth frame-by-frame animations using AI-generated images",
+}
 
 export default function RootLayout({
   children,
@@ -20,10 +28,17 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", sourceSans3.variable)}
+      className={cn(
+        "antialiased",
+        fontMono.variable,
+        "font-sans",
+        sourceSans3.variable,
+      )}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
