@@ -1,0 +1,21 @@
+{
+  "file_hashes": {
+    "eslint.config.mjs": "e24da190df4c2e9bee0b97578d18053458a3074748f70f838a577ba88f190882",
+    "next.config.mjs": "78b3e01e1623f639fec8d8989ddf5b3ef81dac9c56406a1ae38d40d5a839c7c9",
+    "postcss.config.mjs": "34a4007a2bf5e6d1b4846870b0fb759ba3ca168c5402974d1b5c7edc00a161a0",
+    "src/app/layout.tsx": "9a68f36957d5a1b4dbc00bccf8064c7f89cd7e87ec8450dab826b7f530b8bf17",
+    "src/app/page.tsx": "f956ab17aed5de97234b86758a60b11f3e8b3f36cf4aa186e9c83f761f0b9dd7",
+    "src/components/theme-provider.tsx": "8971c1d6ee7545035bc49b08384dba0bd1281a6775856ef4c2336a8e1cca0dfb",
+    "src/components/ui/button.tsx": "3224bda693e92ace60f0e3c9e9a72b755e8639d49e4249e25cd180a377106ed3",
+    "src/lib/utils.ts": "cb488a6352482fc7a7ded88a7d5312a953f7113b0ca3598e60979a44f75fb3f5"
+  },
+  "indexed_at_commit": "10c56069d55f5f6056e5a51c337879537bceeb68",
+  "indexed_at_timestamp": "2026-03-27T04:14:29.687714+00:00",
+  "schema_version": 3,
+  "stats": {
+    "total_edges": 2,
+    "total_files": 8,
+    "total_nodes": 7
+  },
+  "vexp_version": "1.2.30"
+}
