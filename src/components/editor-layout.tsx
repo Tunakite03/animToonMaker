@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { CanvasEditor } from "@/components/canvas-editor";
 import { AnimationTimeline } from "@/components/animation-timeline";
+import { AnimationsPanel } from "@/components/animations-panel";
 import { FramePromptPanel } from "@/components/frame-prompt-panel";
 import { Toolbar } from "@/components/toolbar";
 import { ExportPanel } from "@/components/export-panel";
@@ -9,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAnimationStore } from "@/store/animation-store";
 import { useProjectLibraryStore } from "@/store/project-library-store";
 import { useSettingsStore } from "@/store/settings-store";
+import { useUndoShortcuts } from "@/hooks/use-undo-shortcuts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +41,8 @@ export function EditorLayout() {
 
   const isConnected = aiProvider !== "placeholder" && apiKey.length > 0;
   const providerLabel = PROVIDER_LABELS[aiProvider] ?? aiProvider;
+
+  useUndoShortcuts();
 
   const handleQuickSave = () => {
     const saved = toSavedProject();
@@ -151,41 +155,58 @@ export function EditorLayout() {
       </header>
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
-      {/* Vertical split: top (canvas + prompt) | bottom (toolbar + timeline) */}
-      <ResizablePanelGroup orientation="vertical" className="min-h-0 flex-1">
+      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
 
-        {/* Top: Canvas + Prompt */}
-        <ResizablePanel id="top" defaultSize="68%" minSize="40%">
-          <ResizablePanelGroup orientation="horizontal">
+        {/* Top row: Canvas + Right sidebar (Frame editor on top, Animations below) */}
+        <ResizablePanel id="top" defaultSize="70%" minSize="40%">
+          <ResizablePanelGroup orientation="vertical">
 
             {/* Canvas */}
             <ResizablePanel id="canvas" defaultSize="70%" minSize="35%">
               <CanvasEditor />
             </ResizablePanel>
 
-            <ResizableHandle withHandle orientation="horizontal" />
 
-            {/* Prompt panel */}
-            <ResizablePanel id="prompt" defaultSize="30%" minSize="20%" maxSize="45%">
-              <aside className="flex h-full flex-col overflow-hidden border-l border-border/50 bg-card/50">
-                <FramePromptPanel />
-              </aside>
-            </ResizablePanel>
-
-          </ResizablePanelGroup>
-        </ResizablePanel>
 
         <ResizableHandle withHandle orientation="vertical" />
 
-        {/* Bottom: Toolbar + Timeline */}
-        <ResizablePanel id="timeline" defaultSize="32%" minSize="18%" maxSize="50%">
+        {/* Bottom: Toolbar + Timeline (frames of selected animation) */}
+        <ResizablePanel id="timeline" defaultSize="30%" minSize="16%" maxSize="50%">
           <div className="flex h-full flex-col overflow-hidden bg-card/30">
             <Toolbar />
-            <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2 pt-1.5">
+            <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2 pt-1">
               <AnimationTimeline />
             </div>
           </div>
         </ResizablePanel>
+
+
+          </ResizablePanelGroup>
+        </ResizablePanel>
+
+            <ResizableHandle withHandle orientation="horizontal" />
+
+            {/* Right sidebar: Frame prompt (top) + Animations list (bottom) */}
+            <ResizablePanel id="right-sidebar" defaultSize="30%" minSize="20%" maxSize="45%">
+              <aside className="flex h-full flex-col overflow-hidden border-l border-border/50 bg-card/50">
+                <ResizablePanelGroup orientation="vertical">
+                  {/* Frame editor / prompt panel */}
+                  <ResizablePanel id="frame-editor" defaultSize="55%" minSize="25%">
+                    <FramePromptPanel />
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle orientation="vertical" />
+
+                  {/* Animations list */}
+                  <ResizablePanel id="anims-list" defaultSize="45%" minSize="20%">
+                    <AnimationsPanel />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </aside>
+            </ResizablePanel>
+
+
+
 
       </ResizablePanelGroup>
     </div>

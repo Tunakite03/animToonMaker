@@ -22,7 +22,10 @@ const WEBM_MIME_TYPES = [
 ] as const;
 
 export function ExportPanel() {
-  const frames = useAnimationStore((state) => state.project.frames);
+  const frames = useAnimationStore((state) => {
+    const anim = state.project.animations.find((a) => a.id === state.project.selectedAnimationId);
+    return anim?.frames ?? [];
+  });
   const fps = useAnimationStore((state) => state.project.fps);
   const projectName = useAnimationStore((state) => state.project.name);
 

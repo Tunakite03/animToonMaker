@@ -1,20 +1,28 @@
 import { useRef } from "react";
 import { useAnimationStore } from "@/store/animation-store";
+import { useUndoStore } from "@/store/undo-store";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import { MAX_FRAMES } from "@/lib/constants";
 import { processImageFiles } from "@/lib/import-utils";
+import { cn } from "@/lib/utils";
 
 export function Toolbar() {
-  const frames = useAnimationStore((s) => s.project.frames);
+  const frames = useAnimationStore((s) => {
+    const anim = s.project.animations.find((a) => a.id === s.project.selectedAnimationId);
+    return anim?.frames ?? [];
+  });
+  const selectedAnimName = useAnimationStore((s) => {
+    const anim = s.project.animations.find((a) => a.id === s.project.selectedAnimationId);
+    return anim?.name ?? "";
+  });
   const addFrame = useAnimationStore((s) => s.addFrame);
   const addFrameWithImage = useAnimationStore((s) => s.addFrameWithImage);
+  const undo = useUndoStore((s) => s.undo);
+  const redo = useUndoStore((s) => s.redo);
+  const canUndo = useUndoStore((s) => s.pastStates.length > 0);
+  const canRedo = useUndoStore((s) => s.futureStates.length > 0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalCount = frames.length;
@@ -24,64 +32,90 @@ export function Toolbar() {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
     await processImageFiles(Array.from(fileList), frames.length, addFrameWithImage);
-    // Reset so the same file(s) can be selected again
     e.target.value = "";
   };
 
   return (
-    <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border/40 bg-card/70 px-2.5">
+    <div className="flex h-7 shrink-0 items-center gap-0 border-b border-border/30 bg-card/60 px-2">
 
-      {/* ── Add frame dropdown ──────────────────────────────────────────── */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={atMax}
-            className="h-6 gap-1.5 px-2 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-40"
-          >
-            <PlusIcon />
-            Add Frame
-            <ChevronDownIcon />
-          </Button>
-        </DropdownMenuTrigger>
+      {/* ── Left: Animation label ──────────────────────────────────────── */}
+      <span className="mr-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+        {selectedAnimName}
+      </span>
 
-        <DropdownMenuContent align="start" className="w-52">
-          {/* Import from file — primary action */}
-          <DropdownMenuItem
-            className="gap-2 text-xs"
-            disabled={atMax}
-            onSelect={() => fileInputRef.current?.click()}
-          >
-            <FolderImageIcon />
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">Import image file(s)…</span>
-              <span className="text-[10px] text-muted-foreground">
-                Add frames from local images
-              </span>
-            </div>
-          </DropdownMenuItem>
+      <Separator orientation="vertical" className="mx-1 h-3.5 opacity-40" />
 
-          <DropdownMenuSeparator />
+      {/* ── Undo / Redo ───────────────────────────────────────────── */}
+      <div className="flex items-center gap-0.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              disabled={!canUndo}
+              onClick={undo}
+              className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <UndoIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Undo (Ctrl+Z)</TooltipContent>
+        </Tooltip>
 
-          {/* Add blank frame — secondary action */}
-          <DropdownMenuItem
-            className="gap-2 text-xs"
-            disabled={atMax}
-            onSelect={() => addFrame()}
-          >
-            <BlankFrameIcon />
-            <div className="flex flex-col gap-0.5">
-              <span className="font-medium">Add blank frame</span>
-              <span className="text-[10px] text-muted-foreground">
-                Transparent placeholder frame
-              </span>
-            </div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              disabled={!canRedo}
+              onClick={redo}
+              className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <RedoIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Redo (Ctrl+Shift+Z)</TooltipContent>
+        </Tooltip>
+      </div>
 
-      {/* Hidden file input — triggered by the dropdown item above */}
+      <Separator orientation="vertical" className="mx-1 h-3.5 opacity-40" />
+
+      {/* ── Center: Frame actions ──────────────────────────────────────── */}
+      <div className="flex items-center gap-0.5">
+        {/* Add blank frame */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              disabled={atMax}
+              onClick={() => addFrame()}
+              className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <PlusFrameIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Add blank frame</TooltipContent>
+        </Tooltip>
+
+        {/* Import images */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              disabled={atMax}
+              onClick={() => fileInputRef.current?.click()}
+              className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              <ImportIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Import image(s)</TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -93,14 +127,18 @@ export function Toolbar() {
         onChange={handleFileChange}
       />
 
-      {/* ── Frame count badge (right-aligned) ──────────────────────────── */}
-      <div className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/60">
-        <span className="tabular-nums font-medium text-muted-foreground">
+      {/* ── Right: Frame count ─────────────────────────────────────── */}
+      <div className="ml-auto flex items-center gap-1">
+        <span
+          className={cn(
+            "tabular-nums text-[10px] font-medium",
+            atMax ? "text-destructive" : "text-muted-foreground/70",
+          )}
+        >
           {totalCount}
         </span>
-        <span>/</span>
-        <span>{MAX_FRAMES}</span>
-        <span className="ml-0.5">frames</span>
+        <span className="text-[10px] text-muted-foreground/40">/</span>
+        <span className="text-[10px] text-muted-foreground/40">{MAX_FRAMES}</span>
       </div>
     </div>
   );
@@ -108,78 +146,40 @@ export function Toolbar() {
 
 // ── Inline icons ──────────────────────────────────────────────────────────────
 
-function PlusIcon() {
+function PlusFrameIcon() {
   return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      width="9"
-      height="9"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="opacity-60"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
-function FolderImageIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0 text-primary"
-    >
-      <path d="M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1" />
-      <circle cx="8" cy="15" r="2" />
-      <path d="m10.5 17 1.937-1.5L15 17l3-4" />
-    </svg>
-  );
-}
-
-function BlankFrameIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0 text-muted-foreground"
-    >
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect width="16" height="16" x="4" y="4" rx="2" />
       <path d="M9 12h6" />
       <path d="M12 9v6" />
+    </svg>
+  );
+}
+
+function ImportIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function UndoIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7v6h6" />
+      <path d="M3 13c0-4.97 4.03-9 9-9a9 9 0 0 1 6.36 2.64L21 9" />
+    </svg>
+  );
+}
+
+function RedoIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 7v6h-6" />
+      <path d="M21 13c0-4.97-4.03-9-9-9a9 9 0 0 0-6.36 2.64L3 9" />
     </svg>
   );
 }

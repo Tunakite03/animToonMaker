@@ -21,8 +21,14 @@ type AnimationPlayerProps = {
 export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const frames = useAnimationStore((state) => state.project.frames);
-  const loop = useAnimationStore((state) => state.project.loop);
+  const frames = useAnimationStore((state) => {
+    const anim = state.project.animations.find((a) => a.id === state.project.selectedAnimationId);
+    return anim?.frames ?? [];
+  });
+  const loop = useAnimationStore((state) => {
+    const anim = state.project.animations.find((a) => a.id === state.project.selectedAnimationId);
+    return anim?.loop ?? false;
+  });
   const isPlaying = useAnimationStore((state) => state.playback.isPlaying);
   const setCurrentFrameIndex = useAnimationStore(
     (state) => state.setCurrentFrameIndex,
@@ -239,7 +245,7 @@ export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
 
       {frames.length === 0 ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl">
-          <div className="flex flex-col items-center gap-3 rounded-xl bg-background/60 px-6 py-5 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-background/80 px-6 py-5 backdrop-blur-sm">
             <EmptyCanvasIcon />
             <div className="flex flex-col items-center gap-1 text-center">
               <p className="text-sm font-medium text-muted-foreground">

@@ -5,8 +5,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { CircleX } from "lucide-react"
 
 function Dialog({
   ...props
@@ -75,7 +74,7 @@ function DialogContent({
               className="absolute top-2 right-2"
               size="icon-sm"
             >
-              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+              <CircleX className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </Button>
           </DialogPrimitive.Close>
@@ -129,10 +128,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "text-base leading-none font-medium",
-        className
-      )}
+      className={cn("text-base leading-none font-medium", className)}
       {...props}
     />
   )

@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SavedProject } from "@/types/animation";
+import type { SavedProject, LegacySavedProject } from "@/types/animation";
+
+type StoredProject = SavedProject | LegacySavedProject;
 
 interface ProjectLibraryStore {
-  projects: SavedProject[];
+  projects: StoredProject[];
 
   saveProject: (project: SavedProject) => void;
   deleteProject: (id: string) => void;
   renameProject: (id: string, name: string) => void;
-  getProject: (id: string) => SavedProject | undefined;
+  getProject: (id: string) => StoredProject | undefined;
 }
 
 export const useProjectLibraryStore = create<ProjectLibraryStore>()(

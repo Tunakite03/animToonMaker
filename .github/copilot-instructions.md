@@ -13,7 +13,7 @@
 | Routing | React Router (HashRouter) | 7.x |
 | Styling | Tailwind CSS v4 + tw-animate-css | 4.x |
 | Components | shadcn/ui (Radix primitives) | latest |
-| Icons | HugeIcons (react + core-free-icons) | latest |
+| Icons | Lucice react icons | latest |
 | State | Zustand (persist middleware) | 5.x |
 | DnD | @dnd-kit (core + sortable) | latest |
 | HTTP | @tauri-apps/plugin-http (CORS-free) | 2.x |

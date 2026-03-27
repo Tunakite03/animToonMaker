@@ -19,14 +19,25 @@ export interface Frame {
   keypoints?: FrameKeypoint[];
 }
 
+export interface Animation {
+  id: string;
+  name: string;
+  speed: number; // FPS override for this animation (0 = use project default)
+  loop: boolean;
+  repeatCount: number;
+  repeatTo: number; // frame index to repeat to
+  pingPong: boolean;
+  frames: Frame[];
+}
+
 export interface AnimationProject {
   id: string;
   name: string;
   fps: number;
   width: number;
   height: number;
-  loop: boolean;
-  frames: Frame[];
+  animations: Animation[];
+  selectedAnimationId: string | null;
   selectedFrameId: string | null;
 }
 
@@ -41,10 +52,23 @@ export interface SavedProject {
   fps: number;
   width: number;
   height: number;
-  loop: boolean;
-  frames: Frame[];
+  animations: Animation[];
   savedAt: number; // timestamp
   thumbnailUrl: string | null; // first frame with image, or null
+  frameCount: number;
+}
+
+/** @deprecated Legacy format — used for migration only */
+export interface LegacySavedProject {
+  id: string;
+  name: string;
+  fps: number;
+  width: number;
+  height: number;
+  loop: boolean;
+  frames: Frame[];
+  savedAt: number;
+  thumbnailUrl: string | null;
   frameCount: number;
 }
 

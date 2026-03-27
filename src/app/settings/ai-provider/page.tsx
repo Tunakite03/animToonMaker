@@ -1,37 +1,47 @@
-import { useState } from "react";
-import { useSettingsStore, type AIProvider } from "@/store/settings-store";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react"
+import { useSettingsStore, type AIProvider } from "@/store/settings-store"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 const providers: {
-  id: AIProvider;
-  name: string;
-  description: string;
-  docsUrl: string;
-  keyPlaceholder: string;
-  models: { value: string; label: string }[];
-  badge?: string;
-  badgeVariant?: "secondary" | "outline" | "default" | "destructive";
+  id: AIProvider
+  name: string
+  description: string
+  docsUrl: string
+  keyPlaceholder: string
+  models: { value: string; label: string }[]
+  badge?: string
+  badgeVariant?: "secondary" | "outline" | "default" | "destructive"
 }[] = [
   {
     id: "gemini",
     name: "Google Gemini",
-    description: "Free tier with generous limits. Use 2.5 Flash for best stability, 3.x models are preview (stricter rate limits).",
+    description:
+      "Free tier with generous limits. Use 2.5 Flash for best stability, 3.x models are preview (stricter rate limits).",
     docsUrl: "https://aistudio.google.com/apikey",
     keyPlaceholder: "AIzaSyxxxxxxxxxxxxxxxxxxxxxxx",
     models: [
-      { value: "gemini-2.5-flash-image", label: "Gemini 2.5 Flash Image (Stable)" },
-      { value: "gemini-3.1-flash-image-preview", label: "Gemini 3.1 Flash Image (Preview)" },
-      { value: "gemini-3-pro-image-preview", label: "Gemini 3 Pro Image (Preview)" },
+      {
+        value: "gemini-2.5-flash-image",
+        label: "Gemini 2.5 Flash Image (Stable)",
+      },
+      {
+        value: "gemini-3.1-flash-image-preview",
+        label: "Gemini 3.1 Flash Image (Preview)",
+      },
+      {
+        value: "gemini-3-pro-image-preview",
+        label: "Gemini 3 Pro Image (Preview)",
+      },
     ],
     badge: "Free tier",
     badgeVariant: "default",
@@ -39,7 +49,8 @@ const providers: {
   {
     id: "fal",
     name: "fal.ai",
-    description: "Fast inference API — $10 free credits on signup. Supports SDXL, Flux, and more.",
+    description:
+      "Fast inference API — $10 free credits on signup. Supports SDXL, Flux, and more.",
     docsUrl: "https://fal.ai/dashboard/keys",
     keyPlaceholder: "fal_xxxxxxxxxxxxxxxx",
     models: [
@@ -53,7 +64,8 @@ const providers: {
   {
     id: "together",
     name: "Together AI",
-    description: "Run FLUX models at high speed — $5 free credits. OpenAI-compatible API.",
+    description:
+      "Run FLUX models at high speed — $5 free credits. OpenAI-compatible API.",
     docsUrl: "https://api.together.ai/settings/api-keys",
     keyPlaceholder: "xxxxxxxxxxxxxxxxxxxxxxxx",
     models: [
@@ -89,7 +101,8 @@ const providers: {
   {
     id: "stability",
     name: "Stability AI",
-    description: "Official Stable Diffusion 3.5 API. Very limited free credits.",
+    description:
+      "Official Stable Diffusion 3.5 API. Very limited free credits.",
     docsUrl: "https://platform.stability.ai/account/keys",
     keyPlaceholder: "sk-xxxxxxxxxxxxxxxxxxxxxxxx",
     models: [
@@ -105,53 +118,57 @@ const providers: {
   {
     id: "placeholder",
     name: "Placeholder (No AI)",
-    description: "Colored placeholder frames — no API key needed. Great for testing the editor.",
+    description:
+      "Colored placeholder frames — no API key needed. Great for testing the editor.",
     docsUrl: "",
     keyPlaceholder: "",
     models: [],
     badge: "Free",
     badgeVariant: "outline",
   },
-];
+]
 
 export default function AIProviderPage() {
-  const aiProvider = useSettingsStore((s) => s.aiProvider);
-  const apiKey = useSettingsStore((s) => s.apiKey);
-  const aiModel = useSettingsStore((s) => s.aiModel);
-  const apiKeys = useSettingsStore((s) => s.apiKeys);
-  const aiModels = useSettingsStore((s) => s.aiModels);
-  const setAIProvider = useSettingsStore((s) => s.setAIProvider);
-  const setApiKey = useSettingsStore((s) => s.setApiKey);
-  const setAIModel = useSettingsStore((s) => s.setAIModel);
+  const aiProvider = useSettingsStore((s) => s.aiProvider)
+  const apiKey = useSettingsStore((s) => s.apiKey)
+  const aiModel = useSettingsStore((s) => s.aiModel)
+  const apiKeys = useSettingsStore((s) => s.apiKeys)
+  const aiModels = useSettingsStore((s) => s.aiModels)
+  const setAIProvider = useSettingsStore((s) => s.setAIProvider)
+  const setApiKey = useSettingsStore((s) => s.setApiKey)
+  const setAIModel = useSettingsStore((s) => s.setAIModel)
 
-  const [showKey, setShowKey] = useState(false);
-  const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
-  const [testMessage, setTestMessage] = useState("");
+  const [showKey, setShowKey] = useState(false)
+  const [testStatus, setTestStatus] = useState<
+    "idle" | "testing" | "success" | "error"
+  >("idle")
+  const [testMessage, setTestMessage] = useState("")
 
-  const currentProvider = providers.find((p) => p.id === aiProvider) ?? providers[0];
-  const needsKey = aiProvider !== "placeholder";
+  const currentProvider =
+    providers.find((p) => p.id === aiProvider) ?? providers[0]
+  const needsKey = aiProvider !== "placeholder"
 
   const handleProviderChange = (value: string) => {
-    const newProvider = value as AIProvider;
-    setAIProvider(newProvider);
-    setShowKey(false);
-    setTestStatus("idle");
-    setTestMessage("");
+    const newProvider = value as AIProvider
+    setAIProvider(newProvider)
+    setShowKey(false)
+    setTestStatus("idle")
+    setTestMessage("")
 
     // If the provider has no stored model, set default
-    const storedModel = aiModels[newProvider];
+    const storedModel = aiModels[newProvider]
     if (!storedModel) {
-      const provider = providers.find((p) => p.id === newProvider);
+      const provider = providers.find((p) => p.id === newProvider)
       if (provider && provider.models.length > 0) {
-        setAIModel(provider.models[0].value);
+        setAIModel(provider.models[0].value)
       }
     }
-  };
+  }
 
   const handleTestConnection = async () => {
-    if (!apiKey.trim() || aiProvider === "placeholder") return;
-    setTestStatus("testing");
-    setTestMessage("");
+    if (!apiKey.trim() || aiProvider === "placeholder") return
+    setTestStatus("testing")
+    setTestMessage("")
 
     try {
       const res = await fetch("/api/generate-frame", {
@@ -165,21 +182,21 @@ export default function AIProviderPage() {
           apiKey: apiKey,
           model: aiModel || undefined,
         }),
-      });
+      })
 
       if (res.ok) {
-        setTestStatus("success");
-        setTestMessage("Connection successful! AI generation is working.");
+        setTestStatus("success")
+        setTestMessage("Connection successful! AI generation is working.")
       } else {
-        const data = await res.json().catch(() => ({}));
-        setTestStatus("error");
-        setTestMessage(data.error || `Request failed with status ${res.status}`);
+        const data = await res.json().catch(() => ({}))
+        setTestStatus("error")
+        setTestMessage(data.error || `Request failed with status ${res.status}`)
       }
     } catch {
-      setTestStatus("error");
-      setTestMessage("Network error — check your connection.");
+      setTestStatus("error")
+      setTestMessage("Network error — check your connection.")
     }
-  };
+  }
 
   return (
     <div className="space-y-8">
@@ -205,13 +222,30 @@ export default function AIProviderPage() {
                   <ProviderIcon id={provider.id} size={16} />
                   <span>{provider.name}</span>
                   {provider.badge && (
-                    <Badge variant={provider.badgeVariant ?? "secondary"} className="ml-1 text-[10px] px-1.5 py-0">
+                    <Badge
+                      variant={provider.badgeVariant ?? "secondary"}
+                      className="ml-1 px-1.5 py-0 text-[10px]"
+                    >
                       {provider.badge}
                     </Badge>
                   )}
                   {provider.id !== "placeholder" && apiKeys[provider.id] && (
-                    <span className="ml-auto text-green-500" title="API key configured">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <span
+                      className="ml-auto text-green-500"
+                      title="API key configured"
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     </span>
                   )}
                 </span>
@@ -227,7 +261,9 @@ export default function AIProviderPage() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium">{currentProvider.name}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{currentProvider.description}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {currentProvider.description}
+            </p>
             {currentProvider.docsUrl && (
               <a
                 href={currentProvider.docsUrl}
@@ -256,8 +292,8 @@ export default function AIProviderPage() {
                 type={showKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => {
-                  setApiKey(e.target.value);
-                  setTestStatus("idle");
+                  setApiKey(e.target.value)
+                  setTestStatus("idle")
                 }}
                 placeholder={currentProvider.keyPlaceholder}
                 className="h-10 pr-16 font-mono text-xs"
@@ -266,7 +302,7 @@ export default function AIProviderPage() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-1.5 top-1/2 h-7 -translate-y-1/2 text-xs text-muted-foreground"
+                className="absolute top-1/2 right-1.5 h-7 -translate-y-1/2 text-xs text-muted-foreground"
                 onClick={() => setShowKey(!showKey)}
               >
                 {showKey ? "Hide" : "Show"}
@@ -338,14 +374,17 @@ export default function AIProviderPage() {
         <div>
           <p className="text-xs font-semibold">Security</p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-            Your API key is stored in your browser&apos;s localStorage and is only sent to
-            your own Next.js server route (<code className="rounded bg-muted px-1 text-[10px]">/api/generate-frame</code>).
-            The key never leaves your machine directly.
+            Your API key is stored in your browser&apos;s localStorage and is
+            only sent to your own Next.js server route (
+            <code className="rounded bg-muted px-1 text-[10px]">
+              /api/generate-frame
+            </code>
+            ). The key never leaves your machine directly.
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /* ─── Provider Icons ─── */
@@ -354,54 +393,129 @@ function ProviderIcon({ id, size = 18 }: { id: AIProvider; size?: number }) {
   switch (id) {
     case "fal":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="m13 2 7 9h-7l3 11-7-9h7L13 2z" />
         </svg>
-      );
+      )
     case "replicate":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect width="18" height="10" x="3" y="11" rx="2" />
           <circle cx="12" cy="5" r="2" />
           <path d="M12 7v4" />
           <line x1="8" x2="8" y1="16" y2="16" />
           <line x1="16" x2="16" y1="16" y2="16" />
         </svg>
-      );
+      )
     case "openai":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v4" /><path d="m6.8 15-3.5 2" /><path d="m20.7 17-3.5-2" /><path d="M6.5 8.8 3 6.6" /><path d="m20.7 7-3.5 2" />
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 2v4" />
+          <path d="m6.8 15-3.5 2" />
+          <path d="m20.7 17-3.5-2" />
+          <path d="M6.5 8.8 3 6.6" />
+          <path d="m20.7 7-3.5 2" />
           <circle cx="12" cy="12" r="6" />
         </svg>
-      );
+      )
     case "stability":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 18h8" /><path d="M3 22h18" /><path d="M14 22a7 7 0 1 0 0-14h-1" /><path d="M9 14h2" /><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z" />
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M6 18h8" />
+          <path d="M3 22h18" />
+          <path d="M14 22a7 7 0 1 0 0-14h-1" />
+          <path d="M9 14h2" />
+          <path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z" />
         </svg>
-      );
+      )
     case "together":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 6V2H8" /><path d="m8 18-4 4V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z" />
-          <path d="M2 12h2" /><path d="M9 11v2" /><path d="M15 11v2" /><path d="M20 12h2" />
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 6V2H8" />
+          <path d="m8 18-4 4V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z" />
+          <path d="M2 12h2" />
+          <path d="M9 11v2" />
+          <path d="M15 11v2" />
+          <path d="M20 12h2" />
         </svg>
-      );
+      )
     case "gemini":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 2a4 4 0 0 0-4 4v2H6a4 4 0 0 0 0 8h2v2a4 4 0 0 0 8 0v-2h2a4 4 0 0 0 0-8h-2V6a4 4 0 0 0-4-4Z" />
         </svg>
-      );
+      )
     default:
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect width="18" height="18" x="3" y="3" rx="2" />
           <path d="M12 8v8" />
           <path d="M8 12h8" />
         </svg>
-      );
+      )
   }
 }
 
@@ -409,35 +523,76 @@ function ProviderIcon({ id, size = 18 }: { id: AIProvider; size?: number }) {
 
 function CheckIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
-  );
+  )
 }
 
 function ErrorIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0"
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="15" x2="9" y1="9" y2="15" />
       <line x1="9" x2="15" y1="9" y2="15" />
     </svg>
-  );
+  )
 }
 
 function ConnectionIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m8 20 7-13" /><path d="M5 22c-1.7-1-2-3.5-2-5 0-4 3-6 4-8s1-4-1-6" /><path d="M19 22c1.7-1 2-3.5 2-5 0-4-3-6-4-8s-1-4 1-6" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m8 20 7-13" />
+      <path d="M5 22c-1.7-1-2-3.5-2-5 0-4 3-6 4-8s1-4-1-6" />
+      <path d="M19 22c1.7-1 2-3.5 2-5 0-4-3-6-4-8s-1-4 1-6" />
     </svg>
-  );
+  )
 }
 
 function ShieldIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-muted-foreground">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mt-0.5 shrink-0 text-muted-foreground"
+    >
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
       <path d="m9 12 2 2 4-4" />
     </svg>
-  );
+  )
 }

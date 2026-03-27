@@ -14,10 +14,14 @@ const BATCH_MIN = 2;
 
 export function FramePromptPanel() {
   const selectedFrame = useAnimationStore((s) => {
-    const { frames, selectedFrameId } = s.project;
-    return frames.find((f) => f.id === selectedFrameId) ?? null;
+    const anim = s.project.animations.find((a) => a.id === s.project.selectedAnimationId);
+    const frames = anim?.frames ?? [];
+    return frames.find((f) => f.id === s.project.selectedFrameId) ?? null;
   });
-  const frames = useAnimationStore((s) => s.project.frames);
+  const frames = useAnimationStore((s) => {
+    const anim = s.project.animations.find((a) => a.id === s.project.selectedAnimationId);
+    return anim?.frames ?? [];
+  });
   const selectedFrameId = useAnimationStore((s) => s.project.selectedFrameId);
   const updateFrame = useAnimationStore((s) => s.updateFrame);
   const addFrame = useAnimationStore((s) => s.addFrame);

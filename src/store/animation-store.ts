@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import type { Frame, AnimationProject, PlaybackState, SavedProject } from "@/types/animation";
+import type {
+  Frame,
+  Animation,
+  AnimationProject,
+  PlaybackState,
+  SavedProject,
+  LegacySavedProject,
+} from "@/types/animation";
 import {
   DEFAULT_FPS,
   DEFAULT_FRAME_WIDTH,
@@ -23,9 +30,19 @@ interface AnimationStore {
   // Project actions
   setProjectName: (name: string) => void;
   setFps: (fps: number) => void;
-  setLoop: (loop: boolean) => void;
 
-  // Frame CRUD
+  // Animation CRUD
+  addAnimation: (name?: string) => string;
+  removeAnimation: (id: string) => void;
+  selectAnimation: (id: string) => void;
+  renameAnimation: (id: string, name: string) => void;
+  duplicateAnimation: (id: string) => void;
+  updateAnimationProperty: (
+    id: string,
+    patch: Partial<Omit<Animation, "id" | "frames">>,
+  ) => void;
+
+  // Frame CRUD (operates on selected animation)
   addFrame: (prompt?: string) => string;
   addFrameWithImage: (imageUrl: string, prompt?: string) => string;
   insertFrame: (
@@ -54,13 +71,17 @@ interface AnimationStore {
 
   // Project management
   newProject: () => void;
-  loadProject: (saved: SavedProject) => void;
+  loadProject: (saved: SavedProject | LegacySavedProject) => void;
   toSavedProject: () => SavedProject;
 
   // Helpers
+  getSelectedAnimation: () => Animation | null;
   getSelectedFrame: () => Frame | null;
   getFrameById: (id: string) => Frame | undefined;
+  getCurrentFrames: () => Frame[];
 }
+
+// ── Helper functions ──────────────────────────────────────────────────────────
 
 function createDefaultFrame(
   prompt = "",
@@ -75,6 +96,19 @@ function createDefaultFrame(
     isBlank: true,
     duration: Math.round(1000 / fps),
     status: "idle",
+  };
+}
+
+function createDefaultAnimation(name: string): Animation {
+  return {
+    id: nanoid(),
+    name,
+    speed: 0,
+    loop: false,
+    repeatCount: 1,
+    repeatTo: 0,
+    pingPong: false,
+    frames: [],
   };
 }
 
@@ -142,15 +176,45 @@ function getSelectedFrameAfterRemoval(
   return frames[fallbackIndex]?.id ?? null;
 }
 
+/** Map over the selected animation's frames inside the project */
+function mapSelectedAnimationFrames(
+  project: AnimationProject,
+  mapper: (frames: Frame[]) => Frame[],
+): Animation[] {
+  return project.animations.map((anim) =>
+    anim.id === project.selectedAnimationId
+      ? { ...anim, frames: mapper(anim.frames) }
+      : anim,
+  );
+}
+
+function getActiveFrames(project: AnimationProject): Frame[] {
+  const anim = project.animations.find(
+    (a) => a.id === project.selectedAnimationId,
+  );
+  return anim?.frames ?? [];
+}
+
+/** Detect legacy saved project format (has frames array at root) */
+function isLegacyProject(
+  saved: SavedProject | LegacySavedProject,
+): saved is LegacySavedProject {
+  return "loop" in saved && "frames" in saved && !("animations" in saved);
+}
+
+// ── Store ─────────────────────────────────────────────────────────────────────
+
+const defaultAnimation = createDefaultAnimation("Animation 1");
+
 export const useAnimationStore = create<AnimationStore>((set, get) => ({
   project: {
     id: nanoid(),
-    name: "Untitled Animation",
+    name: "Untitled Project",
     fps: DEFAULT_FPS,
     width: DEFAULT_FRAME_WIDTH,
     height: DEFAULT_FRAME_HEIGHT,
-    loop: true,
-    frames: [],
+    animations: [defaultAnimation],
+    selectedAnimationId: defaultAnimation.id,
     selectedFrameId: null,
   },
   playback: {
@@ -158,6 +222,8 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     currentFrameIndex: 0,
   },
   frameClipboard: null,
+
+  // ── Project actions ───────────────────────────────────────────────────────
 
   setProjectName: (name) =>
     set((s) => ({ project: { ...s.project, name } })),
@@ -169,13 +235,118 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
         project: {
           ...s.project,
           fps,
-          frames: s.project.frames.map((f) => ({ ...f, duration })),
+          animations: s.project.animations.map((anim) => ({
+            ...anim,
+            frames: anim.frames.map((f) => ({ ...f, duration })),
+          })),
         },
       };
     }),
 
-  setLoop: (loop) =>
-    set((s) => ({ project: { ...s.project, loop } })),
+  // ── Animation CRUD ────────────────────────────────────────────────────────
+
+  addAnimation: (name) => {
+    const count = get().project.animations.length;
+    const anim = createDefaultAnimation(name ?? `Animation ${count + 1}`);
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: [...s.project.animations, anim],
+        selectedAnimationId: anim.id,
+        selectedFrameId: null,
+      },
+      playback: { isPlaying: false, currentFrameIndex: 0 },
+    }));
+    return anim.id;
+  },
+
+  removeAnimation: (id) =>
+    set((s) => {
+      const animations = s.project.animations.filter((a) => a.id !== id);
+      if (animations.length === 0) {
+        const fallback = createDefaultAnimation("Animation 1");
+        return {
+          project: {
+            ...s.project,
+            animations: [fallback],
+            selectedAnimationId: fallback.id,
+            selectedFrameId: null,
+          },
+          playback: { isPlaying: false, currentFrameIndex: 0 },
+        };
+      }
+
+      const wasSelected = s.project.selectedAnimationId === id;
+      const selectedAnimationId = wasSelected
+        ? animations[0].id
+        : s.project.selectedAnimationId;
+      const selectedFrameId = wasSelected
+        ? animations[0].frames[0]?.id ?? null
+        : s.project.selectedFrameId;
+
+      return {
+        project: { ...s.project, animations, selectedAnimationId, selectedFrameId },
+        playback: { isPlaying: false, currentFrameIndex: 0 },
+      };
+    }),
+
+  selectAnimation: (id) =>
+    set((s) => {
+      const anim = s.project.animations.find((a) => a.id === id);
+      if (!anim) return s;
+      return {
+        project: {
+          ...s.project,
+          selectedAnimationId: id,
+          selectedFrameId: anim.frames[0]?.id ?? null,
+        },
+        playback: { isPlaying: false, currentFrameIndex: 0 },
+      };
+    }),
+
+  renameAnimation: (id, name) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: s.project.animations.map((a) =>
+          a.id === id ? { ...a, name } : a,
+        ),
+      },
+    })),
+
+  duplicateAnimation: (id) => {
+    const source = get().project.animations.find((a) => a.id === id);
+    if (!source) return;
+
+    const dupe: Animation = {
+      ...source,
+      id: nanoid(),
+      name: `${source.name} Copy`,
+      frames: source.frames.map(cloneFrame),
+    };
+
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: [...s.project.animations, dupe],
+        selectedAnimationId: dupe.id,
+        selectedFrameId: dupe.frames[0]?.id ?? null,
+      },
+      playback: { isPlaying: false, currentFrameIndex: 0 },
+    }));
+  },
+
+  updateAnimationProperty: (id, patch) =>
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: s.project.animations.map((a) =>
+          a.id === id ? { ...a, ...patch } : a,
+        ),
+      },
+    })),
+
+  // ── Frame CRUD (operates on selected animation) ───────────────────────────
 
   addFrame: (prompt = "") => {
     const { fps, width, height } = get().project;
@@ -183,7 +354,10 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     set((s) => ({
       project: {
         ...s.project,
-        frames: [...s.project.frames, frame],
+        animations: mapSelectedAnimationFrames(s.project, (frames) => [
+          ...frames,
+          frame,
+        ]),
         selectedFrameId: frame.id,
       },
     }));
@@ -199,7 +373,10 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     set((s) => ({
       project: {
         ...s.project,
-        frames: [...s.project.frames, frame],
+        animations: mapSelectedAnimationFrames(s.project, (frames) => [
+          ...frames,
+          frame,
+        ]),
         selectedFrameId: frame.id,
       },
     }));
@@ -210,35 +387,42 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     const { fps, width, height } = get().project;
     const frame = createDefaultFrame(prompt, fps, width, height);
 
-    set((s) => {
-      const insertIndex = resolveInsertIndex(s.project.frames, targetId, position);
-      return {
-        project: {
-          ...s.project,
-          frames: insertFrameAtIndex(s.project.frames, frame, insertIndex),
-          selectedFrameId: frame.id,
-        },
-      };
-    });
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: mapSelectedAnimationFrames(s.project, (frames) => {
+          const insertIndex = resolveInsertIndex(frames, targetId, position);
+          return insertFrameAtIndex(frames, frame, insertIndex);
+        }),
+        selectedFrameId: frame.id,
+      },
+    }));
 
     return frame.id;
   },
 
   duplicateFrame: (id) => {
-    const state = get();
-    const source = state.project.frames.find((f) => f.id === id);
+    const frames = getActiveFrames(get().project);
+    const source = frames.find((f) => f.id === id);
     if (!source) return;
 
     const dupe = cloneFrame(source);
-    const idx = state.project.frames.findIndex((f) => f.id === id);
-    const frames = insertFrameAtIndex(state.project.frames, dupe, idx + 1);
+    const idx = frames.findIndex((f) => f.id === id);
+
     set((s) => ({
-      project: { ...s.project, frames, selectedFrameId: dupe.id },
+      project: {
+        ...s.project,
+        animations: mapSelectedAnimationFrames(s.project, (frs) =>
+          insertFrameAtIndex(frs, dupe, idx + 1),
+        ),
+        selectedFrameId: dupe.id,
+      },
     }));
   },
 
   copyFrame: (id) => {
-    const source = get().project.frames.find((frame) => frame.id === id);
+    const frames = getActiveFrames(get().project);
+    const source = frames.find((frame) => frame.id === id);
     if (!source) return;
 
     set({ frameClipboard: { frame: cloneFrame(source), mode: "copy" } });
@@ -246,20 +430,25 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
 
   cutFrame: (id) =>
     set((s) => {
-      const index = s.project.frames.findIndex((frame) => frame.id === id);
+      const frames = getActiveFrames(s.project);
+      const index = frames.findIndex((frame) => frame.id === id);
       if (index === -1) return s;
 
-      const source = s.project.frames[index];
-      const frames = s.project.frames.filter((frame) => frame.id !== id);
+      const source = frames[index];
+      const remaining = frames.filter((frame) => frame.id !== id);
       const selectedFrameId = getSelectedFrameAfterRemoval(
-        frames,
+        remaining,
         id,
         s.project.selectedFrameId,
         index,
       );
 
       return {
-        project: { ...s.project, frames, selectedFrameId },
+        project: {
+          ...s.project,
+          animations: mapSelectedAnimationFrames(s.project, () => remaining),
+          selectedFrameId,
+        },
         frameClipboard: { frame: cloneFrame(source), mode: "cut" },
       };
     }),
@@ -269,16 +458,16 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     if (!clipboard) return null;
 
     const frame = cloneFrame(clipboard.frame);
-    set((s) => {
-      const insertIndex = resolveInsertIndex(s.project.frames, targetId, position);
-      return {
-        project: {
-          ...s.project,
-          frames: insertFrameAtIndex(s.project.frames, frame, insertIndex),
-          selectedFrameId: frame.id,
-        },
-      };
-    });
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: mapSelectedAnimationFrames(s.project, (frames) => {
+          const insertIndex = resolveInsertIndex(frames, targetId, position);
+          return insertFrameAtIndex(frames, frame, insertIndex);
+        }),
+        selectedFrameId: frame.id,
+      },
+    }));
 
     return frame.id;
   },
@@ -287,38 +476,52 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     set((s) => ({
       project: {
         ...s.project,
-        frames: s.project.frames.map((f) =>
-          f.id === id ? { ...f, ...patch } : f,
+        animations: mapSelectedAnimationFrames(s.project, (frames) =>
+          frames.map((f) => (f.id === id ? { ...f, ...patch } : f)),
         ),
       },
     })),
 
   removeFrame: (id) =>
     set((s) => {
-      const removedIndex = s.project.frames.findIndex((frame) => frame.id === id);
+      const frames = getActiveFrames(s.project);
+      const removedIndex = frames.findIndex((frame) => frame.id === id);
       if (removedIndex === -1) return s;
 
-      const frames = s.project.frames.filter((f) => f.id !== id);
+      const remaining = frames.filter((f) => f.id !== id);
       const selectedFrameId = getSelectedFrameAfterRemoval(
-        frames,
+        remaining,
         id,
         s.project.selectedFrameId,
         removedIndex,
       );
 
-      return { project: { ...s.project, frames, selectedFrameId } };
+      return {
+        project: {
+          ...s.project,
+          animations: mapSelectedAnimationFrames(s.project, () => remaining),
+          selectedFrameId,
+        },
+      };
     }),
 
   reorderFrames: (fromIndex, toIndex) =>
-    set((s) => {
-      const frames = [...s.project.frames];
-      const [moved] = frames.splice(fromIndex, 1);
-      frames.splice(toIndex, 0, moved);
-      return { project: { ...s.project, frames } };
-    }),
+    set((s) => ({
+      project: {
+        ...s.project,
+        animations: mapSelectedAnimationFrames(s.project, (frames) => {
+          const nextFrames = [...frames];
+          const [moved] = nextFrames.splice(fromIndex, 1);
+          nextFrames.splice(toIndex, 0, moved);
+          return nextFrames;
+        }),
+      },
+    })),
 
   selectFrame: (id) =>
     set((s) => ({ project: { ...s.project, selectedFrameId: id } })),
+
+  // ── Playback ──────────────────────────────────────────────────────────────
 
   setPlaying: (isPlaying) =>
     set((s) => ({ playback: { ...s.playback, isPlaying } })),
@@ -327,21 +530,24 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     set((s) => ({ playback: { ...s.playback, currentFrameIndex } })),
 
   generateAllFrames: () => {
-    return get().project.frames.filter(
+    return getActiveFrames(get().project).filter(
       (f) => f.status === "idle" || f.status === "error",
     );
   },
 
+  // ── Project management ────────────────────────────────────────────────────
+
   newProject: () => {
+    const anim = createDefaultAnimation("Animation 1");
     set({
       project: {
         id: nanoid(),
-        name: "Untitled Animation",
+        name: "Untitled Project",
         fps: DEFAULT_FPS,
         width: DEFAULT_FRAME_WIDTH,
         height: DEFAULT_FRAME_HEIGHT,
-        loop: true,
-        frames: [],
+        animations: [anim],
+        selectedAnimationId: anim.id,
         selectedFrameId: null,
       },
       playback: {
@@ -353,10 +559,48 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
   },
 
   loadProject: (saved) => {
-    const hydratedFrames = saved.frames.map((frame) =>
-      hydrateFrame(frame, saved.width, saved.height),
-    );
+    // Handle legacy format (single frames array)
+    if (isLegacyProject(saved)) {
+      const hydratedFrames = saved.frames.map((frame) =>
+        hydrateFrame(frame, saved.width, saved.height),
+      );
+      const anim: Animation = {
+        id: nanoid(),
+        name: "Animation 1",
+        speed: 0,
+        loop: saved.loop,
+        repeatCount: 1,
+        repeatTo: 0,
+        pingPong: false,
+        frames: hydratedFrames,
+      };
 
+      set({
+        project: {
+          id: saved.id,
+          name: saved.name,
+          fps: saved.fps,
+          width: saved.width,
+          height: saved.height,
+          animations: [anim],
+          selectedAnimationId: anim.id,
+          selectedFrameId: hydratedFrames[0]?.id ?? null,
+        },
+        playback: { isPlaying: false, currentFrameIndex: 0 },
+        frameClipboard: null,
+      });
+      return;
+    }
+
+    // New format with animations array
+    const hydratedAnimations = saved.animations.map((anim) => ({
+      ...anim,
+      frames: anim.frames.map((frame) =>
+        hydrateFrame(frame, saved.width, saved.height),
+      ),
+    }));
+
+    const firstAnim = hydratedAnimations[0];
     set({
       project: {
         id: saved.id,
@@ -364,42 +608,51 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
         fps: saved.fps,
         width: saved.width,
         height: saved.height,
-        loop: saved.loop,
-        frames: hydratedFrames,
-        selectedFrameId: hydratedFrames.length > 0 ? hydratedFrames[0].id : null,
+        animations: hydratedAnimations,
+        selectedAnimationId: firstAnim?.id ?? null,
+        selectedFrameId: firstAnim?.frames[0]?.id ?? null,
       },
-      playback: {
-        isPlaying: false,
-        currentFrameIndex: 0,
-      },
+      playback: { isPlaying: false, currentFrameIndex: 0 },
       frameClipboard: null,
     });
   },
 
   toSavedProject: () => {
     const { project } = get();
+    const allFrames = project.animations.flatMap((a) => a.frames);
     const thumbnail =
-      project.frames.find((f) => f.imageUrl && !f.isBlank)?.imageUrl ?? null;
+      allFrames.find((f) => f.imageUrl && !f.isBlank)?.imageUrl ?? null;
     return {
       id: project.id,
       name: project.name,
       fps: project.fps,
       width: project.width,
       height: project.height,
-      loop: project.loop,
-      frames: project.frames,
+      animations: project.animations,
       savedAt: Date.now(),
       thumbnailUrl: thumbnail,
-      frameCount: project.frames.length,
+      frameCount: allFrames.length,
     };
   },
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  getSelectedAnimation: () => {
+    const { animations, selectedAnimationId } = get().project;
+    return animations.find((a) => a.id === selectedAnimationId) ?? null;
+  },
+
   getSelectedFrame: () => {
-    const { frames, selectedFrameId } = get().project;
+    const { selectedFrameId } = get().project;
+    const frames = getActiveFrames(get().project);
     return frames.find((f) => f.id === selectedFrameId) ?? null;
   },
 
   getFrameById: (id) => {
-    return get().project.frames.find((f) => f.id === id);
+    return getActiveFrames(get().project).find((f) => f.id === id);
+  },
+
+  getCurrentFrames: () => {
+    return getActiveFrames(get().project);
   },
 }));
