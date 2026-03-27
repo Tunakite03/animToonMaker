@@ -36,24 +36,25 @@ export function Toolbar() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-2">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/60 px-4 py-2.5 backdrop-blur-sm">
       {/* Playback controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
           size="sm"
           variant={isPlaying ? "secondary" : "default"}
           onClick={handlePlay}
           disabled={playableCount < 2}
+          className="gap-1.5"
         >
           {isPlaying ? "⏸ Pause" : "▶ Play"}
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="ghost"
           onClick={handleStop}
           disabled={!isPlaying}
         >
-          ⏹ Stop
+          ⏹
         </Button>
       </div>
 

@@ -58,12 +58,12 @@ function SortableFrame({
       {...listeners}
       onClick={() => onSelect(frame.id)}
       className={cn(
-        "group relative flex h-[88px] w-[88px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 transition-all",
+        "group relative flex h-[88px] w-[88px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 transition-all duration-150",
         isSelected
-          ? "border-primary ring-2 ring-primary/30"
-          : "border-border hover:border-primary/50",
+          ? "border-primary shadow-sm shadow-primary/20 ring-2 ring-primary/20"
+          : "border-border/60 hover:border-primary/50 hover:shadow-sm",
         isCurrent && !isSelected && "border-accent-foreground/40",
-        isDragging && "opacity-50",
+        isDragging && "opacity-50 scale-95",
       )}
     >
       {/* Frame image or placeholder */}
@@ -144,14 +144,17 @@ export function AnimationTimeline() {
 
   if (frames.length === 0) {
     return (
-      <div className="flex h-[104px] items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
-        No frames yet. Add a frame to get started.
+      <div className="flex h-[104px] items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-lg opacity-50">🎞️</span>
+          <span>No frames yet. Add a frame to get started.</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="w-full rounded-xl border border-border bg-card p-2">
+    <ScrollArea className="w-full rounded-xl border border-border bg-card/40 p-2 backdrop-blur-sm">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

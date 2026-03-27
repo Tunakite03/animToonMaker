@@ -2,8 +2,7 @@ import { Geist_Mono, Source_Sans_3 } from "next/font/google"
 import type { Metadata } from "next"
 
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { Providers } from "./provider"
 import { cn } from "@/lib/utils"
 
 const sourceSans3 = Source_Sans_3({ subsets: ["latin"], variable: "--font-sans" })
@@ -36,9 +35,7 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>
-          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

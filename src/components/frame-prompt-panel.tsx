@@ -51,11 +51,17 @@ export function FramePromptPanel() {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Frame Editor</h3>
+        <h3 className="text-sm font-semibold tracking-tight">Frame Editor</h3>
         {selectedFrame && (
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="gap-1 text-[10px]">
+            <div className={`h-1.5 w-1.5 rounded-full ${
+              selectedFrame.status === "done" ? "bg-green-400" :
+              selectedFrame.status === "generating" ? "bg-yellow-400 animate-pulse" :
+              selectedFrame.status === "error" ? "bg-red-400" :
+              "bg-muted-foreground/40"
+            }`} />
             {selectedFrame.status}
           </Badge>
         )}

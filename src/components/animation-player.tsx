@@ -107,15 +107,21 @@ export function AnimationPlayer() {
   return (
     <div
       ref={containerRef}
-      className="flex items-center justify-center rounded-xl border border-border bg-muted/30 p-2"
+      className="relative flex flex-1 items-center justify-center rounded-xl border border-border bg-gradient-to-b from-muted/40 to-muted/20 p-3"
     >
       <canvas
         ref={canvasRef}
         width={512}
         height={512}
-        className="max-h-[420px] max-w-full rounded-lg object-contain"
+        className="max-h-[480px] max-w-full rounded-lg shadow-sm ring-1 ring-border/50"
         style={{ imageRendering: "auto" }}
       />
+      {/* Frame counter overlay */}
+      {playableFrames.length > 0 && (
+        <div className="absolute bottom-5 right-5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+          {Math.min(currentFrameIndex + 1, playableFrames.length)} / {playableFrames.length}
+        </div>
+      )}
     </div>
   );
 }

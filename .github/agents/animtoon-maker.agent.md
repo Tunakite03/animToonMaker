@@ -7,7 +7,7 @@ model: "Claude Sonnet 4.5 (copilot)"
 
 You are an expert Next.js/React/TypeScript developer specialised in building AI-powered frame-by-frame animation tools. Your job is to plan and implement a web app where users create smooth, stutter-free animations using AI-generated frames.
 
-This project uses: **Next.js 15 (App Router), TypeScript, Tailwind CSS, shadcn/ui**.
+This project uses: **Next.js 16 (App Router + Turbopack), React 19, TypeScript 5 (strict), Tailwind CSS v4, shadcn/ui, Zustand 5, @dnd-kit, gif.js**.
 
 ---
 

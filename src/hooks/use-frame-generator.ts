@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useAnimationStore } from "@/store/animation-store";
+import { useSettingsStore } from "@/store/settings-store";
 
 export function useFrameGenerator() {
   const updateFrame = useAnimationStore((s) => s.updateFrame);
@@ -16,11 +17,19 @@ export function useFrameGenerator() {
       setGeneratingIds((prev) => new Set(prev).add(frameId));
       updateFrame(frameId, { status: "generating", errorMessage: undefined });
 
+      // Read current settings
+      const { aiProvider, apiKey, aiModel } = useSettingsStore.getState();
+
       try {
         const res = await fetch("/api/generate-frame", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({
+            prompt,
+            provider: aiProvider,
+            apiKey: apiKey || undefined,
+            model: aiModel || undefined,
+          }),
           signal: controller.signal,
         });
 
