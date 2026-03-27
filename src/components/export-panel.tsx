@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useState } from "react";
 import GIF from "gif.js";
 import { useAnimationStore } from "@/store/animation-store";

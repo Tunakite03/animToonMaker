@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useMemo } from "react";
 import { useAnimationStore } from "@/store/animation-store";
 import { useImagePreloader, usePlaybackLoop } from "@/hooks/use-playback";

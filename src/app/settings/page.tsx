@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useSettingsStore } from "@/store/settings-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,7 +68,7 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <Link href="/settings/ai-provider">
+            <Link to="/settings/ai-provider">
               <Button size="sm" className="mt-4">
                 Configure AI Provider
                 <ArrowRightIcon />
@@ -83,7 +81,7 @@ export default function SettingsPage() {
       {/* Status cards */}
       <div className="grid gap-3 sm:grid-cols-3">
         {/* AI Provider card */}
-        <Link href="/settings/ai-provider" className="group">
+        <Link to="/settings/ai-provider" className="group">
           <Card className="h-full transition-all hover:border-primary/30 hover:shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -111,7 +109,7 @@ export default function SettingsPage() {
         </Link>
 
         {/* Canvas card */}
-        <Link href="/settings/canvas" className="group">
+        <Link to="/settings/canvas" className="group">
           <Card className="h-full transition-all hover:border-primary/30 hover:shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -134,7 +132,7 @@ export default function SettingsPage() {
         </Link>
 
         {/* Export card */}
-        <Link href="/settings/export" className="group">
+        <Link to="/settings/export" className="group">
           <Card className="h-full transition-all hover:border-primary/30 hover:shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -175,7 +173,7 @@ export default function SettingsPage() {
               desc: "Onion skin & timeline",
             },
           ].map((item) => (
-            <Link key={item.href} href={item.href}>
+            <Link key={item.href} to={item.href}>
               <Card className="transition-all hover:border-primary/30 hover:shadow-sm">
                 <CardContent className="flex items-center gap-3 p-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">

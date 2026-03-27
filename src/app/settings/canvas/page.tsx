@@ -1,5 +1,3 @@
-"use client";
-
 import { useSettingsStore, type CanvasQuality } from "@/store/settings-store";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";

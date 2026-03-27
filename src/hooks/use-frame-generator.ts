@@ -1,8 +1,7 @@
-"use client";
-
 import { useCallback, useRef, useState } from "react";
 import { useAnimationStore } from "@/store/animation-store";
 import { useSettingsStore } from "@/store/settings-store";
+import { generateFrame as generateFrameService } from "@/services/generate-frame";
 
 export function useFrameGenerator() {
   const updateFrame = useAnimationStore((s) => s.updateFrame);
@@ -18,27 +17,22 @@ export function useFrameGenerator() {
       updateFrame(frameId, { status: "generating", errorMessage: undefined });
 
       // Read current settings
-      const { aiProvider, apiKey, aiModel } = useSettingsStore.getState();
+      const { aiProvider, apiKey, aiModel, canvasWidth, canvasHeight } =
+        useSettingsStore.getState();
 
       try {
-        const res = await fetch("/api/generate-frame", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        const data = await generateFrameService(
+          {
             prompt,
+            width: canvasWidth,
+            height: canvasHeight,
             provider: aiProvider,
             apiKey: apiKey || undefined,
             model: aiModel || undefined,
-          }),
-          signal: controller.signal,
-        });
+          },
+          controller.signal,
+        );
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? `Generation failed (${res.status})`);
-        }
-
-        const data = await res.json();
         updateFrame(frameId, {
           imageUrl: data.imageUrl,
           status: "done",

@@ -1,5 +1,3 @@
-"use client";
-
 import { useSettingsStore } from "@/store/settings-store";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";

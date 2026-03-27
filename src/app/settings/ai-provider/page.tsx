@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useSettingsStore, type AIProvider } from "@/store/settings-store";
 import { Label } from "@/components/ui/label";

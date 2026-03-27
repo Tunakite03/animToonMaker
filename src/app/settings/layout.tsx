@@ -1,7 +1,4 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -13,19 +10,15 @@ const navItems = [
   { href: "/settings/export", label: "Export", icon: ExportIcon, description: "Format & quality" },
 ];
 
-export default function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
+export default function SettingsLayout() {
+  const { pathname } = useLocation();
 
   return (
     <div className="flex h-svh flex-col bg-background">
       {/* Top bar */}
       <header className="flex items-center gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur-sm">
         <Link
-          href="/"
+          to="/"
           className="group flex items-center gap-2 rounded-lg px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
         >
           <ArrowLeftIcon />
@@ -52,7 +45,7 @@ export default function SettingsLayout({
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  to={item.href}
                   className={cn(
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all",
                     isActive
@@ -103,7 +96,7 @@ export default function SettingsLayout({
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-2xl px-8 py-8">{children}</div>
+          <div className="mx-auto max-w-2xl px-8 py-8"><Outlet /></div>
         </main>
       </div>
     </div>

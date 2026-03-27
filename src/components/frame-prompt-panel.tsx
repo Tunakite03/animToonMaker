@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useAnimationStore } from "@/store/animation-store";
 import { useFrameGenerator } from "@/hooks/use-frame-generator";

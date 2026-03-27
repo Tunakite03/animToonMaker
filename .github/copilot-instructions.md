@@ -1,19 +1,22 @@
 # AnimToon Maker — Project Guidelines
 
-> AI-powered frame-by-frame animation editor. Users write prompts per frame, AI generates images, frames play back as smooth animation, and the result exports as GIF/WebM.
+> AI-powered frame-by-frame animation editor (desktop app). Users write prompts per frame, AI generates images, frames play back as smooth animation, and the result exports as GIF/WebM.
 
 ## Tech Stack
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Framework | Next.js (App Router, Turbopack) | 16.x |
+| Desktop Shell | Tauri v2 (Rust backend, WebView2) | 2.x |
+| Bundler | Vite | 6.x |
 | Language | TypeScript (strict mode) | 5.x |
 | UI | React | 19.x |
+| Routing | React Router (HashRouter) | 7.x |
 | Styling | Tailwind CSS v4 + tw-animate-css | 4.x |
 | Components | shadcn/ui (Radix primitives) | latest |
 | Icons | HugeIcons (react + core-free-icons) | latest |
 | State | Zustand (persist middleware) | 5.x |
 | DnD | @dnd-kit (core + sortable) | latest |
+| HTTP | @tauri-apps/plugin-http (CORS-free) | 2.x |
 | Export | gif.js (Web Worker) | 0.2.x |
 | IDs | nanoid | 5.x |
 | Package Manager | pnpm | latest |
@@ -21,12 +24,14 @@
 ## Project Structure
 
 ```
+index.html                  # Vite entry point (Google Fonts, root div)
+vite.config.ts              # Vite config with Tauri dev settings
 src/
-├── app/                    # Next.js App Router pages & API routes
-│   ├── api/generate-frame/ # POST — AI image generation endpoint
-│   ├── settings/           # Settings pages (ai-provider, canvas, editor, export, generation)
-│   ├── layout.tsx          # Root layout with ThemeProvider
-│   └── page.tsx            # Main editor page
+├── main.tsx                # React root — HashRouter + App
+├── App.tsx                 # React Router routes definition
+├── app/
+│   ├── globals.css         # Tailwind v4 + shadcn theme
+│   └── settings/           # Settings pages (ai-provider, canvas, editor, export, generation)
 ├── components/             # Reusable UI components
 │   ├── ui/                 # shadcn/ui primitives (button, dialog, input, etc.)
 │   ├── animation-player.tsx    # Canvas-based frame playback
@@ -34,6 +39,7 @@ src/
 │   ├── editor-layout.tsx       # Main editor shell
 │   ├── export-panel.tsx        # GIF/WebM export UI
 │   ├── frame-prompt-panel.tsx  # Per-frame prompt editing
+│   ├── theme-provider.tsx      # Custom theme provider (light/dark/system)
 │   └── toolbar.tsx             # Playback controls
 ├── hooks/                  # Custom React hooks
 │   ├── use-frame-generator.ts  # AI generation with abort support
@@ -41,11 +47,22 @@ src/
 ├── lib/                    # Shared utilities & constants
 │   ├── constants.ts        # FPS, dimensions, style suffix, limits
 │   └── utils.ts            # cn() helper (clsx + tailwind-merge)
+├── services/
+│   └── generate-frame.ts   # AI provider API calls (via Tauri HTTP plugin)
 ├── store/                  # Zustand stores
 │   ├── animation-store.ts  # Frames, project state, playback
+│   ├── project-library-store.ts  # Saved projects (persisted)
 │   └── settings-store.ts   # AI provider, canvas, export settings (persisted)
 ├── types/
 │   └── animation.ts        # Frame, AnimationProject, PlaybackState types
+src-tauri/
+├── Cargo.toml              # Rust dependencies (tauri, tauri-plugin-http)
+├── tauri.conf.json         # Tauri window config, CSP, build commands
+├── capabilities/
+│   └── default.json        # HTTP permissions for AI provider URLs
+├── src/
+│   ├── main.rs             # Tauri entry point
+│   └── lib.rs              # Plugin registration (opener, http)
 public/
 └── gif.worker.js           # gif.js Web Worker
 ```
@@ -55,27 +72,32 @@ public/
 - **TypeScript strict mode** — always enabled; never use `any` unless truly unavoidable
 - **Naming**: `kebab-case` files, `PascalCase` components/types, `camelCase` functions/variables, `UPPER_SNAKE_CASE` constants
 - **Imports**: use `@/*` path alias (maps to `src/`); prefer named exports for utilities, default exports for page/layout components
-- **Components**: use `"use client"` directive only when hooks, state, or browser APIs are needed — default to Server Components
+- **Components**: all components are client-side (no Server Components in Tauri/Vite)
 - **Semicolons**: always use them
 - **Formatting**: Prettier + prettier-plugin-tailwindcss for class sorting
-- **Linting**: ESLint with eslint-config-next
+- **Linting**: ESLint with typescript-eslint
 
 ## Architecture Rules
 
 ### Server vs Client Boundary
-- API routes (`src/app/api/`) handle all external API calls — **never call AI providers from the browser**
-- API keys resolve in priority: request body (from settings UI) → `.env.local` → placeholder mode
-- Client components read settings from Zustand and pass them via POST body
+- API calls go directly from the WebView using Tauri HTTP plugin — **no server-side API routes**
+- API keys are stored in Zustand settings store (persisted to localStorage)
+- AI provider logic lives in `src/services/generate-frame.ts`
+- Tauri CSP and HTTP capabilities restrict which external URLs can be accessed
 
 ### State Management (Zustand)
 - `animation-store.ts` — project state, frames CRUD, playback (no persistence)
 - `settings-store.ts` — user preferences with `persist` middleware (localStorage)
 - Access store outside React with `useStore.getState()` only in hooks/callbacks, never in render
 
-### AI Generation Pipeline
-1. User writes prompt → client calls `POST /api/generate-frame`
-2. Server appends `STYLE_SUFFIX` for visual consistency
-3. Server routes to fal.ai / Replicate / OpenAI based on resolved provider
+### AI Generation Pipeline (Client-Side via Tauri HTTP)
+- AI API calls happen client-side using `@tauri-apps/plugin-http` (CORS-free native fetch)
+- `src/services/generate-frame.ts` handles all provider routing
+- API keys are stored in Zustand settings store (localStorage)
+- `use-frame-generator` hook imports the service directly (no API route)
+1. User writes prompt → hook calls `generateFrame()` service
+2. Service appends `STYLE_SUFFIX` for visual consistency
+3. Service routes to fal.ai / Replicate / OpenAI / Stability / Together / Gemini
 4. Returns `{ imageUrl }` or falls back to SVG placeholder
 5. Frame status: `idle` → `generating` → `done` | `error`
 6. Batch generation is sequential to avoid rate limits
@@ -93,8 +115,10 @@ public/
 ## Build & Development
 
 ```bash
-pnpm dev          # Start dev server (Turbopack)
-pnpm build        # Production build
+pnpm dev          # Start Tauri dev (Vite + native window)
+pnpm dev:vite     # Start Vite dev server only (browser)
+pnpm build        # Build Tauri app (production binary)
+pnpm build:vite   # Build frontend only
 pnpm lint         # ESLint
 pnpm lint:fix     # ESLint auto-fix
 pnpm format       # Prettier format
@@ -104,18 +128,14 @@ pnpm check        # lint + typecheck + build (CI)
 
 ## Environment Variables
 
-```bash
-# .env.local (never commit)
-FAL_KEY=           # fal.ai API key
-REPLICATE_API_TOKEN=  # Replicate API token
-OPENAI_API_KEY=    # OpenAI API key
-```
+API keys are configured in the Settings UI and stored in localStorage (Zustand persist).
+No `.env` files are needed for AI provider keys.
 
 ## Critical Constraints
 
 - **Max 120 frames** per project (`MAX_FRAMES` in constants)
 - **Default canvas**: 512×512px, 12 FPS
-- **Prompt limit**: 1000 characters (sanitized server-side)
+- **Prompt limit**: 1000 characters (sanitized client-side)
 - **Frame duration** auto-recalculates when FPS changes
 - **AbortController** per frame generation — always support cancellation
 - **Onion skin** feature for animation continuity (opacity configurable)
@@ -123,7 +143,7 @@ OPENAI_API_KEY=    # OpenAI API key
 ## When Modifying This Project
 
 1. Check `src/types/animation.ts` for data shapes before changing stores or components
-2. Keep AI provider logic server-side only — never import API SDKs in client bundles
+2. Keep AI provider logic in `src/services/generate-frame.ts` — use Tauri HTTP plugin for CORS-free requests
 3. Preserve the `STYLE_SUFFIX` pattern for visual frame consistency
 4. Test playback smoothness after any change to animation-player or use-playback
 5. Run `pnpm check` before considering any change complete

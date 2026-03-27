@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useCallback } from "react";
 import { useAnimationStore } from "@/store/animation-store";
 import { useProjectLibraryStore } from "@/store/project-library-store";

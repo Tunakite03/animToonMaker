@@ -1,5 +1,3 @@
-"use client";
-
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import type { Frame, FrameKeypoint, AnimationProject, PlaybackState, SavedProject } from "@/types/animation";

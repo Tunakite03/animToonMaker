@@ -1,0 +1,20 @@
+[package]
+name = "animtoonmaker"
+version = "0.0.1"
+description = "AI-powered frame-by-frame animation editor"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "animtoonmaker_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-http = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

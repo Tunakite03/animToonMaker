@@ -34,3 +34,8 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# build 
+./src-tauri/target
+./src-tauri/dist

@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { CanvasEditor } from "@/components/canvas-editor";
 import { AnimationTimeline } from "@/components/animation-timeline";
 import { FramePromptPanel } from "@/components/frame-prompt-panel";
@@ -92,7 +90,7 @@ export function EditorLayout() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon-sm" asChild>
-                <Link href="/settings">
+                <Link to="/settings">
                   <SettingsIcon />
                   <span className="sr-only">Settings</span>
                 </Link>
