@@ -1,8 +1,12 @@
 ---
-title: Import from Design System Folder
+title: "Import from Design System Folder"
 impact: LOW
-impactDescription: enables global changes and easy refactoring
-tags: imports, architecture, design-system
+impactDescription: "enables global changes and easy refactoring"
+tags: "imports, architecture, design-system, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Import from Design System Folder

@@ -1,8 +1,12 @@
 ---
-title: Use Pressable Instead of Touchable Components
+title: "Use Pressable Instead of Touchable Components"
 impact: LOW
-impactDescription: modern API, more flexible
-tags: ui, pressable, touchable, gestures
+impactDescription: "modern API, more flexible"
+tags: "ui, pressable, touchable, gestures, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Pressable Instead of Touchable Components

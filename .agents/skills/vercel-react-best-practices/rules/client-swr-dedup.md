@@ -1,8 +1,12 @@
 ---
-title: Use SWR for Automatic Deduplication
+title: "Use SWR for Automatic Deduplication"
 impact: MEDIUM-HIGH
-impactDescription: automatic deduplication
-tags: client, swr, deduplication, data-fetching
+impactDescription: "automatic deduplication"
+tags: "client, swr, deduplication, data-fetching"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use SWR for Automatic Deduplication

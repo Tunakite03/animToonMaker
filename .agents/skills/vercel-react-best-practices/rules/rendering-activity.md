@@ -1,8 +1,12 @@
 ---
-title: Use Activity Component for Show/Hide
+title: "Use Activity Component for Show/Hide"
 impact: MEDIUM
-impactDescription: preserves state/DOM
-tags: rendering, activity, visibility, state-preservation
+impactDescription: "preserves state/DOM"
+tags: "rendering, activity, visibility, state-preservation"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Activity Component for Show/Hide

@@ -1,8 +1,12 @@
 ---
-title: Store Event Handlers in Refs
+title: "Store Event Handlers in Refs"
 impact: LOW
-impactDescription: stable subscriptions
-tags: advanced, hooks, refs, event-handlers, optimization
+impactDescription: "stable subscriptions"
+tags: "advanced, hooks, refs, event-handlers, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 19
+incompatibleWith: []
 ---
 
 ## Store Event Handlers in Refs

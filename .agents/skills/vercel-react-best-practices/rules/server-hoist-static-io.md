@@ -1,8 +1,12 @@
 ---
-title: Hoist Static I/O to Module Level
+title: "Hoist Static I/O to Module Level"
 impact: HIGH
-impactDescription: avoids repeated file/network I/O per request
-tags: server, io, performance, next.js, route-handlers, og-image
+impactDescription: "avoids repeated file/network I/O per request"
+tags: "server, io, performance, next.js, route-handlers, og-image, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Hoist Static I/O to Module Level

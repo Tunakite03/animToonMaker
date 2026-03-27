@@ -1,8 +1,12 @@
 ---
-title: Destructure Functions Early in Render (React Compiler)
+title: "Destructure Functions Early in Render (React Compiler)"
 impact: HIGH
-impactDescription: stable references, fewer re-renders
-tags: rerender, hooks, performance, react-compiler
+impactDescription: "stable references, fewer re-renders"
+tags: "rerender, hooks, performance, react-compiler, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Destructure Functions Early in Render

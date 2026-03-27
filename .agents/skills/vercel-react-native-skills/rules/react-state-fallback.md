@@ -1,8 +1,12 @@
 ---
-title: Use fallback state instead of initialState
+title: "Use fallback state instead of initialState"
 impact: MEDIUM
-impactDescription: reactive fallbacks without syncing
-tags: state, hooks, derived-state, props, initialState
+impactDescription: "reactive fallbacks without syncing"
+tags: "state, hooks, derived-state, props, initialState, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use fallback state instead of initialState

@@ -1,8 +1,12 @@
 ---
-title: Use Compressed Images in Lists
+title: "Use Compressed Images in Lists"
 impact: HIGH
-impactDescription: faster load times, less memory
-tags: lists, images, performance, optimization
+impactDescription: "faster load times, less memory"
+tags: "lists, images, performance, optimization, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Compressed Images in Lists

@@ -1,44 +1,82 @@
-import { useCallback, useEffect, useRef, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAnimationStore } from "@/store/animation-store";
+import { useSettingsStore } from "@/store/settings-store";
 import { useImagePreloader, usePlaybackLoop } from "@/hooks/use-playback";
 import { CANVAS_BG } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-export function AnimationPlayer({ children }: { children?: React.ReactNode }) {
+const GRID_BACKGROUND = {
+  backgroundImage: `
+    linear-gradient(to right, rgba(255,255,255,0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.12) 1px, transparent 1px)
+  `,
+  backgroundSize: "32px 32px",
+};
+
+type AnimationPlayerProps = {
+  children?: React.ReactNode;
+  zoom?: number;
+};
+
+export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const frames = useAnimationStore((s) => s.project.frames);
-  const loop = useAnimationStore((s) => s.project.loop);
-  const isPlaying = useAnimationStore((s) => s.playback.isPlaying);
-  const setCurrentFrameIndex = useAnimationStore((s) => s.setCurrentFrameIndex);
-  const currentFrameIndex = useAnimationStore((s) => s.playback.currentFrameIndex);
-  const selectedFrameId = useAnimationStore((s) => s.project.selectedFrameId);
+  const frames = useAnimationStore((state) => state.project.frames);
+  const loop = useAnimationStore((state) => state.project.loop);
+  const isPlaying = useAnimationStore((state) => state.playback.isPlaying);
+  const setCurrentFrameIndex = useAnimationStore(
+    (state) => state.setCurrentFrameIndex,
+  );
+  const setPlaying = useAnimationStore((state) => state.setPlaying);
+  const currentFrameIndex = useAnimationStore(
+    (state) => state.playback.currentFrameIndex,
+  );
+  const selectedFrameId = useAnimationStore(
+    (state) => state.project.selectedFrameId,
+  );
+  const selectFrame = useAnimationStore((state) => state.selectFrame);
+
+  const canvasWidth = useSettingsStore((state) => state.canvasWidth);
+  const canvasHeight = useSettingsStore((state) => state.canvasHeight);
+  const canvasQuality = useSettingsStore((state) => state.canvasQuality);
+  const showGrid = useSettingsStore((state) => state.showGrid);
 
   const { preload, getImage } = useImagePreloader();
 
-  // Playable frames only (those with images)
   const playableFrames = useMemo(
-    () => frames.filter((f) => f.imageUrl),
+    () => frames.filter((frame) => frame.imageUrl),
     [frames],
   );
+  const selectedFrame = useMemo(
+    () => frames.find((frame) => frame.id === selectedFrameId) ?? null,
+    [frames, selectedFrameId],
+  );
 
-  // Preload images whenever frames change
   useEffect(() => {
     const urls = playableFrames
-      .map((f) => f.imageUrl)
-      .filter((u): u is string => !!u);
+      .map((frame) => frame.imageUrl)
+      .filter((url): url is string => Boolean(url));
+
     if (urls.length > 0) {
-      preload(urls);
+      void preload(urls);
     }
   }, [playableFrames, preload]);
 
-  // Draw a frame to the canvas
   const drawFrame = useCallback(
     (index: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
+
+      ctx.imageSmoothingEnabled = canvasQuality !== "low";
+      ctx.imageSmoothingQuality =
+        canvasQuality === "high"
+          ? "high"
+          : canvasQuality === "medium"
+            ? "medium"
+            : "low";
 
       const frame = playableFrames[index];
       if (!frame?.imageUrl) {
@@ -47,94 +85,214 @@ export function AnimationPlayer({ children }: { children?: React.ReactNode }) {
         return;
       }
 
-      const img = getImage(frame.imageUrl);
-      if (img) {
+      const drawImage = (image: CanvasImageSource) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      } else {
-        // Image not cached yet, try drawing anyway
-        const tempImg = new Image();
-        tempImg.src = frame.imageUrl;
-        tempImg.onload = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
-        };
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      };
+
+      const cachedImage = getImage(frame.imageUrl);
+      if (cachedImage) {
+        drawImage(cachedImage);
+        return;
       }
+
+      const tempImage = new Image();
+      tempImage.onload = () => drawImage(tempImage);
+      tempImage.src = frame.imageUrl;
     },
-    [playableFrames, getImage],
+    [canvasQuality, getImage, playableFrames],
   );
 
-  // Playback loop callback
+  const playbackStartIndex = useMemo(() => {
+    if (playableFrames.length === 0) return 0;
+
+    if (selectedFrameId) {
+      const selectedIdx = playableFrames.findIndex(
+        (frame) => frame.id === selectedFrameId,
+      );
+      if (selectedIdx >= 0) return selectedIdx;
+    }
+
+    if (currentFrameIndex >= 0 && currentFrameIndex < playableFrames.length) {
+      return currentFrameIndex;
+    }
+
+    return 0;
+  }, [currentFrameIndex, playableFrames, selectedFrameId]);
+
   const onTick = useCallback(
     (frameIndex: number) => {
       setCurrentFrameIndex(frameIndex);
+
+      const currentFrame = playableFrames[frameIndex];
+      if (currentFrame) {
+        selectFrame(currentFrame.id);
+      }
+
       drawFrame(frameIndex);
     },
-    [setCurrentFrameIndex, drawFrame],
+    [drawFrame, playableFrames, selectFrame, setCurrentFrameIndex],
   );
 
   usePlaybackLoop(onTick, {
     isPlaying,
     frames: playableFrames,
     loop,
+    onStop: () => setPlaying(false),
+    startIndex: playbackStartIndex,
   });
 
-  // Draw selected or current frame when not playing
   useEffect(() => {
-    if (!isPlaying) {
-      if (selectedFrameId) {
-        const selectedIdx = playableFrames.findIndex(
-          (f) => f.id === selectedFrameId,
-        );
-        if (selectedIdx >= 0) {
-          drawFrame(selectedIdx);
-          return;
-        }
-      }
-      if (playableFrames.length > 0) {
-        const idx = Math.min(currentFrameIndex, playableFrames.length - 1);
-        drawFrame(idx);
-      }
-    }
-  }, [isPlaying, selectedFrameId, currentFrameIndex, playableFrames, drawFrame]);
+    if (isPlaying) return;
 
-  // Draw empty state
-  useEffect(() => {
-    if (playableFrames.length === 0) {
+    if (selectedFrame && !selectedFrame.imageUrl) {
       const canvas = canvasRef.current;
       if (!canvas) return;
+
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
+
       ctx.fillStyle = CANVAS_BG;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.font = "16px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Add frames to start", canvas.width / 2, canvas.height / 2);
+      return;
     }
-  }, [playableFrames.length]);
+
+    if (selectedFrameId) {
+      const selectedIdx = playableFrames.findIndex(
+        (frame) => frame.id === selectedFrameId,
+      );
+      if (selectedIdx >= 0) {
+        drawFrame(selectedIdx);
+        return;
+      }
+    }
+
+    if (playableFrames.length > 0) {
+      const index = Math.min(currentFrameIndex, playableFrames.length - 1);
+      drawFrame(index);
+    }
+  }, [
+    currentFrameIndex,
+    drawFrame,
+    isPlaying,
+    playableFrames,
+    selectedFrame,
+    selectedFrameId,
+  ]);
+
+  useEffect(() => {
+    if (playableFrames.length > 0) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = CANVAS_BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [canvasHeight, canvasWidth, playableFrames.length]);
+
+  const currentDisplay = Math.min(
+    currentFrameIndex + 1,
+    Math.max(1, playableFrames.length),
+  );
+  const displayWidth = Math.max(1, Math.round(canvasWidth * zoom));
+  const displayHeight = Math.max(1, Math.round(canvasHeight * zoom));
 
   return (
     <div
-      ref={containerRef}
-      className="relative flex flex-1 items-center justify-center rounded-xl border border-border bg-gradient-to-b from-muted/40 to-muted/20 p-3"
+      className={cn(
+        "relative flex flex-1 items-center justify-center rounded-xl border border-border/40 p-3",
+        "bg-checker shadow-[inset_0_1px_3px_rgba(0,0,0,0.12)]",
+      )}
     >
-      <div className="relative inline-flex">
+      <div
+        className="relative inline-flex"
+        style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
+      >
+        {isPlaying ? (
+          <div className="absolute -inset-px rounded-lg bg-primary/20 blur-sm" />
+        ) : null}
+
         <canvas
           ref={canvasRef}
-          width={512}
-          height={512}
-          className="block max-h-[480px] max-w-full rounded-lg shadow-sm ring-1 ring-border/50"
-          style={{ imageRendering: "auto" }}
+          width={canvasWidth}
+          height={canvasHeight}
+          className={cn(
+            "relative block h-full w-full rounded-lg text-white",
+            "shadow-[0_4px_24px_rgba(0,0,0,0.28),0_1px_4px_rgba(0,0,0,0.18)] ring-1",
+            isPlaying ? "ring-primary/40" : "ring-border/60",
+          )}
         />
+
+        {showGrid ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-lg"
+            style={GRID_BACKGROUND}
+          />
+        ) : null}
+
         {children}
       </div>
-      {/* Frame counter overlay */}
-      {playableFrames.length > 0 && (
-        <div className="absolute bottom-5 right-5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-          {Math.min(currentFrameIndex + 1, playableFrames.length)} / {playableFrames.length}
+
+      {frames.length === 0 ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-background/60 px-6 py-5 backdrop-blur-sm">
+            <EmptyCanvasIcon />
+            <div className="flex flex-col items-center gap-1 text-center">
+              <p className="text-sm font-medium text-muted-foreground">
+                No frames yet
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                Add frames and write prompts to generate animation
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      ) : null}
+
+      {playableFrames.length > 0 ? (
+        <div
+          className={cn(
+            "absolute bottom-4 right-4 flex items-center gap-1.5 rounded-md border border-border/30",
+            "bg-background/75 px-2 py-1 shadow-sm backdrop-blur-md",
+            isPlaying && "border-primary/30",
+          )}
+        >
+          {isPlaying ? (
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+          ) : null}
+          <span className="tabular-nums text-[11px] font-semibold text-foreground/75">
+            {currentDisplay}
+          </span>
+          <span className="text-[10px] text-muted-foreground/50">/</span>
+          <span className="tabular-nums text-[11px] text-muted-foreground/75">
+            {playableFrames.length}
+          </span>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function EmptyCanvasIcon() {
+  return (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-muted-foreground/30"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </svg>
   );
 }

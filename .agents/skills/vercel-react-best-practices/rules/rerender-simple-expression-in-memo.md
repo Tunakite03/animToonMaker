@@ -1,8 +1,12 @@
 ---
-title: Do not wrap a simple expression with a primitive result type in useMemo
+title: "Do not wrap a simple expression with a primitive result type in useMemo"
 impact: LOW-MEDIUM
-impactDescription: wasted computation on every render
-tags: rerender, useMemo, optimization
+impactDescription: "wasted computation on every render"
+tags: "rerender, useMemo, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Do not wrap a simple expression with a primitive result type in useMemo

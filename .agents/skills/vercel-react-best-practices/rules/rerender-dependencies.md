@@ -1,8 +1,12 @@
 ---
-title: Narrow Effect Dependencies
+title: "Narrow Effect Dependencies"
 impact: LOW
-impactDescription: minimizes effect re-runs
-tags: rerender, useEffect, dependencies, optimization
+impactDescription: "minimizes effect re-runs"
+tags: "rerender, useEffect, dependencies, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Narrow Effect Dependencies

@@ -1,8 +1,12 @@
 ---
-title: Hoist Static JSX Elements
+title: "Hoist Static JSX Elements"
 impact: LOW
-impactDescription: avoids re-creation
-tags: rendering, jsx, static, optimization
+impactDescription: "avoids re-creation"
+tags: "rendering, jsx, static, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Hoist Static JSX Elements

@@ -374,8 +374,19 @@ function generatePlaceholder(
     </text>
   </svg>`;
 
-  const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+  const dataUrl = `data:image/svg+xml;base64,${encodeUtf8ToBase64(svg)}`;
   return { imageUrl: dataUrl };
+}
+
+function encodeUtf8ToBase64(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
 }
 
 function escapeXml(s: string): string {

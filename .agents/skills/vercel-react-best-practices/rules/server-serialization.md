@@ -1,8 +1,12 @@
 ---
-title: Minimize Serialization at RSC Boundaries
+title: "Minimize Serialization at RSC Boundaries"
 impact: HIGH
-impactDescription: reduces data transfer size
-tags: server, rsc, serialization, props
+impactDescription: "reduces data transfer size"
+tags: "server, rsc, serialization, props, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Minimize Serialization at RSC Boundaries

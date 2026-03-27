@@ -1,8 +1,12 @@
 ---
-title: Dependency-Based Parallelization
+title: "Dependency-Based Parallelization"
 impact: CRITICAL
-impactDescription: 2-10× improvement
-tags: async, parallelization, dependencies, better-all
+impactDescription: "2-10× improvement"
+tags: "async, parallelization, dependencies, better-all"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Dependency-Based Parallelization

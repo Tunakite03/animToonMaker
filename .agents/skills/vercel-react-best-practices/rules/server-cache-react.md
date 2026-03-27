@@ -1,8 +1,12 @@
 ---
-title: Per-Request Deduplication with React.cache()
+title: "Per-Request Deduplication with React.cache()"
 impact: MEDIUM
-impactDescription: deduplicates within request
-tags: server, cache, react-cache, deduplication
+impactDescription: "deduplicates within request"
+tags: "server, cache, react-cache, deduplication, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Per-Request Deduplication with React.cache()

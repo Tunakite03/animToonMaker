@@ -1,8 +1,12 @@
 ---
-title: Use after() for Non-Blocking Operations
+title: "Use after() for Non-Blocking Operations"
 impact: MEDIUM
-impactDescription: faster response times
-tags: server, async, logging, analytics, side-effects
+impactDescription: "faster response times"
+tags: "server, async, logging, analytics, side-effects, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Use after() for Non-Blocking Operations

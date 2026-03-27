@@ -45,6 +45,7 @@ dependencies = [
 name = "animtoonmaker"
 version = "0.0.1"
 dependencies = [
+ "base64 0.22.1",
  "serde",
  "serde_json",
  "tauri",

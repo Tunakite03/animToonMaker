@@ -1,42 +1,46 @@
 ---
-title: React 19 API Changes
+title: "React 19 API Changes"
 impact: MEDIUM
-impactDescription: cleaner component definitions and context usage
-tags: react19, refs, context, hooks
+impactDescription: "cleaner component definitions and context usage"
+tags: "react19, refs, context, hooks, composition"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 19
+incompatibleWith: ["react<19"]
 ---
 
 ## React 19 API Changes
 
 > **⚠️ React 19+ only.** Skip this if you're on React 18 or earlier.
 
-In React 19, `ref` is now a regular prop (no `forwardRef` wrapper needed), and `use()` replaces `useContext()`.
+In React 19, function components can accept `ref` as a normal prop, which often removes the need for `forwardRef` in new code. `forwardRef` still works and remains useful for backward compatibility.
 
-**Incorrect (forwardRef in React 19):**
+`use()` can read context values, but it does not remove support for `useContext()`. Use whichever is clearer for your team conventions.
+
+**Compatible, but often unnecessary in new React 19 code:**
 
 ```tsx
-const ComposerInput = forwardRef<TextInput, Props>((props, ref) => {
-  return <TextInput ref={ref} {...props} />
+const SearchInput = forwardRef<HTMLInputElement, Props>((props, ref) => {
+  return <input ref={ref} {...props} />
 })
 ```
 
-**Correct (ref as a regular prop):**
+**React 19 style (ref as a regular prop):**
 
 ```tsx
-function ComposerInput({ ref, ...props }: Props & { ref?: React.Ref<TextInput> }) {
-  return <TextInput ref={ref} {...props} />
+function SearchInput({
+  ref,
+  ...props
+}: Props & { ref?: React.Ref<HTMLInputElement> }) {
+  return <input ref={ref} {...props} />
 }
 ```
 
-**Incorrect (useContext in React 19):**
+**Both are valid in React 19:**
 
 ```tsx
-const value = useContext(MyContext)
-```
-
-**Correct (use instead of useContext):**
-
-```tsx
-const value = use(MyContext)
+const valueA = useContext(MyContext)
+const valueB = use(MyContext)
 ```
 
 `use()` can also be called conditionally, unlike `useContext()`.

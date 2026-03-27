@@ -1,8 +1,12 @@
 ---
-title: Load fonts natively at build time
+title: "Load fonts natively at build time"
 impact: LOW
-impactDescription: fonts available at launch, no async loading
-tags: fonts, expo, performance, config-plugin
+impactDescription: "fonts available at launch, no async loading"
+tags: "fonts, expo, performance, config-plugin, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Expo Config Plugin for Font Loading

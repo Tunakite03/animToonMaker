@@ -1,8 +1,12 @@
 ---
-title: Use expo-image for Optimized Images
+title: "Use expo-image for Optimized Images"
 impact: HIGH
-impactDescription: memory efficiency, caching, blurhash placeholders, progressive loading
-tags: images, performance, expo-image, ui
+impactDescription: "memory efficiency, caching, blurhash placeholders, progressive loading"
+tags: "images, performance, expo-image, ui, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use expo-image for Optimized Images

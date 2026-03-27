@@ -1,8 +1,12 @@
 ---
-title: Hoist Intl Formatter Creation
+title: "Hoist Intl Formatter Creation"
 impact: LOW-MEDIUM
-impactDescription: avoids expensive object recreation
-tags: javascript, intl, optimization, memoization
+impactDescription: "avoids expensive object recreation"
+tags: "javascript, intl, optimization, memoization, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Hoist Intl Formatter Creation

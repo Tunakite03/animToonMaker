@@ -1,8 +1,12 @@
 ---
-title: Subscribe to Derived State
+title: "Subscribe to Derived State"
 impact: MEDIUM
-impactDescription: reduces re-render frequency
-tags: rerender, derived-state, media-query, optimization
+impactDescription: "reduces re-render frequency"
+tags: "rerender, derived-state, media-query, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Subscribe to Derived State

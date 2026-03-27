@@ -1,8 +1,12 @@
 ---
-title: Calculate Derived State During Rendering
+title: "Calculate Derived State During Rendering"
 impact: MEDIUM
-impactDescription: avoids redundant renders and state drift
-tags: rerender, derived-state, useEffect, state
+impactDescription: "avoids redundant renders and state drift"
+tags: "rerender, derived-state, useEffect, state"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Calculate Derived State During Rendering

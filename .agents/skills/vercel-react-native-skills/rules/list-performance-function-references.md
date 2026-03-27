@@ -1,8 +1,12 @@
 ---
-title: Optimize List Performance with Stable Object References
+title: "Optimize List Performance with Stable Object References"
 impact: CRITICAL
-impactDescription: virtualization relies on reference stability
-tags: lists, performance, flatlist, virtualization
+impactDescription: "virtualization relies on reference stability"
+tags: "lists, performance, flatlist, virtualization, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Optimize List Performance with Stable Object References

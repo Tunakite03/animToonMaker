@@ -1,8 +1,12 @@
 ---
-title: Use Item Types for Heterogeneous Lists
+title: "Use Item Types for Heterogeneous Lists"
 impact: HIGH
-impactDescription: efficient recycling, less layout thrashing
-tags: list, performance, recycling, heterogeneous, LegendList
+impactDescription: "efficient recycling, less layout thrashing"
+tags: "list, performance, recycling, heterogeneous, LegendList, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Item Types for Heterogeneous Lists

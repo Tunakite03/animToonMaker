@@ -1,8 +1,12 @@
 ---
-title: CSS content-visibility for Long Lists
+title: "CSS content-visibility for Long Lists"
 impact: HIGH
-impactDescription: faster initial render
-tags: rendering, css, content-visibility, long-lists
+impactDescription: "faster initial render"
+tags: "rendering, css, content-visibility, long-lists"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## CSS content-visibility for Long Lists

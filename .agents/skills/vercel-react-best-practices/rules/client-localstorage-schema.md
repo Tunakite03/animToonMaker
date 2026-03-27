@@ -1,8 +1,12 @@
 ---
-title: Version and Minimize localStorage Data
+title: "Version and Minimize localStorage Data"
 impact: MEDIUM
-impactDescription: prevents schema conflicts, reduces storage size
-tags: client, localStorage, storage, versioning, data-minimization
+impactDescription: "prevents schema conflicts, reduces storage size"
+tags: "client, localStorage, storage, versioning, data-minimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Version and Minimize localStorage Data

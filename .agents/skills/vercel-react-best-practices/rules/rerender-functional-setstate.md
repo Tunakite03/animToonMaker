@@ -1,8 +1,12 @@
 ---
-title: Use Functional setState Updates
+title: "Use Functional setState Updates"
 impact: MEDIUM
-impactDescription: prevents stale closures and unnecessary callback recreations
-tags: react, hooks, useState, useCallback, callbacks, closures
+impactDescription: "prevents stale closures and unnecessary callback recreations"
+tags: "react, hooks, useState, useCallback, callbacks, closures"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Functional setState Updates

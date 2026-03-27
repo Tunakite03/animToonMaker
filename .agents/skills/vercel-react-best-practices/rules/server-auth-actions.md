@@ -1,8 +1,12 @@
 ---
-title: Authenticate Server Actions Like API Routes
+title: "Authenticate Server Actions Like API Routes"
 impact: CRITICAL
-impactDescription: prevents unauthorized access to server mutations
-tags: server, server-actions, authentication, security, authorization
+impactDescription: "prevents unauthorized access to server mutations"
+tags: "server, server-actions, authentication, security, authorization, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Authenticate Server Actions Like API Routes

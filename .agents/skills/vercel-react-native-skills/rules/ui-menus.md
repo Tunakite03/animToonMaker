@@ -1,8 +1,12 @@
 ---
-title: Use Native Menus for Dropdowns and Context Menus
+title: "Use Native Menus for Dropdowns and Context Menus"
 impact: HIGH
-impactDescription: native accessibility, platform-consistent UX
-tags: user-interface, menus, context-menus, zeego, accessibility
+impactDescription: "native accessibility, platform-consistent UX"
+tags: "user-interface, menus, context-menus, zeego, accessibility, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Native Menus for Dropdowns and Context Menus

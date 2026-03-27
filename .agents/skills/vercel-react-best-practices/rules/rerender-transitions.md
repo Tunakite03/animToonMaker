@@ -1,8 +1,12 @@
 ---
-title: Use Transitions for Non-Urgent Updates
+title: "Use Transitions for Non-Urgent Updates"
 impact: MEDIUM
-impactDescription: maintains UI responsiveness
-tags: rerender, transitions, startTransition, performance
+impactDescription: "maintains UI responsiveness"
+tags: "rerender, transitions, startTransition, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Transitions for Non-Urgent Updates

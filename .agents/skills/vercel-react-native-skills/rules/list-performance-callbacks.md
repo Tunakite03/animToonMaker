@@ -1,13 +1,17 @@
 ---
-title: Hoist callbacks to the root of lists
+title: "Hoist callbacks to the root of lists"
 impact: MEDIUM
-impactDescription: Fewer re-renders and faster lists
-tags: tag1, tag2
+impactDescription: "Fewer re-renders and faster lists"
+tags: react-native
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
-## List performance callbacks
+## Hoist Callbacks to the Root of Lists
 
-**Impact: HIGH (Fewer re-renders and faster lists)**
+**Impact: MEDIUM (Fewer re-renders and faster lists)**
 
 When passing callback functions to list items, create a single instance of the
 callback at the root of the list. Items should then call it with a unique
@@ -30,15 +34,22 @@ return (
 **Correct (a single function instance passed to each item):**
 
 ```typescript
-const onPress = useCallback(() => handlePress(item.id), [handlePress, item.id])
+const onItemPress = useCallback(
+  (id: string) => {
+    handlePress(id)
+  },
+  [handlePress]
+)
 
 return (
   <LegendList
     renderItem={({ item }) => (
-      <Item key={item.id} item={item} onPress={onPress} />
+      <Item key={item.id} item={item} onPress={onItemPress} />
     )}
   />
 )
 ```
 
-Reference: [Link to documentation or resource](https://example.com)
+The callback instance is stable at the list root. Each item passes its own `id` when pressed.
+
+Reference: [Optimizing FlatList Configuration](https://reactnative.dev/docs/optimizing-flatlist-configuration)

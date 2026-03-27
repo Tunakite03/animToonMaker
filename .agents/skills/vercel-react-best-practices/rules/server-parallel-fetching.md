@@ -1,8 +1,12 @@
 ---
-title: Parallel Data Fetching with Component Composition
+title: "Parallel Data Fetching with Component Composition"
 impact: CRITICAL
-impactDescription: eliminates server-side waterfalls
-tags: server, rsc, parallel-fetching, composition
+impactDescription: "eliminates server-side waterfalls"
+tags: "server, rsc, parallel-fetching, composition, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Parallel Data Fetching with Component Composition

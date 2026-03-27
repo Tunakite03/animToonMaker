@@ -1,8 +1,12 @@
 ---
-title: Decouple State Management from UI
+title: "Decouple State Management from UI"
 impact: MEDIUM
-impactDescription: enables swapping state implementations without changing UI
-tags: composition, state, architecture
+impactDescription: "enables swapping state implementations without changing UI"
+tags: "composition, state, architecture"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Decouple State Management from UI

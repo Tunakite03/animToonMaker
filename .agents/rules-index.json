@@ -1,0 +1,2669 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-03-27T12:12:18.322Z",
+  "projectContext": {
+    "hasNext": false,
+    "hasReactNative": false,
+    "hasVite": true,
+    "hasTauri": true
+  },
+  "summary": {
+    "totalRules": 110,
+    "enabledRules": 62,
+    "nextSpecificRules": 12,
+    "nativeRules": 36
+  },
+  "rules": [
+    {
+      "id": "vercel-composition-patterns/architecture-avoid-boolean-props",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/architecture-avoid-boolean-props.md",
+      "title": "Avoid Boolean Prop Proliferation",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "composition",
+        "props",
+        "architecture"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/async-api-routes",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/async-api-routes.md",
+      "title": "Prevent Waterfall Chains in API Routes",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "api-routes",
+        "server-actions",
+        "waterfalls",
+        "parallelization",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/async-dependencies",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/async-dependencies.md",
+      "title": "Dependency-Based Parallelization",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "async",
+        "parallelization",
+        "dependencies",
+        "better-all"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/async-parallel",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/async-parallel.md",
+      "title": "Promise.all() for Independent Operations",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "async",
+        "parallelization",
+        "promises",
+        "waterfalls"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/bundle-barrel-imports",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/bundle-barrel-imports.md",
+      "title": "Avoid Barrel File Imports",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "bundle",
+        "imports",
+        "tree-shaking",
+        "barrel-files",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/bundle-dynamic-imports",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/bundle-dynamic-imports.md",
+      "title": "Dynamic Imports for Heavy Components",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "bundle",
+        "dynamic-import",
+        "code-splitting",
+        "next-dynamic",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-auth-actions",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-auth-actions.md",
+      "title": "Authenticate Server Actions Like API Routes",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "server",
+        "server-actions",
+        "authentication",
+        "security",
+        "authorization",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-parallel-fetching",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-parallel-fetching.md",
+      "title": "Parallel Data Fetching with Component Composition",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "server",
+        "rsc",
+        "parallel-fetching",
+        "composition",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-parallel-nested-fetching",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-parallel-nested-fetching.md",
+      "title": "Parallel Nested Data Fetching",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "server",
+        "rsc",
+        "parallel-fetching",
+        "promise-chaining",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-function-references",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-function-references.md",
+      "title": "Optimize List Performance with Stable Object References",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "lists",
+        "performance",
+        "flatlist",
+        "virtualization",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/monorepo-native-deps-in-app",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/monorepo-native-deps-in-app.md",
+      "title": "Install Native Dependencies in App Directory",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "monorepo",
+        "native",
+        "autolinking",
+        "installation",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/rendering-no-falsy-and",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/rendering-no-falsy-and.md",
+      "title": "Never Use && with Potentially Falsy Values",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "rendering",
+        "conditional",
+        "jsx",
+        "crash",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/rendering-text-in-text-component",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/rendering-text-in-text-component.md",
+      "title": "Wrap Strings in Text Components",
+      "impact": "CRITICAL",
+      "impactScore": 5,
+      "tags": [
+        "rendering",
+        "text",
+        "core",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-composition-patterns/architecture-compound-components",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/architecture-compound-components.md",
+      "title": "Use Compound Components",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "composition",
+        "compound-components",
+        "architecture"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/state-context-interface",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/state-context-interface.md",
+      "title": "Define Generic Context Interfaces for Dependency Injection",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "composition",
+        "context",
+        "state",
+        "typescript",
+        "dependency-injection"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/state-lift-state",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/state-lift-state.md",
+      "title": "Lift State into Provider Components",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "composition",
+        "state",
+        "context",
+        "providers"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/async-defer-await",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/async-defer-await.md",
+      "title": "Defer Await Until Needed",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "async",
+        "await",
+        "conditional",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/async-suspense-boundaries",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/async-suspense-boundaries.md",
+      "title": "Strategic Suspense Boundaries",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "async",
+        "suspense",
+        "streaming",
+        "layout-shift"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/bundle-conditional",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/bundle-conditional.md",
+      "title": "Conditional Module Loading",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "bundle",
+        "conditional-loading",
+        "lazy-loading"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-content-visibility",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-content-visibility.md",
+      "title": "CSS content-visibility for Long Lists",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "rendering",
+        "css",
+        "content-visibility",
+        "long-lists"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-resource-hints",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-resource-hints.md",
+      "title": "Use React DOM Resource Hints",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "rendering",
+        "preload",
+        "preconnect",
+        "prefetch",
+        "resource-hints"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-script-defer-async",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-script-defer-async.md",
+      "title": "Use defer or async on Script Tags",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "rendering",
+        "script",
+        "defer",
+        "async",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-no-inline-components",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-no-inline-components.md",
+      "title": "Don't Define Components Inside Components",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "rerender",
+        "components",
+        "remount",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/server-cache-lru",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-cache-lru.md",
+      "title": "Cross-Request LRU Caching",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "server",
+        "cache",
+        "lru",
+        "cross-request",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-hoist-static-io",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-hoist-static-io.md",
+      "title": "Hoist Static I/O to Module Level",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "server",
+        "io",
+        "performance",
+        "next.js",
+        "route-handlers",
+        "og-image",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-serialization",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-serialization.md",
+      "title": "Minimize Serialization at RSC Boundaries",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "server",
+        "rsc",
+        "serialization",
+        "props",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/animation-gpu-properties",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/animation-gpu-properties.md",
+      "title": "Animate Transform and Opacity Instead of Layout Properties",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "animation",
+        "performance",
+        "reanimated",
+        "transform",
+        "opacity",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-images",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-images.md",
+      "title": "Use Compressed Images in Lists",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "lists",
+        "images",
+        "performance",
+        "optimization",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-inline-objects",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-inline-objects.md",
+      "title": "Avoid Inline Objects in renderItem",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "lists",
+        "performance",
+        "flatlist",
+        "virtualization",
+        "memo",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-item-expensive",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-item-expensive.md",
+      "title": "Keep List Items Lightweight",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "lists",
+        "performance",
+        "virtualization",
+        "hooks",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-item-memo",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-item-memo.md",
+      "title": "Pass Primitives to List Items for Memoization",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "lists",
+        "performance",
+        "memo",
+        "primitives",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-item-types",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-item-types.md",
+      "title": "Use Item Types for Heterogeneous Lists",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "list",
+        "performance",
+        "recycling",
+        "heterogeneous",
+        "LegendList",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-virtualize",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-virtualize.md",
+      "title": "Use a List Virtualizer for Any List",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "lists",
+        "performance",
+        "virtualization",
+        "scrollview",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/navigation-native-navigators",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/navigation-native-navigators.md",
+      "title": "Use Native Navigators for Navigation",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "navigation",
+        "react-navigation",
+        "expo-router",
+        "native-stack",
+        "tabs",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/react-compiler-destructure-functions",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/react-compiler-destructure-functions.md",
+      "title": "Destructure Functions Early in Render (React Compiler)",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "rerender",
+        "hooks",
+        "performance",
+        "react-compiler",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/scroll-position-no-state",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/scroll-position-no-state.md",
+      "title": "Never Track Scroll Position in useState",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "scroll",
+        "performance",
+        "reanimated",
+        "useRef",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/state-ground-truth",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/state-ground-truth.md",
+      "title": "State Must Represent Ground Truth",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "state",
+        "derived-state",
+        "reanimated",
+        "hooks",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-expo-image",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-expo-image.md",
+      "title": "Use expo-image for Optimized Images",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "images",
+        "performance",
+        "expo-image",
+        "ui",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-menus",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-menus.md",
+      "title": "Use Native Menus for Dropdowns and Context Menus",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "user-interface",
+        "menus",
+        "context-menus",
+        "zeego",
+        "accessibility",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-native-modals",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-native-modals.md",
+      "title": "Use Native Modals Over JS-Based Bottom Sheets",
+      "impact": "HIGH",
+      "impactScore": 4,
+      "tags": [
+        "modals",
+        "bottom-sheet",
+        "native",
+        "react-navigation",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/client-swr-dedup",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/client-swr-dedup.md",
+      "title": "Use SWR for Automatic Deduplication",
+      "impact": "MEDIUM-HIGH",
+      "impactScore": 3.5,
+      "tags": [
+        "client",
+        "swr",
+        "deduplication",
+        "data-fetching"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-length-check-first",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-length-check-first.md",
+      "title": "Early Length Check for Array Comparisons",
+      "impact": "MEDIUM-HIGH",
+      "impactScore": 3.5,
+      "tags": [
+        "javascript",
+        "arrays",
+        "performance",
+        "optimization",
+        "comparison"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-tosorted-immutable",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-tosorted-immutable.md",
+      "title": "Use toSorted() Instead of sort() for Immutability",
+      "impact": "MEDIUM-HIGH",
+      "impactScore": 3.5,
+      "tags": [
+        "javascript",
+        "arrays",
+        "immutability",
+        "react",
+        "state",
+        "mutation"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/patterns-children-over-render-props",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/patterns-children-over-render-props.md",
+      "title": "Prefer Composing Children Over Render Props",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "composition",
+        "children",
+        "render-props"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/patterns-explicit-variants",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/patterns-explicit-variants.md",
+      "title": "Create Explicit Component Variants",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "composition",
+        "variants",
+        "architecture"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/react19-no-forwardref",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/react19-no-forwardref.md",
+      "title": "React 19 API Changes",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "react19",
+        "refs",
+        "context",
+        "hooks",
+        "composition"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 19,
+      "incompatibleWith": [
+        "react<19"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "vercel-composition-patterns/state-decouple-implementation",
+      "skill": "vercel-composition-patterns",
+      "path": ".agents/skills/vercel-composition-patterns/rules/state-decouple-implementation.md",
+      "title": "Decouple State Management from UI",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "composition",
+        "state",
+        "architecture"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "universal",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/bundle-defer-third-party",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/bundle-defer-third-party.md",
+      "title": "Defer Non-Critical Third-Party Libraries",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "bundle",
+        "third-party",
+        "analytics",
+        "defer",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/bundle-preload",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/bundle-preload.md",
+      "title": "Preload Based on User Intent",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "bundle",
+        "preload",
+        "user-intent",
+        "hover"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/client-localstorage-schema",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/client-localstorage-schema.md",
+      "title": "Version and Minimize localStorage Data",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "client",
+        "localStorage",
+        "storage",
+        "versioning",
+        "data-minimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/client-passive-event-listeners",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/client-passive-event-listeners.md",
+      "title": "Use Passive Event Listeners for Scrolling Performance",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "client",
+        "event-listeners",
+        "scrolling",
+        "performance",
+        "touch",
+        "wheel"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-batch-dom-css",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-batch-dom-css.md",
+      "title": "Avoid Layout Thrashing",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "javascript",
+        "dom",
+        "css",
+        "performance",
+        "reflow",
+        "layout-thrashing"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-cache-function-results",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-cache-function-results.md",
+      "title": "Cache Repeated Function Calls",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "javascript",
+        "cache",
+        "memoization",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-request-idle-callback",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-request-idle-callback.md",
+      "title": "Defer Non-Critical Work with requestIdleCallback",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "javascript",
+        "performance",
+        "idle",
+        "scheduling",
+        "analytics"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-activity",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-activity.md",
+      "title": "Use Activity Component for Show/Hide",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rendering",
+        "activity",
+        "visibility",
+        "state-preservation"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-hydration-no-flicker",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-hydration-no-flicker.md",
+      "title": "Prevent Hydration Mismatch Without Flickering",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rendering",
+        "ssr",
+        "hydration",
+        "localStorage",
+        "flicker"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-defer-reads",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-defer-reads.md",
+      "title": "Defer State Reads to Usage Point",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "searchParams",
+        "localStorage",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-derived-state-no-effect",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-derived-state-no-effect.md",
+      "title": "Calculate Derived State During Rendering",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "derived-state",
+        "useEffect",
+        "state"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-derived-state",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-derived-state.md",
+      "title": "Subscribe to Derived State",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "derived-state",
+        "media-query",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-functional-setstate",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-functional-setstate.md",
+      "title": "Use Functional setState Updates",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "react",
+        "hooks",
+        "useState",
+        "useCallback",
+        "callbacks",
+        "closures"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-lazy-state-init",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-lazy-state-init.md",
+      "title": "Use Lazy State Initialization",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "react",
+        "hooks",
+        "useState",
+        "performance",
+        "initialization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-memo-with-default-value",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-memo-with-default-value.md",
+      "title": "Extract Default Non-primitive Parameter Value from Memoized Component to Constant",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "memo",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-memo",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-memo.md",
+      "title": "Extract to Memoized Components",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "memo",
+        "useMemo",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-move-effect-to-event",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-move-effect-to-event.md",
+      "title": "Put Interaction Logic in Event Handlers",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "useEffect",
+        "events",
+        "side-effects",
+        "dependencies"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-split-combined-hooks",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-split-combined-hooks.md",
+      "title": "Split Combined Hook Computations",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "useMemo",
+        "useEffect",
+        "dependencies",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-transitions",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-transitions.md",
+      "title": "Use Transitions for Non-Urgent Updates",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "transitions",
+        "startTransition",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-use-deferred-value",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-use-deferred-value.md",
+      "title": "Use useDeferredValue for Expensive Derived Renders",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "useDeferredValue",
+        "optimization",
+        "concurrent"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-use-ref-transient-values",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-use-ref-transient-values.md",
+      "title": "Use useRef for Transient Values",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "rerender",
+        "useref",
+        "state",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/server-after-nonblocking",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-after-nonblocking.md",
+      "title": "Use after() for Non-Blocking Operations",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "server",
+        "async",
+        "logging",
+        "analytics",
+        "side-effects",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/server-cache-react",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-cache-react.md",
+      "title": "Per-Request Deduplication with React.cache()",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "server",
+        "cache",
+        "react-cache",
+        "deduplication",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/animation-derived-value",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/animation-derived-value.md",
+      "title": "Prefer useDerivedValue Over useAnimatedReaction",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "animation",
+        "reanimated",
+        "derived-value",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/animation-gesture-detector-press",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/animation-gesture-detector-press.md",
+      "title": "Use GestureDetector for Animated Press States",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "animation",
+        "gestures",
+        "press",
+        "reanimated",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/design-system-compound-components",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/design-system-compound-components.md",
+      "title": "Use Compound Components Over Polymorphic Children",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "design-system",
+        "components",
+        "composition",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/list-performance-callbacks",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/list-performance-callbacks.md",
+      "title": "Hoist callbacks to the root of lists",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/monorepo-single-dependency-versions",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/monorepo-single-dependency-versions.md",
+      "title": "Use Single Dependency Versions Across Monorepo",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "monorepo",
+        "dependencies",
+        "installation",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/react-state-dispatcher",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/react-state-dispatcher.md",
+      "title": "useState Dispatch updaters for State That Depends on Current Value",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "state",
+        "hooks",
+        "useState",
+        "callbacks",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/react-state-fallback",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/react-state-fallback.md",
+      "title": "Use fallback state instead of initialState",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "state",
+        "hooks",
+        "derived-state",
+        "props",
+        "initialState",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/react-state-minimize",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/react-state-minimize.md",
+      "title": "Minimize State Variables and Derive Values",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "state",
+        "derived-state",
+        "hooks",
+        "optimization",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-image-gallery",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-image-gallery.md",
+      "title": "Use Galeria for Image Galleries and Lightbox",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "images",
+        "gallery",
+        "lightbox",
+        "expo-image",
+        "ui",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-measure-views",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-measure-views.md",
+      "title": "Measuring View Dimensions",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "layout",
+        "measurement",
+        "onLayout",
+        "useLayoutEffect",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-safe-area-scroll",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-safe-area-scroll.md",
+      "title": "Use contentInsetAdjustmentBehavior for Safe Areas",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "safe-area",
+        "scrollview",
+        "layout",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-styling",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-styling.md",
+      "title": "Modern React Native Styling Patterns",
+      "impact": "MEDIUM",
+      "impactScore": 3,
+      "tags": [
+        "styling",
+        "css",
+        "layout",
+        "shadows",
+        "gradients",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/advanced-init-once",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/advanced-init-once.md",
+      "title": "Initialize App Once, Not Per Mount",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "initialization",
+        "useEffect",
+        "app-startup",
+        "side-effects"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-cache-property-access",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-cache-property-access.md",
+      "title": "Cache Property Access in Loops",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "loops",
+        "optimization",
+        "caching"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-cache-storage",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-cache-storage.md",
+      "title": "Cache Storage API Calls",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "localStorage",
+        "storage",
+        "caching",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-combine-iterations",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-combine-iterations.md",
+      "title": "Combine Multiple Array Iterations",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "arrays",
+        "loops",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-early-exit",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-early-exit.md",
+      "title": "Early Return from Functions",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "functions",
+        "optimization",
+        "early-return"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-flatmap-filter",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-flatmap-filter.md",
+      "title": "Use flatMap to Map and Filter in One Pass",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "arrays",
+        "flatMap",
+        "filter",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-hoist-regexp",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-hoist-regexp.md",
+      "title": "Hoist RegExp Creation",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "regexp",
+        "optimization",
+        "memoization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-index-maps",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-index-maps.md",
+      "title": "Build Index Maps for Repeated Lookups",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "map",
+        "indexing",
+        "optimization",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-set-map-lookups",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-set-map-lookups.md",
+      "title": "Use Set/Map for O(1) Lookups",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "set",
+        "map",
+        "data-structures",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-hydration-suppress-warning",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-hydration-suppress-warning.md",
+      "title": "Suppress Expected Hydration Mismatches",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "rendering",
+        "hydration",
+        "ssr",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-simple-expression-in-memo",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-simple-expression-in-memo.md",
+      "title": "Do not wrap a simple expression with a primitive result type in useMemo",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "rerender",
+        "useMemo",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-native-skills/js-hoist-intl",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/js-hoist-intl.md",
+      "title": "Hoist Intl Formatter Creation",
+      "impact": "LOW-MEDIUM",
+      "impactScore": 2,
+      "tags": [
+        "javascript",
+        "intl",
+        "optimization",
+        "memoization",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-best-practices/advanced-event-handler-refs",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/advanced-event-handler-refs.md",
+      "title": "Store Event Handlers in Refs",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "advanced",
+        "hooks",
+        "refs",
+        "event-handlers",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 19,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/advanced-use-latest",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/advanced-use-latest.md",
+      "title": "useEffectEvent for Stable Callback Refs",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "advanced",
+        "hooks",
+        "useEffectEvent",
+        "refs",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 19,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/client-event-listeners",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/client-event-listeners.md",
+      "title": "Deduplicate Global Event Listeners",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "client",
+        "swr",
+        "event-listeners",
+        "subscription"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/js-min-max-loop",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/js-min-max-loop.md",
+      "title": "Use Loop for Min/Max Instead of Sort",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "javascript",
+        "arrays",
+        "performance",
+        "sorting",
+        "algorithms"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-animate-svg-wrapper",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-animate-svg-wrapper.md",
+      "title": "Animate SVG Wrapper Instead of SVG Element",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rendering",
+        "svg",
+        "css",
+        "animation",
+        "performance"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-conditional-render",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-conditional-render.md",
+      "title": "Use Explicit Conditional Rendering",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rendering",
+        "conditional",
+        "jsx",
+        "falsy-values"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-hoist-jsx",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-hoist-jsx.md",
+      "title": "Hoist Static JSX Elements",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rendering",
+        "jsx",
+        "static",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-svg-precision",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-svg-precision.md",
+      "title": "Optimize SVG Precision",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rendering",
+        "svg",
+        "optimization",
+        "svgo"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rendering-usetransition-loading",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rendering-usetransition-loading.md",
+      "title": "Use useTransition Over Manual Loading States",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rendering",
+        "transitions",
+        "useTransition",
+        "loading",
+        "state"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/rerender-dependencies",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/rerender-dependencies.md",
+      "title": "Narrow Effect Dependencies",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "rerender",
+        "useEffect",
+        "dependencies",
+        "optimization"
+      ],
+      "appliesTo": [
+        "react-web",
+        "vite-react",
+        "nextjs-app-router"
+      ],
+      "runtime": "browser",
+      "minReact": 18,
+      "incompatibleWith": [],
+      "enabled": true
+    },
+    {
+      "id": "vercel-react-best-practices/server-dedup-props",
+      "skill": "vercel-react-best-practices",
+      "path": ".agents/skills/vercel-react-best-practices/rules/server-dedup-props.md",
+      "title": "Avoid Duplicate Serialization in RSC Props",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "server",
+        "rsc",
+        "serialization",
+        "props",
+        "client-components",
+        "nextjs"
+      ],
+      "appliesTo": [
+        "react-web",
+        "nextjs-app-router"
+      ],
+      "runtime": "server",
+      "minReact": 19,
+      "incompatibleWith": [
+        "vite-spa-without-next"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/fonts-config-plugin",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/fonts-config-plugin.md",
+      "title": "Load fonts natively at build time",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "fonts",
+        "expo",
+        "performance",
+        "config-plugin",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/imports-design-system-folder",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/imports-design-system-folder.md",
+      "title": "Import from Design System Folder",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "imports",
+        "architecture",
+        "design-system",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/react-compiler-reanimated-shared-values",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/react-compiler-reanimated-shared-values.md",
+      "title": "Use .get() and .set() for Reanimated Shared Values (not .value)",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "reanimated",
+        "react-compiler",
+        "shared-values",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-pressable",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-pressable.md",
+      "title": "Use Pressable Instead of Touchable Components",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "ui",
+        "pressable",
+        "touchable",
+        "gestures",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "vercel-react-native-skills/ui-scrollview-content-inset",
+      "skill": "vercel-react-native-skills",
+      "path": ".agents/skills/vercel-react-native-skills/rules/ui-scrollview-content-inset.md",
+      "title": "Use contentInset for Dynamic ScrollView Spacing",
+      "impact": "LOW",
+      "impactScore": 1,
+      "tags": [
+        "scrollview",
+        "layout",
+        "contentInset",
+        "performance",
+        "react-native"
+      ],
+      "appliesTo": [
+        "react-native",
+        "expo"
+      ],
+      "runtime": "native",
+      "minReact": 18,
+      "incompatibleWith": [
+        "react-dom-only-web"
+      ],
+      "enabled": false
+    }
+  ]
+}

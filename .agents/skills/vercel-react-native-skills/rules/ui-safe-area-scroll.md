@@ -1,8 +1,12 @@
 ---
-title: Use contentInsetAdjustmentBehavior for Safe Areas
+title: "Use contentInsetAdjustmentBehavior for Safe Areas"
 impact: MEDIUM
-impactDescription: native safe area handling, no layout shifts
-tags: safe-area, scrollview, layout
+impactDescription: "native safe area handling, no layout shifts"
+tags: "safe-area, scrollview, layout, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use contentInsetAdjustmentBehavior for Safe Areas

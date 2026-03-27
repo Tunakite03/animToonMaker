@@ -1,8 +1,12 @@
 ---
-title: State Must Represent Ground Truth
+title: "State Must Represent Ground Truth"
 impact: HIGH
-impactDescription: cleaner logic, easier debugging, single source of truth
-tags: state, derived-state, reanimated, hooks
+impactDescription: "cleaner logic, easier debugging, single source of truth"
+tags: "state, derived-state, reanimated, hooks, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## State Must Represent Ground Truth

@@ -1,8 +1,12 @@
 ---
-title: Don't Define Components Inside Components
+title: "Don't Define Components Inside Components"
 impact: HIGH
-impactDescription: prevents remount on every render
-tags: rerender, components, remount, performance
+impactDescription: "prevents remount on every render"
+tags: "rerender, components, remount, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Don't Define Components Inside Components

@@ -36,6 +36,7 @@ export function useFrameGenerator() {
         updateFrame(frameId, {
           imageUrl: data.imageUrl,
           status: "done",
+          isBlank: false,
         });
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") return;

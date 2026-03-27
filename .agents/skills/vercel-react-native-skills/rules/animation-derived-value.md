@@ -1,8 +1,12 @@
 ---
-title: Prefer useDerivedValue Over useAnimatedReaction
+title: "Prefer useDerivedValue Over useAnimatedReaction"
 impact: MEDIUM
-impactDescription: cleaner code, automatic dependency tracking
-tags: animation, reanimated, derived-value
+impactDescription: "cleaner code, automatic dependency tracking"
+tags: "animation, reanimated, derived-value, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Prefer useDerivedValue Over useAnimatedReaction

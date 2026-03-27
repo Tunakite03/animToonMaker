@@ -1,8 +1,12 @@
 ---
-title: Use Native Navigators for Navigation
+title: "Use Native Navigators for Navigation"
 impact: HIGH
-impactDescription: native performance, platform-appropriate UI
-tags: navigation, react-navigation, expo-router, native-stack, tabs
+impactDescription: "native performance, platform-appropriate UI"
+tags: "navigation, react-navigation, expo-router, native-stack, tabs, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Native Navigators for Navigation

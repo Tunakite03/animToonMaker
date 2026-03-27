@@ -1,8 +1,12 @@
 ---
-title: Prevent Waterfall Chains in API Routes
+title: "Prevent Waterfall Chains in API Routes"
 impact: CRITICAL
-impactDescription: 2-10× improvement
-tags: api-routes, server-actions, waterfalls, parallelization
+impactDescription: "2-10× improvement"
+tags: "api-routes, server-actions, waterfalls, parallelization, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Prevent Waterfall Chains in API Routes

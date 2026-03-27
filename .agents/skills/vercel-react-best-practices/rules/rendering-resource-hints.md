@@ -1,8 +1,12 @@
 ---
-title: Use React DOM Resource Hints
+title: "Use React DOM Resource Hints"
 impact: HIGH
-impactDescription: reduces load time for critical resources
-tags: rendering, preload, preconnect, prefetch, resource-hints
+impactDescription: "reduces load time for critical resources"
+tags: "rendering, preload, preconnect, prefetch, resource-hints"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use React DOM Resource Hints

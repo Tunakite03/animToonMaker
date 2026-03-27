@@ -1,8 +1,12 @@
 ---
-title: Define Generic Context Interfaces for Dependency Injection
+title: "Define Generic Context Interfaces for Dependency Injection"
 impact: HIGH
-impactDescription: enables dependency-injectable state across use-cases
-tags: composition, context, state, typescript, dependency-injection
+impactDescription: "enables dependency-injectable state across use-cases"
+tags: "composition, context, state, typescript, dependency-injection"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Define Generic Context Interfaces for Dependency Injection

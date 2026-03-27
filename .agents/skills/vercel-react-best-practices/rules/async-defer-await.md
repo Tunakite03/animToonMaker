@@ -1,8 +1,12 @@
 ---
-title: Defer Await Until Needed
+title: "Defer Await Until Needed"
 impact: HIGH
-impactDescription: avoids blocking unused code paths
-tags: async, await, conditional, optimization
+impactDescription: "avoids blocking unused code paths"
+tags: "async, await, conditional, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Defer Await Until Needed

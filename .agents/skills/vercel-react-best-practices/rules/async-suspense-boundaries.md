@@ -1,8 +1,12 @@
 ---
-title: Strategic Suspense Boundaries
+title: "Strategic Suspense Boundaries"
 impact: HIGH
-impactDescription: faster initial paint
-tags: async, suspense, streaming, layout-shift
+impactDescription: "faster initial paint"
+tags: "async, suspense, streaming, layout-shift"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Strategic Suspense Boundaries

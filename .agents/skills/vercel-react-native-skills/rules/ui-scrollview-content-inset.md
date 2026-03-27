@@ -1,8 +1,12 @@
 ---
-title: Use contentInset for Dynamic ScrollView Spacing
+title: "Use contentInset for Dynamic ScrollView Spacing"
 impact: LOW
-impactDescription: smoother updates, no layout recalculation
-tags: scrollview, layout, contentInset, performance
+impactDescription: "smoother updates, no layout recalculation"
+tags: "scrollview, layout, contentInset, performance, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use contentInset for Dynamic ScrollView Spacing

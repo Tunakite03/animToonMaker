@@ -1,8 +1,12 @@
 ---
-title: Preload Based on User Intent
+title: "Preload Based on User Intent"
 impact: MEDIUM
-impactDescription: reduces perceived latency
-tags: bundle, preload, user-intent, hover
+impactDescription: "reduces perceived latency"
+tags: "bundle, preload, user-intent, hover"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Preload Based on User Intent

@@ -1,8 +1,12 @@
 ---
-title: Hoist RegExp Creation
+title: "Hoist RegExp Creation"
 impact: LOW-MEDIUM
-impactDescription: avoids recreation
-tags: javascript, regexp, optimization, memoization
+impactDescription: "avoids recreation"
+tags: "javascript, regexp, optimization, memoization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Hoist RegExp Creation

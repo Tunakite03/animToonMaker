@@ -1,8 +1,12 @@
 ---
-title: Measuring View Dimensions
+title: "Measuring View Dimensions"
 impact: MEDIUM
-impactDescription: synchronous measurement, avoid unnecessary re-renders
-tags: layout, measurement, onLayout, useLayoutEffect
+impactDescription: "synchronous measurement, avoid unnecessary re-renders"
+tags: "layout, measurement, onLayout, useLayoutEffect, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Measuring View Dimensions

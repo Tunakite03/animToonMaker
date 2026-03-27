@@ -1,8 +1,12 @@
 ---
-title: Modern React Native Styling Patterns
+title: "Modern React Native Styling Patterns"
 impact: MEDIUM
-impactDescription: consistent design, smoother borders, cleaner layouts
-tags: styling, css, layout, shadows, gradients
+impactDescription: "consistent design, smoother borders, cleaner layouts"
+tags: "styling, css, layout, shadows, gradients, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Modern React Native Styling Patterns

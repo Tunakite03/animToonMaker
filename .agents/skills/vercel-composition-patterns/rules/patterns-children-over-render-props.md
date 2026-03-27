@@ -1,8 +1,12 @@
 ---
-title: Prefer Composing Children Over Render Props
+title: "Prefer Composing Children Over Render Props"
 impact: MEDIUM
-impactDescription: cleaner composition, better readability
-tags: composition, children, render-props
+impactDescription: "cleaner composition, better readability"
+tags: "composition, children, render-props"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Prefer Children Over Render Props

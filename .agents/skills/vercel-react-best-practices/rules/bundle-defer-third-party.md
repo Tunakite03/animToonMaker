@@ -1,8 +1,12 @@
 ---
-title: Defer Non-Critical Third-Party Libraries
+title: "Defer Non-Critical Third-Party Libraries"
 impact: MEDIUM
-impactDescription: loads after hydration
-tags: bundle, third-party, analytics, defer
+impactDescription: "loads after hydration"
+tags: "bundle, third-party, analytics, defer, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: browser
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Defer Non-Critical Third-Party Libraries

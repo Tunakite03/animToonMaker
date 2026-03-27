@@ -1,8 +1,12 @@
 ---
-title: Cache Storage API Calls
+title: "Cache Storage API Calls"
 impact: LOW-MEDIUM
-impactDescription: reduces expensive I/O
-tags: javascript, localStorage, storage, caching, performance
+impactDescription: "reduces expensive I/O"
+tags: "javascript, localStorage, storage, caching, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Cache Storage API Calls

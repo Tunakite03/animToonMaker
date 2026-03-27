@@ -1,8 +1,12 @@
 ---
-title: Install Native Dependencies in App Directory
+title: "Install Native Dependencies in App Directory"
 impact: CRITICAL
-impactDescription: required for autolinking to work
-tags: monorepo, native, autolinking, installation
+impactDescription: "required for autolinking to work"
+tags: "monorepo, native, autolinking, installation, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Install Native Dependencies in App Directory

@@ -1,9 +1,12 @@
 ---
-title: Use Galeria for Image Galleries and Lightbox
+title: "Use Galeria for Image Galleries and Lightbox"
 impact: MEDIUM
-impactDescription:
-  native shared element transitions, pinch-to-zoom, pan-to-close
-tags: images, gallery, lightbox, expo-image, ui
+impactDescription: ""
+tags: "images, gallery, lightbox, expo-image, ui, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Galeria for Image Galleries and Lightbox

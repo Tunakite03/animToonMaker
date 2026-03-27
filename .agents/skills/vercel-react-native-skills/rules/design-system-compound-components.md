@@ -1,8 +1,12 @@
 ---
-title: Use Compound Components Over Polymorphic Children
+title: "Use Compound Components Over Polymorphic Children"
 impact: MEDIUM
-impactDescription: flexible composition, clearer API
-tags: design-system, components, composition
+impactDescription: "flexible composition, clearer API"
+tags: "design-system, components, composition, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Compound Components Over Polymorphic Children

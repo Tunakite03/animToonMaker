@@ -1,8 +1,12 @@
 ---
-title: Use a List Virtualizer for Any List
+title: "Use a List Virtualizer for Any List"
 impact: HIGH
-impactDescription: reduced memory, faster mounts
-tags: lists, performance, virtualization, scrollview
+impactDescription: "reduced memory, faster mounts"
+tags: "lists, performance, virtualization, scrollview, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use a List Virtualizer for Any List

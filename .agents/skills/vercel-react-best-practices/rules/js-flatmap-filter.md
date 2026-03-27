@@ -1,8 +1,12 @@
 ---
-title: Use flatMap to Map and Filter in One Pass
+title: "Use flatMap to Map and Filter in One Pass"
 impact: LOW-MEDIUM
-impactDescription: eliminates intermediate array
-tags: javascript, arrays, flatMap, filter, performance
+impactDescription: "eliminates intermediate array"
+tags: "javascript, arrays, flatMap, filter, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use flatMap to Map and Filter in One Pass

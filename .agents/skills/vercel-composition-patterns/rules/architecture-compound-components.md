@@ -1,8 +1,12 @@
 ---
-title: Use Compound Components
+title: "Use Compound Components"
 impact: HIGH
-impactDescription: enables flexible composition without prop drilling
-tags: composition, compound-components, architecture
+impactDescription: "enables flexible composition without prop drilling"
+tags: "composition, compound-components, architecture"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Compound Components

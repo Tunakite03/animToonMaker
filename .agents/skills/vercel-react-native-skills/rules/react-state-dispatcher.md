@@ -1,8 +1,12 @@
 ---
-title: useState Dispatch updaters for State That Depends on Current Value
+title: "useState Dispatch updaters for State That Depends on Current Value"
 impact: MEDIUM
-impactDescription: avoids stale closures, prevents unnecessary re-renders
-tags: state, hooks, useState, callbacks
+impactDescription: "avoids stale closures, prevents unnecessary re-renders"
+tags: "state, hooks, useState, callbacks, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Dispatch Updaters for State That Depends on Current Value

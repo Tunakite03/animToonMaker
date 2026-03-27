@@ -1,170 +1,185 @@
+import { useRef } from "react";
 import { useAnimationStore } from "@/store/animation-store";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MIN_FPS, MAX_FPS } from "@/lib/constants";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MAX_FRAMES } from "@/lib/constants";
+import { processImageFiles } from "@/lib/import-utils";
 
 export function Toolbar() {
-  const fps = useAnimationStore((s) => s.project.fps);
-  const loop = useAnimationStore((s) => s.project.loop);
   const frames = useAnimationStore((s) => s.project.frames);
-  const isPlaying = useAnimationStore((s) => s.playback.isPlaying);
-
-  const setFps = useAnimationStore((s) => s.setFps);
-  const setLoop = useAnimationStore((s) => s.setLoop);
-  const setPlaying = useAnimationStore((s) => s.setPlaying);
   const addFrame = useAnimationStore((s) => s.addFrame);
-  const setCurrentFrameIndex = useAnimationStore((s) => s.setCurrentFrameIndex);
+  const addFrameWithImage = useAnimationStore((s) => s.addFrameWithImage);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const playableCount = frames.filter((f) => f.imageUrl).length;
+  const totalCount = frames.length;
+  const atMax = totalCount >= MAX_FRAMES;
 
-  const handlePlay = () => {
-    if (isPlaying) {
-      setPlaying(false);
-    } else {
-      setCurrentFrameIndex(0);
-      setPlaying(true);
-    }
-  };
-
-  const handleStop = () => {
-    setPlaying(false);
-    setCurrentFrameIndex(0);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
+    await processImageFiles(Array.from(fileList), frames.length, addFrameWithImage);
+    // Reset so the same file(s) can be selected again
+    e.target.value = "";
   };
 
   return (
-    <div className="flex items-center gap-2 border-b border-border/40 bg-card/60 px-3 py-1.5">
-      {/* Playback controls */}
-      <div className="flex items-center gap-1">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon-sm"
-              variant={isPlaying ? "secondary" : "default"}
-              onClick={handlePlay}
-              disabled={playableCount < 2}
-            >
-              {isPlaying ? <PauseIcon /> : <PlayIcon />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{isPlaying ? "Pause" : "Play"}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={handleStop}
-              disabled={!isPlaying}
-            >
-              <StopIcon />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Stop</TooltipContent>
-        </Tooltip>
-      </div>
+    <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border/40 bg-card/70 px-2.5">
 
-      <Separator orientation="vertical" className="h-5" />
-
-      {/* Add frame */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button size="sm" variant="outline" onClick={() => addFrame()} className="gap-1.5 text-xs">
-            <PlusIcon />
-            Frame
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top">Add new frame</TooltipContent>
-      </Tooltip>
-
-      <Separator orientation="vertical" className="h-5" />
-
-      {/* FPS control */}
-      <div className="flex items-center gap-2">
-        <Label className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-          FPS: <span className="text-foreground">{fps}</span>
-        </Label>
-        <Slider
-          value={[fps]}
-          onValueChange={([v]) => setFps(v)}
-          min={MIN_FPS}
-          max={MAX_FPS}
-          step={1}
-          className="w-24"
-        />
-      </div>
-
-      <Separator orientation="vertical" className="h-5" />
-
-      {/* Loop toggle */}
-      <Tooltip>
-        <TooltipTrigger asChild>
+      {/* ── Add frame dropdown ──────────────────────────────────────────── */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             size="sm"
-            variant={loop ? "default" : "outline"}
-            onClick={() => setLoop(!loop)}
-            className="gap-1.5 text-xs"
+            variant="ghost"
+            disabled={atMax}
+            className="h-6 gap-1.5 px-2 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-40"
           >
-            <RepeatIcon />
-            {loop ? "Loop" : "Once"}
+            <PlusIcon />
+            Add Frame
+            <ChevronDownIcon />
           </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top">{loop ? "Loop enabled" : "Play once"}</TooltipContent>
-      </Tooltip>
+        </DropdownMenuTrigger>
 
-      {/* Frame count */}
-      <div className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <span>{frames.length} frames</span>
-        <span className="text-muted-foreground/40">·</span>
-        <span>{playableCount} ready</span>
+        <DropdownMenuContent align="start" className="w-52">
+          {/* Import from file — primary action */}
+          <DropdownMenuItem
+            className="gap-2 text-xs"
+            disabled={atMax}
+            onSelect={() => fileInputRef.current?.click()}
+          >
+            <FolderImageIcon />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Import image file(s)…</span>
+              <span className="text-[10px] text-muted-foreground">
+                Add frames from local images
+              </span>
+            </div>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Add blank frame — secondary action */}
+          <DropdownMenuItem
+            className="gap-2 text-xs"
+            disabled={atMax}
+            onSelect={() => addFrame()}
+          >
+            <BlankFrameIcon />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Add blank frame</span>
+              <span className="text-[10px] text-muted-foreground">
+                Transparent placeholder frame
+              </span>
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Hidden file input — triggered by the dropdown item above */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={handleFileChange}
+      />
+
+      {/* ── Frame count badge (right-aligned) ──────────────────────────── */}
+      <div className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground/60">
+        <span className="tabular-nums font-medium text-muted-foreground">
+          {totalCount}
+        </span>
+        <span>/</span>
+        <span>{MAX_FRAMES}</span>
+        <span className="ml-0.5">frames</span>
       </div>
     </div>
   );
 }
 
-function PlayIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <polygon points="6 3 20 12 6 21 6 3" />
-    </svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <rect x="6" y="4" width="4" height="16" rx="1" />
-      <rect x="14" y="4" width="4" height="16" rx="1" />
-    </svg>
-  );
-}
-
-function StopIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <rect x="5" y="5" width="14" height="14" rx="2" />
-    </svg>
-  );
-}
+// ── Inline icons ──────────────────────────────────────────────────────────────
 
 function PlusIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M5 12h14" />
       <path d="M12 5v14" />
     </svg>
   );
 }
 
-function RepeatIcon() {
+function ChevronDownIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m17 2 4 4-4 4" />
-      <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
-      <path d="m7 22-4-4 4-4" />
-      <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+    <svg
+      width="9"
+      height="9"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="opacity-60"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function FolderImageIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-primary"
+    >
+      <path d="M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1" />
+      <circle cx="8" cy="15" r="2" />
+      <path d="m10.5 17 1.937-1.5L15 17l3-4" />
+    </svg>
+  );
+}
+
+function BlankFrameIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-muted-foreground"
+    >
+      <rect width="16" height="16" x="4" y="4" rx="2" />
+      <path d="M9 12h6" />
+      <path d="M12 9v6" />
     </svg>
   );
 }

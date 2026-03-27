@@ -1,8 +1,12 @@
 ---
-title: Suppress Expected Hydration Mismatches
+title: "Suppress Expected Hydration Mismatches"
 impact: LOW-MEDIUM
-impactDescription: avoids noisy hydration warnings for known differences
-tags: rendering, hydration, ssr, nextjs
+impactDescription: "avoids noisy hydration warnings for known differences"
+tags: "rendering, hydration, ssr, nextjs"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Suppress Expected Hydration Mismatches

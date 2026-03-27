@@ -1,8 +1,12 @@
 ---
-title: Minimize State Variables and Derive Values
+title: "Minimize State Variables and Derive Values"
 impact: MEDIUM
-impactDescription: fewer re-renders, less state drift
-tags: state, derived-state, hooks, optimization
+impactDescription: "fewer re-renders, less state drift"
+tags: "state, derived-state, hooks, optimization, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Minimize State Variables and Derive Values

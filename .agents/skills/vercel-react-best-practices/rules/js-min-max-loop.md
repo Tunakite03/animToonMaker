@@ -1,8 +1,12 @@
 ---
-title: Use Loop for Min/Max Instead of Sort
+title: "Use Loop for Min/Max Instead of Sort"
 impact: LOW
-impactDescription: O(n) instead of O(n log n)
-tags: javascript, arrays, performance, sorting, algorithms
+impactDescription: "O(n) instead of O(n log n)"
+tags: "javascript, arrays, performance, sorting, algorithms"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Loop for Min/Max Instead of Sort

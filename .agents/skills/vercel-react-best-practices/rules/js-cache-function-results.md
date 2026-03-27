@@ -1,8 +1,12 @@
 ---
-title: Cache Repeated Function Calls
+title: "Cache Repeated Function Calls"
 impact: MEDIUM
-impactDescription: avoid redundant computation
-tags: javascript, cache, memoization, performance
+impactDescription: "avoid redundant computation"
+tags: "javascript, cache, memoization, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Cache Repeated Function Calls

@@ -1,8 +1,12 @@
 ---
-title: Use Passive Event Listeners for Scrolling Performance
+title: "Use Passive Event Listeners for Scrolling Performance"
 impact: MEDIUM
-impactDescription: eliminates scroll delay caused by event listeners
-tags: client, event-listeners, scrolling, performance, touch, wheel
+impactDescription: "eliminates scroll delay caused by event listeners"
+tags: "client, event-listeners, scrolling, performance, touch, wheel"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Passive Event Listeners for Scrolling Performance

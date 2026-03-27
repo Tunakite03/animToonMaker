@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     settings: { react: { version: "detect" } },
   },
   globalIgnores([
+    ".next/**",
     "dist/**",
     "src-tauri/**",
     "public/**",

@@ -1,8 +1,12 @@
 ---
-title: Initialize App Once, Not Per Mount
+title: "Initialize App Once, Not Per Mount"
 impact: LOW-MEDIUM
-impactDescription: avoids duplicate init in development
-tags: initialization, useEffect, app-startup, side-effects
+impactDescription: "avoids duplicate init in development"
+tags: "initialization, useEffect, app-startup, side-effects"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Initialize App Once, Not Per Mount

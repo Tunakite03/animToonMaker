@@ -1,8 +1,12 @@
 ---
-title: Split Combined Hook Computations
+title: "Split Combined Hook Computations"
 impact: MEDIUM
-impactDescription: avoids recomputing independent steps
-tags: rerender, useMemo, useEffect, dependencies, optimization
+impactDescription: "avoids recomputing independent steps"
+tags: "rerender, useMemo, useEffect, dependencies, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Split Combined Hook Computations

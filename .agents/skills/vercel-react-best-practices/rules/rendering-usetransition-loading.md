@@ -1,8 +1,12 @@
 ---
-title: Use useTransition Over Manual Loading States
+title: "Use useTransition Over Manual Loading States"
 impact: LOW
-impactDescription: reduces re-renders and improves code clarity
-tags: rendering, transitions, useTransition, loading, state
+impactDescription: "reduces re-renders and improves code clarity"
+tags: "rendering, transitions, useTransition, loading, state"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use useTransition Over Manual Loading States

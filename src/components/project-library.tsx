@@ -140,7 +140,6 @@ export function ProjectLibrary() {
                   {/* Thumbnail */}
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
                     {project.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={project.thumbnailUrl}
                         alt={project.name}

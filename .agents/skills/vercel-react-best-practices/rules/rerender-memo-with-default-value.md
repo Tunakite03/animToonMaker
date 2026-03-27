@@ -1,10 +1,12 @@
 ---
-
-title: Extract Default Non-primitive Parameter Value from Memoized Component to Constant
+title: "Extract Default Non-primitive Parameter Value from Memoized Component to Constant"
 impact: MEDIUM
-impactDescription: restores memoization by using a constant for default value
-tags: rerender, memo, optimization
-
+impactDescription: "restores memoization by using a constant for default value"
+tags: "rerender, memo, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Extract Default Non-primitive Parameter Value from Memoized Component to Constant

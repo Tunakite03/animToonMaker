@@ -1,8 +1,12 @@
 ---
-title: Pass Primitives to List Items for Memoization
+title: "Pass Primitives to List Items for Memoization"
 impact: HIGH
-impactDescription: enables effective memo() comparison
-tags: lists, performance, memo, primitives
+impactDescription: "enables effective memo() comparison"
+tags: "lists, performance, memo, primitives, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Pass Primitives to List Items for Memoization

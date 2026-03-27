@@ -1,8 +1,12 @@
 ---
-title: Early Return from Functions
+title: "Early Return from Functions"
 impact: LOW-MEDIUM
-impactDescription: avoids unnecessary computation
-tags: javascript, functions, optimization, early-return
+impactDescription: "avoids unnecessary computation"
+tags: "javascript, functions, optimization, early-return"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Early Return from Functions

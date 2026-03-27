@@ -1,8 +1,12 @@
 ---
-title: Never Track Scroll Position in useState
+title: "Never Track Scroll Position in useState"
 impact: HIGH
-impactDescription: prevents render thrashing during scroll
-tags: scroll, performance, reanimated, useRef
+impactDescription: "prevents render thrashing during scroll"
+tags: "scroll, performance, reanimated, useRef, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Never Track Scroll Position in useState

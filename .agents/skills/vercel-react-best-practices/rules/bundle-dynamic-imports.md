@@ -1,8 +1,12 @@
 ---
-title: Dynamic Imports for Heavy Components
+title: "Dynamic Imports for Heavy Components"
 impact: CRITICAL
-impactDescription: directly affects TTI and LCP
-tags: bundle, dynamic-import, code-splitting, next-dynamic
+impactDescription: "directly affects TTI and LCP"
+tags: "bundle, dynamic-import, code-splitting, next-dynamic, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: browser
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Dynamic Imports for Heavy Components

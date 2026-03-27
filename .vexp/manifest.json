@@ -1,21 +1,27 @@
 {
   "file_hashes": {
-    "eslint.config.mjs": "e24da190df4c2e9bee0b97578d18053458a3074748f70f838a577ba88f190882",
-    "next.config.mjs": "78b3e01e1623f639fec8d8989ddf5b3ef81dac9c56406a1ae38d40d5a839c7c9",
-    "postcss.config.mjs": "34a4007a2bf5e6d1b4846870b0fb759ba3ca168c5402974d1b5c7edc00a161a0",
-    "src/app/layout.tsx": "9a68f36957d5a1b4dbc00bccf8064c7f89cd7e87ec8450dab826b7f530b8bf17",
-    "src/app/page.tsx": "f956ab17aed5de97234b86758a60b11f3e8b3f36cf4aa186e9c83f761f0b9dd7",
-    "src/components/theme-provider.tsx": "8971c1d6ee7545035bc49b08384dba0bd1281a6775856ef4c2336a8e1cca0dfb",
-    "src/components/ui/button.tsx": "3224bda693e92ace60f0e3c9e9a72b755e8639d49e4249e25cd180a377106ed3",
-    "src/lib/utils.ts": "cb488a6352482fc7a7ded88a7d5312a953f7113b0ca3598e60979a44f75fb3f5"
+    "package.json": "2169c195250e9d29ad7285fb1cac8373ba21814239b04f1806387c56c63d909e",
+    "eslint.config.mjs": "94d7afaf8b379950c15a72cc94e7b18403e5d902fbfcc63e8ac6d85ded2f24ea",
+    "tsconfig.json": "afe0b705f66e096c06a6cdc3389384c1df7278f424c377cd9eb72715caa5e263",
+    "vite.config.ts": "ba1f8cbd200ea910d01c0da62da103583ff81996d4683df79eceed2ec4ca8abd",
+    "src/main.tsx": "9fceaa0dbc2748917e582e284ce14e00729593ce8fb3cfe270c27109d4341fa6",
+    "src/App.tsx": "90035511f78b44185451464bdb14c1ae9c59dac7231658ff8557e130c99ce75d",
+    "src/components/animation-player.tsx": "627333cf790207509f78dbb0b45837cf54952d9303787e3b9eaf176459f3da53",
+    "src/components/animation-timeline.tsx": "870fbbf352d89c0ff4a85d88599fc5ca3126e643460029029814010041b61630",
+    "src/components/editor-layout.tsx": "e774f8f5bcb5a8749b67de96eb41f96fca65066358dd8d6f7fdecfc2449ee7e2",
+    "src/components/frame-prompt-panel.tsx": "e50dd12bade0e3727f3f30730831bdcd9a55a2320787ba43bf5edec3f41f5b9c",
+    "src/components/export-panel.tsx": "c974ece03e5e894e8bc230c6367db43b641f90b35b577276572b1be76a8c39da",
+    "src/services/generate-frame.ts": "62b8c7065589b732df62ba9ec799d82c717557b823485f46bcf2b997f507e965",
+    "src/store/animation-store.ts": "29f977850d5f62c0c405ccba60cf5149137d8f35c5ad8419ca971ad3c971308e",
+    "src/store/settings-store.ts": "debb91eade8627284305c29f9b7d8fbb45ff05e3ba29294a8921fd9db21f4640"
   },
-  "indexed_at_commit": "10c56069d55f5f6056e5a51c337879537bceeb68",
-  "indexed_at_timestamp": "2026-03-27T04:14:29.687714+00:00",
+  "indexed_at_commit": "19c1439ebe8523aef966f0ee839dd0b91bea63e0",
+  "indexed_at_timestamp": "2026-03-27T12:11:16.745Z",
   "schema_version": 3,
   "stats": {
-    "total_edges": 2,
-    "total_files": 8,
-    "total_nodes": 7
+    "total_edges": 13,
+    "total_files": 14,
+    "total_nodes": 14
   },
   "vexp_version": "1.2.30"
 }

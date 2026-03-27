@@ -1,8 +1,12 @@
 ---
-title: Defer Non-Critical Work with requestIdleCallback
+title: "Defer Non-Critical Work with requestIdleCallback"
 impact: MEDIUM
-impactDescription: keeps UI responsive during background tasks
-tags: javascript, performance, idle, scheduling, analytics
+impactDescription: "keeps UI responsive during background tasks"
+tags: "javascript, performance, idle, scheduling, analytics"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Defer Non-Critical Work with requestIdleCallback

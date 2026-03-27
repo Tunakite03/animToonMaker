@@ -1,8 +1,12 @@
 ---
-title: Promise.all() for Independent Operations
+title: "Promise.all() for Independent Operations"
 impact: CRITICAL
-impactDescription: 2-10× improvement
-tags: async, parallelization, promises, waterfalls
+impactDescription: "2-10× improvement"
+tags: "async, parallelization, promises, waterfalls"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Promise.all() for Independent Operations

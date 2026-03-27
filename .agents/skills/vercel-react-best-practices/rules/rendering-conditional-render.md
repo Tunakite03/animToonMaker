@@ -1,8 +1,12 @@
 ---
-title: Use Explicit Conditional Rendering
+title: "Use Explicit Conditional Rendering"
 impact: LOW
-impactDescription: prevents rendering 0 or NaN
-tags: rendering, conditional, jsx, falsy-values
+impactDescription: "prevents rendering 0 or NaN"
+tags: "rendering, conditional, jsx, falsy-values"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Explicit Conditional Rendering

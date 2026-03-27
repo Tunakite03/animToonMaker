@@ -1,8 +1,12 @@
 ---
-title: Keep List Items Lightweight
+title: "Keep List Items Lightweight"
 impact: HIGH
-impactDescription: reduces render time for visible items during scroll
-tags: lists, performance, virtualization, hooks
+impactDescription: "reduces render time for visible items during scroll"
+tags: "lists, performance, virtualization, hooks, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Keep List Items Lightweight

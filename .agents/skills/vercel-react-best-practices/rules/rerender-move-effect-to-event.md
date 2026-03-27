@@ -1,8 +1,12 @@
 ---
-title: Put Interaction Logic in Event Handlers
+title: "Put Interaction Logic in Event Handlers"
 impact: MEDIUM
-impactDescription: avoids effect re-runs and duplicate side effects
-tags: rerender, useEffect, events, side-effects, dependencies
+impactDescription: "avoids effect re-runs and duplicate side effects"
+tags: "rerender, useEffect, events, side-effects, dependencies"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Put Interaction Logic in Event Handlers

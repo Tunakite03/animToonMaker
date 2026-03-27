@@ -9,7 +9,7 @@ metadata:
 
 # Vercel React Best Practices
 
-Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 65 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
+Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 66 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
 ## When to Apply
 
@@ -19,6 +19,19 @@ Reference these guidelines when:
 - Reviewing code for performance issues
 - Refactoring existing React/Next.js code
 - Optimizing bundle size or load times
+
+## Framework-Aware Routing
+
+Always route rules by detected framework before applying guidance:
+- **Next.js mode**: apply both generic React rules and Next.js-specific rules.
+- **Vite/SPA mode**: apply only generic React rules and skip rules tagged `appliesTo: [nextjs-app-router, ...]`.
+- **React Native mode**: skip this skill entirely and use `vercel-react-native-skills`.
+
+Detection signals:
+- `next` dependency or `next.config.*` file => Next.js mode
+- no `next` + `vite.config.*` => Vite/SPA mode
+
+Use `.agents/rules-index.json` as the source of truth for `enabled` rules in the current repo.
 
 ## Rule Categories by Priority
 
@@ -46,8 +59,8 @@ Reference these guidelines when:
 ### 2. Bundle Size Optimization (CRITICAL)
 
 - `bundle-barrel-imports` - Import directly, avoid barrel files
-- `bundle-dynamic-imports` - Use next/dynamic for heavy components
-- `bundle-defer-third-party` - Load analytics/logging after hydration
+- `bundle-dynamic-imports` - Use framework-appropriate dynamic imports for heavy components (`next/dynamic` in Next.js)
+- `bundle-defer-third-party` - Load analytics/logging after hydration (Next.js and non-Next variants differ)
 - `bundle-conditional` - Load modules only when feature is activated
 - `bundle-preload` - Preload on hover/focus for perceived speed
 

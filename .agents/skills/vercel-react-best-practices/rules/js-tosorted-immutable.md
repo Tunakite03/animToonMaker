@@ -1,8 +1,12 @@
 ---
-title: Use toSorted() Instead of sort() for Immutability
+title: "Use toSorted() Instead of sort() for Immutability"
 impact: MEDIUM-HIGH
-impactDescription: prevents mutation bugs in React state
-tags: javascript, arrays, immutability, react, state, mutation
+impactDescription: "prevents mutation bugs in React state"
+tags: "javascript, arrays, immutability, react, state, mutation"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use toSorted() Instead of sort() for Immutability

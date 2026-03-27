@@ -1,8 +1,12 @@
 ---
-title: Animate Transform and Opacity Instead of Layout Properties
+title: "Animate Transform and Opacity Instead of Layout Properties"
 impact: HIGH
-impactDescription: GPU-accelerated animations, no layout recalculation
-tags: animation, performance, reanimated, transform, opacity
+impactDescription: "GPU-accelerated animations, no layout recalculation"
+tags: "animation, performance, reanimated, transform, opacity, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Animate Transform and Opacity Instead of Layout Properties

@@ -1,8 +1,12 @@
 ---
-title: Extract to Memoized Components
+title: "Extract to Memoized Components"
 impact: MEDIUM
-impactDescription: enables early returns
-tags: rerender, memo, useMemo, optimization
+impactDescription: "enables early returns"
+tags: "rerender, memo, useMemo, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Extract to Memoized Components

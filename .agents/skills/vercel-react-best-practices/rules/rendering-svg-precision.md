@@ -1,8 +1,12 @@
 ---
-title: Optimize SVG Precision
+title: "Optimize SVG Precision"
 impact: LOW
-impactDescription: reduces file size
-tags: rendering, svg, optimization, svgo
+impactDescription: "reduces file size"
+tags: "rendering, svg, optimization, svgo"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Optimize SVG Precision

@@ -1,8 +1,12 @@
 ---
-title: Parallel Nested Data Fetching
+title: "Parallel Nested Data Fetching"
 impact: CRITICAL
-impactDescription: eliminates server-side waterfalls
-tags: server, rsc, parallel-fetching, promise-chaining
+impactDescription: "eliminates server-side waterfalls"
+tags: "server, rsc, parallel-fetching, promise-chaining, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Parallel Nested Data Fetching

@@ -1,8 +1,12 @@
 ---
-title: Avoid Inline Objects in renderItem
+title: "Avoid Inline Objects in renderItem"
 impact: HIGH
-impactDescription: prevents unnecessary re-renders of memoized list items
-tags: lists, performance, flatlist, virtualization, memo
+impactDescription: "prevents unnecessary re-renders of memoized list items"
+tags: "lists, performance, flatlist, virtualization, memo, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Avoid Inline Objects in renderItem

@@ -1,8 +1,12 @@
 ---
-title: Avoid Layout Thrashing
+title: "Avoid Layout Thrashing"
 impact: MEDIUM
-impactDescription: prevents forced synchronous layouts and reduces performance bottlenecks
-tags: javascript, dom, css, performance, reflow, layout-thrashing
+impactDescription: "prevents forced synchronous layouts and reduces performance bottlenecks"
+tags: "javascript, dom, css, performance, reflow, layout-thrashing"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Avoid Layout Thrashing

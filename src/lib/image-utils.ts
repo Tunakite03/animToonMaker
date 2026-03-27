@@ -3,6 +3,8 @@
  * All functions accept an image source (URL or data URL) and return a data URL.
  */
 
+const transparentImageCache = new Map<string, string>();
+
 async function loadImage(src: string): Promise<HTMLImageElement> {
   // Data URLs / blob URLs: load directly (no CORS issues)
   if (src.startsWith("data:") || src.startsWith("blob:")) {
@@ -171,4 +173,44 @@ export async function removeBackground(
 
   ctx.putImageData(imageData, 0, 0);
   return canvas.toDataURL("image/png");
+}
+
+export function createSolidColorImage(
+  color: string,
+  width: number,
+  height: number,
+): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Unable to create a color-filled image.");
+  }
+
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, width, height);
+
+  return canvas.toDataURL("image/png");
+}
+
+export function createTransparentImage(width: number, height: number): string {
+  const cacheKey = `${width}x${height}`;
+  const cached = transparentImageCache.get(cacheKey);
+  if (cached) return cached;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Unable to create a transparent placeholder image.");
+  }
+
+  ctx.clearRect(0, 0, width, height);
+  const dataUrl = canvas.toDataURL("image/png");
+  transparentImageCache.set(cacheKey, dataUrl);
+  return dataUrl;
 }

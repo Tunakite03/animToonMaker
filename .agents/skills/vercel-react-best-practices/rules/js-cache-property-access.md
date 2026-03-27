@@ -1,8 +1,12 @@
 ---
-title: Cache Property Access in Loops
+title: "Cache Property Access in Loops"
 impact: LOW-MEDIUM
-impactDescription: reduces lookups
-tags: javascript, loops, optimization, caching
+impactDescription: "reduces lookups"
+tags: "javascript, loops, optimization, caching"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Cache Property Access in Loops

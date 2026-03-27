@@ -1,8 +1,12 @@
 ---
-title: Wrap Strings in Text Components
+title: "Wrap Strings in Text Components"
 impact: CRITICAL
-impactDescription: prevents runtime crash
-tags: rendering, text, core
+impactDescription: "prevents runtime crash"
+tags: "rendering, text, core, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Wrap Strings in Text Components

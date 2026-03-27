@@ -1,8 +1,12 @@
 ---
-title: Never Use && with Potentially Falsy Values
+title: "Never Use && with Potentially Falsy Values"
 impact: CRITICAL
-impactDescription: prevents production crash
-tags: rendering, conditional, jsx, crash
+impactDescription: "prevents production crash"
+tags: "rendering, conditional, jsx, crash, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Never Use && with Potentially Falsy Values

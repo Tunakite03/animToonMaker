@@ -1,8 +1,12 @@
 ---
-title: Defer State Reads to Usage Point
+title: "Defer State Reads to Usage Point"
 impact: MEDIUM
-impactDescription: avoids unnecessary subscriptions
-tags: rerender, searchParams, localStorage, optimization
+impactDescription: "avoids unnecessary subscriptions"
+tags: "rerender, searchParams, localStorage, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Defer State Reads to Usage Point

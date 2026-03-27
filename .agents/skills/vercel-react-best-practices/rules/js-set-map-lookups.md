@@ -1,8 +1,12 @@
 ---
-title: Use Set/Map for O(1) Lookups
+title: "Use Set/Map for O(1) Lookups"
 impact: LOW-MEDIUM
-impactDescription: O(n) to O(1)
-tags: javascript, set, map, data-structures, performance
+impactDescription: "O(n) to O(1)"
+tags: "javascript, set, map, data-structures, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Set/Map for O(1) Lookups

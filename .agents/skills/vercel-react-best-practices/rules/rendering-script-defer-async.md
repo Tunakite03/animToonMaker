@@ -1,8 +1,12 @@
 ---
-title: Use defer or async on Script Tags
+title: "Use defer or async on Script Tags"
 impact: HIGH
-impactDescription: eliminates render-blocking
-tags: rendering, script, defer, async, performance
+impactDescription: "eliminates render-blocking"
+tags: "rendering, script, defer, async, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use defer or async on Script Tags

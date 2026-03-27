@@ -1,8 +1,12 @@
 ---
-title: Lift State into Provider Components
+title: "Lift State into Provider Components"
 impact: HIGH
-impactDescription: enables state sharing outside component boundaries
-tags: composition, state, context, providers
+impactDescription: "enables state sharing outside component boundaries"
+tags: "composition, state, context, providers"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Lift State into Provider Components

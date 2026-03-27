@@ -1,8 +1,12 @@
 ---
-title: Use GestureDetector for Animated Press States
+title: "Use GestureDetector for Animated Press States"
 impact: MEDIUM
-impactDescription: UI thread animations, smoother press feedback
-tags: animation, gestures, press, reanimated
+impactDescription: "UI thread animations, smoother press feedback"
+tags: "animation, gestures, press, reanimated, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use GestureDetector for Animated Press States

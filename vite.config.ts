@@ -30,5 +30,32 @@ export default defineConfig({
     // Produce sourcemaps for Tauri debug builds
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+
+          if (id.includes("@tauri-apps")) {
+            return "tauri";
+          }
+
+          if (id.includes("@dnd-kit")) {
+            return "dnd";
+          }
+
+          if (id.includes("@radix-ui") || id.includes("radix-ui")) {
+            return "radix";
+          }
+
+          if (
+            id.includes("react") ||
+            id.includes("scheduler") ||
+            id.includes("use-sync-external-store")
+          ) {
+            return "react-vendor";
+          }
+        },
+      },
+    },
   },
 });

@@ -1,8 +1,12 @@
 ---
-title: Conditional Module Loading
+title: "Conditional Module Loading"
 impact: HIGH
-impactDescription: loads large data only when needed
-tags: bundle, conditional-loading, lazy-loading
+impactDescription: "loads large data only when needed"
+tags: "bundle, conditional-loading, lazy-loading"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Conditional Module Loading

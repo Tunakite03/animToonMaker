@@ -1,8 +1,12 @@
 ---
-title: Prevent Hydration Mismatch Without Flickering
+title: "Prevent Hydration Mismatch Without Flickering"
 impact: MEDIUM
-impactDescription: avoids visual flicker and hydration errors
-tags: rendering, ssr, hydration, localStorage, flicker
+impactDescription: "avoids visual flicker and hydration errors"
+tags: "rendering, ssr, hydration, localStorage, flicker"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Prevent Hydration Mismatch Without Flickering

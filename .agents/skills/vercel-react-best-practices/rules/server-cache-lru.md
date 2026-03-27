@@ -1,8 +1,12 @@
 ---
-title: Cross-Request LRU Caching
+title: "Cross-Request LRU Caching"
 impact: HIGH
-impactDescription: caches across requests
-tags: server, cache, lru, cross-request
+impactDescription: "caches across requests"
+tags: "server, cache, lru, cross-request, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Cross-Request LRU Caching

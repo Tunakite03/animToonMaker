@@ -1,8 +1,12 @@
 ---
-title: Avoid Boolean Prop Proliferation
+title: "Avoid Boolean Prop Proliferation"
 impact: CRITICAL
-impactDescription: prevents unmaintainable component variants
-tags: composition, props, architecture
+impactDescription: "prevents unmaintainable component variants"
+tags: "composition, props, architecture"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Avoid Boolean Prop Proliferation

@@ -1,8 +1,12 @@
 ---
-title: Combine Multiple Array Iterations
+title: "Combine Multiple Array Iterations"
 impact: LOW-MEDIUM
-impactDescription: reduces iterations
-tags: javascript, arrays, loops, performance
+impactDescription: "reduces iterations"
+tags: "javascript, arrays, loops, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Combine Multiple Array Iterations

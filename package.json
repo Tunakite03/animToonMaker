@@ -14,7 +14,12 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint && pnpm typecheck && pnpm build:vite"
+    "check": "pnpm lint && pnpm typecheck && pnpm build:vite",
+    "rules:normalize": "node scripts/normalize-rules.mjs",
+    "rules:index": "node scripts/build-rules-index.mjs",
+    "rules:validate": "node scripts/validate-rules.mjs",
+    "rules:reindex:vexp": "node scripts/reindex-vexp-manifest.mjs",
+    "rules:sync": "pnpm rules:normalize && pnpm rules:index && pnpm rules:reindex:vexp"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

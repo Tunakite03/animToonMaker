@@ -1,37 +1,64 @@
-import { Routes, Route } from "react-router-dom";
-
+import { Suspense, lazy, type ReactNode } from "react";
+import { Route, Routes } from "react-router-dom";
 import { EditorLayout } from "@/components/editor-layout";
-import SettingsLayout from "@/app/settings/layout";
-import SettingsPage from "@/app/settings/page";
-import AIProviderPage from "@/app/settings/ai-provider/page";
-import CanvasPage from "@/app/settings/canvas/page";
-import EditorSettingsPage from "@/app/settings/editor/page";
-import ExportPage from "@/app/settings/export/page";
-import GenerationPage from "@/app/settings/generation/page";
 import { Providers } from "./provider/provider";
 
+const SettingsLayout = lazy(() => import("@/app/settings/layout"));
+const SettingsPage = lazy(() => import("@/app/settings/page"));
+const AIProviderPage = lazy(() => import("@/app/settings/ai-provider/page"));
+const CanvasPage = lazy(() => import("@/app/settings/canvas/page"));
+const EditorSettingsPage = lazy(() => import("@/app/settings/editor/page"));
+const ExportPage = lazy(() => import("@/app/settings/export/page"));
+const GenerationPage = lazy(() => import("@/app/settings/generation/page"));
+
+function SettingsFallback() {
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-background px-6">
+      <div className="rounded-lg border border-border/60 bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
+        Loading settings...
+      </div>
+    </div>
+  );
+}
+
+function withSettingsSuspense(children: ReactNode) {
+  return <Suspense fallback={<SettingsFallback />}>{children}</Suspense>;
+}
 
 export function App() {
   return (
-   <Providers>
-        <div
-          className="font-sans antialiased"
-          style={{
-            fontFamily: "'Source Sans 3', var(--font-sans), system-ui, sans-serif",
-          }}
-        >
-          <Routes>
-            <Route path="/" element={<EditorLayout />} />
-            <Route path="/settings" element={<SettingsLayout />}>
-              <Route index element={<SettingsPage />} />
-              <Route path="ai-provider" element={<AIProviderPage />} />
-              <Route path="canvas" element={<CanvasPage />} />
-              <Route path="editor" element={<EditorSettingsPage />} />
-              <Route path="export" element={<ExportPage />} />
-              <Route path="generation" element={<GenerationPage />} />
-            </Route>
-          </Routes>
-        </div>
-   </Providers>
+    <Providers>
+      <div className="font-sans antialiased">
+        <Routes>
+          <Route path="/" element={<EditorLayout />} />
+          <Route
+            path="/settings"
+            element={withSettingsSuspense(<SettingsLayout />)}
+          >
+            <Route index element={withSettingsSuspense(<SettingsPage />)} />
+            <Route
+              path="ai-provider"
+              element={withSettingsSuspense(<AIProviderPage />)}
+            />
+            <Route
+              path="canvas"
+              element={withSettingsSuspense(<CanvasPage />)}
+            />
+            <Route
+              path="editor"
+              element={withSettingsSuspense(<EditorSettingsPage />)}
+            />
+            <Route
+              path="export"
+              element={withSettingsSuspense(<ExportPage />)}
+            />
+            <Route
+              path="generation"
+              element={withSettingsSuspense(<GenerationPage />)}
+            />
+          </Route>
+        </Routes>
+      </div>
+    </Providers>
   );
 }

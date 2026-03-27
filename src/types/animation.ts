@@ -12,6 +12,7 @@ export interface Frame {
   id: string;
   prompt: string;
   imageUrl: string | null;
+  isBlank?: boolean;
   duration: number; // ms per frame
   status: FrameStatus;
   errorMessage?: string;

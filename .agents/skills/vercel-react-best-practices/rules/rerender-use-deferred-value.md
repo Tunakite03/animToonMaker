@@ -1,8 +1,12 @@
 ---
-title: Use useDeferredValue for Expensive Derived Renders
+title: "Use useDeferredValue for Expensive Derived Renders"
 impact: MEDIUM
-impactDescription: keeps input responsive during heavy computation
-tags: rerender, useDeferredValue, optimization, concurrent
+impactDescription: "keeps input responsive during heavy computation"
+tags: "rerender, useDeferredValue, optimization, concurrent"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use useDeferredValue for Expensive Derived Renders

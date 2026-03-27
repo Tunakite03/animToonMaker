@@ -1,8 +1,12 @@
 ---
-title: useEffectEvent for Stable Callback Refs
+title: "useEffectEvent for Stable Callback Refs"
 impact: LOW
-impactDescription: prevents effect re-runs
-tags: advanced, hooks, useEffectEvent, refs, optimization
+impactDescription: "prevents effect re-runs"
+tags: "advanced, hooks, useEffectEvent, refs, optimization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 19
+incompatibleWith: []
 ---
 
 ## useEffectEvent for Stable Callback Refs

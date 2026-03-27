@@ -1,8 +1,12 @@
 ---
-title: Use Native Modals Over JS-Based Bottom Sheets
+title: "Use Native Modals Over JS-Based Bottom Sheets"
 impact: HIGH
-impactDescription: native performance, gestures, accessibility
-tags: modals, bottom-sheet, native, react-navigation
+impactDescription: "native performance, gestures, accessibility"
+tags: "modals, bottom-sheet, native, react-navigation, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Native Modals Over JS-Based Bottom Sheets

@@ -1,8 +1,12 @@
 ---
-title: Avoid Barrel File Imports
+title: "Avoid Barrel File Imports"
 impact: CRITICAL
-impactDescription: 200-800ms import cost, slow builds
-tags: bundle, imports, tree-shaking, barrel-files, performance
+impactDescription: "200-800ms import cost, slow builds"
+tags: "bundle, imports, tree-shaking, barrel-files, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Avoid Barrel File Imports

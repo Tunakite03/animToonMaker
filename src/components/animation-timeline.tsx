@@ -1,4 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import {
   DndContext,
   closestCenter,
@@ -17,24 +26,48 @@ import { CSS } from "@dnd-kit/utilities";
 import { useAnimationStore } from "@/store/animation-store";
 import type { Frame } from "@/types/animation";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MAX_FRAMES } from "@/lib/constants";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  processImageFiles,
+  processImagePaths,
+  readImageFile,
+  readImagePath,
+} from "@/lib/import-utils";
+
+// ── Frame thumbnail size ──────────────────────────────────────────────────────
+const FRAME_W = 80; // px — matches 512×512 square canvas aspect
+
+type TimelineMenuState = {
+  frameId: string | null;
+  x: number;
+  y: number;
+};
 
 function SortableFrame({
   frame,
   index,
   isSelected,
-  isCurrent,
+  isPlaying,
   onSelect,
   onDelete,
+  onOpenContextMenu,
+  isDropTarget,
+  onFrameImageDragOver,
+  onFrameImageDragLeave,
+  onFrameImageDrop,
 }: {
   frame: Frame;
   index: number;
   isSelected: boolean;
-  isCurrent: boolean;
+  isPlaying: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpenContextMenu: (event: React.MouseEvent, frameId: string) => void;
+  isDropTarget: boolean;
+  onFrameImageDragOver: (event: React.DragEvent, frameId: string) => void;
+  onFrameImageDragLeave: (event: React.DragEvent, frameId: string) => void;
+  onFrameImageDrop: (event: React.DragEvent, frameId: string) => void;
 }) {
   const {
     attributes,
@@ -47,8 +80,9 @@ function SortableFrame({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition ?? "transform 180ms ease",
     zIndex: isDragging ? 50 : undefined,
+    width: FRAME_W,
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -60,21 +94,64 @@ function SortableFrame({
     <div
       ref={setNodeRef}
       style={style}
+      data-frame-id={frame.id}
       {...attributes}
       {...listeners}
       onClick={() => onSelect(frame.id)}
+      onContextMenu={(event) => onOpenContextMenu(event, frame.id)}
+      onDragOver={(event) => onFrameImageDragOver(event, frame.id)}
+      onDragLeave={(event) => onFrameImageDragLeave(event, frame.id)}
+      onDrop={(event) => onFrameImageDrop(event, frame.id)}
       className={cn(
-        "group/frame relative flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border transition-all duration-150",
+        "group/frame relative shrink-0 cursor-pointer select-none overflow-hidden rounded-md border transition-all duration-150",
+        // height fills the track
+        "h-full",
         isSelected
-          ? "border-primary ring-2 ring-primary/25 shadow-sm shadow-primary/10"
-          : "border-border/50 hover:border-primary/40",
-        isCurrent && !isSelected && "border-accent-foreground/30",
-        isDragging && "opacity-40 scale-95",
+          ? "border-primary shadow-[0_0_0_2px] shadow-primary/30"
+          : "border-border/50 hover:border-primary/40 hover:shadow-sm",
+        isPlaying && isSelected &&
+          "border-amber-400/80 shadow-[0_0_0_2px] shadow-amber-400/25",
+        isDragging && "opacity-50 scale-95 shadow-xl",
+        isDropTarget && "border-primary shadow-[0_0_0_2px] shadow-primary/25",
       )}
     >
-      {/* Frame image or placeholder */}
-      {frame.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
+      {/* ── Thumbnail ──────────────────────────────────────────────── */}
+      {frame.isBlank ? (
+        <div
+          className={cn(
+            "flex h-full w-full flex-col items-center justify-center gap-1 bg-checker px-1.5 text-center",
+            "ring-1 ring-inset ring-border/30",
+            isDropTarget && "bg-primary/10 ring-primary/40",
+          )}
+        >
+          {frame.status === "generating" ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-[9px] text-muted-foreground">Gen…</span>
+            </>
+          ) : frame.status === "error" ? (
+            <>
+              <ErrorIcon />
+              <span className="text-[9px] text-destructive">Error</span>
+            </>
+          ) : (
+            <>
+              <EmptyFrameIcon />
+              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
+                Blank
+              </span>
+              <span
+                className={cn(
+                  "text-[8px] leading-tight text-muted-foreground/70",
+                  isDropTarget && "text-primary",
+                )}
+              >
+                {isDropTarget ? "Drop to replace" : "Transparent frame"}
+              </span>
+            </>
+          )}
+        </div>
+      ) : frame.imageUrl ? (
         <img
           src={frame.imageUrl}
           alt={`Frame ${index + 1}`}
@@ -82,77 +159,171 @@ function SortableFrame({
           draggable={false}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-muted/60 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            "flex h-full w-full flex-col items-center justify-center gap-1 bg-muted/50 px-1.5 text-center",
+            isDropTarget && "bg-primary/10",
+          )}
+        >
           {frame.status === "generating" ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-[9px] text-muted-foreground">Gen…</span>
+            </>
           ) : frame.status === "error" ? (
-            <span className="text-[10px] text-destructive">Error</span>
+            <>
+              <ErrorIcon />
+              <span className="text-[9px] text-destructive">Error</span>
+            </>
           ) : (
-            <span className="text-[10px]">Empty</span>
+            <>
+              <EmptyFrameIcon />
+              <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
+                Blank
+              </span>
+              <span
+                className={cn(
+                  "text-[8px] leading-tight text-muted-foreground/70",
+                  isDropTarget && "text-primary",
+                )}
+              >
+                {isDropTarget ? "Drop to replace" : "Drop image or fill"}
+              </span>
+            </>
           )}
         </div>
       )}
 
-      {/* Frame index */}
-      <div className="absolute bottom-0.5 left-0.5 flex h-4 min-w-4 items-center justify-center rounded bg-black/60 px-0.5 text-[9px] font-medium text-white">
-        {index + 1}
+      {/* ── Bottom strip: frame number ──────────────────────────────── */}
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 right-0 flex items-center justify-between px-1.5 py-0.5",
+          "bg-linear-to-t from-black/70 via-black/30 to-transparent",
+        )}
+      >
+        <span className="tabular-nums text-[9px] font-semibold leading-none text-white/90">
+          {index + 1}
+        </span>
+        {/* Status dot */}
+        {frame.status === "done" && (
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px] shadow-emerald-400/60" />
+        )}
+        {frame.status === "generating" && (
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+        )}
+        {frame.status === "error" && (
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+        )}
       </div>
 
-      {/* Status dot */}
-      {frame.status !== "idle" && (
-        <div className={cn(
-          "absolute top-1 right-1 h-2 w-2 rounded-full",
-          frame.status === "done" && "bg-emerald-400",
-          frame.status === "generating" && "bg-amber-400 animate-pulse",
-          frame.status === "error" && "bg-red-400",
-        )} />
+      {/* ── Playing indicator bar ───────────────────────────────────── */}
+      {isSelected && isPlaying && (
+        <div className="absolute inset-x-0 top-0 h-0.5 animate-pulse bg-amber-400" />
       )}
 
-      {/* Delete button — visible on hover */}
+      {/* ── Selected indicator bar ──────────────────────────────────── */}
+      {isSelected && !isPlaying && (
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-primary" />
+      )}
+
+      {/* ── Delete button (hover) ───────────────────────────────────── */}
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             onClick={handleDelete}
-            className="absolute top-0.5 left-0.5 flex h-4 w-4 items-center justify-center rounded-sm bg-destructive/90 text-white opacity-0 transition-opacity hover:bg-destructive group-hover/frame:opacity-100"
+            className={cn(
+              "absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-sm",
+              "bg-black/60 text-white/70 opacity-0 transition-all",
+              "hover:bg-destructive hover:text-white",
+              "group-hover/frame:opacity-100",
+            )}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
               <path d="M18 6 6 18" />
               <path d="m6 6 12 12" />
             </svg>
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="text-[10px]">Delete frame</TooltipContent>
+        <TooltipContent side="top" className="text-[10px]">
+          Delete frame
+        </TooltipContent>
       </Tooltip>
+
+      {/* ── Drag handle overlay (invisible, just for cursor feel) ────── */}
+      {!isDragging && (
+        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover/frame:opacity-100">
+          <div className="absolute inset-x-0 bottom-6 flex items-center justify-center">
+            <div className="flex gap-0.5 opacity-40">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-0.5 w-3 rounded-full bg-white" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+// ── Main timeline component ───────────────────────────────────────────────────
+
 export function AnimationTimeline() {
   const frames = useAnimationStore((s) => s.project.frames);
   const selectedFrameId = useAnimationStore((s) => s.project.selectedFrameId);
-  const currentFrameIndex = useAnimationStore(
-    (s) => s.playback.currentFrameIndex,
-  );
+  const isPlaying = useAnimationStore((s) => s.playback.isPlaying);
+  const currentFrameIndex = useAnimationStore((s) => s.playback.currentFrameIndex);
+
   const selectFrame = useAnimationStore((s) => s.selectFrame);
   const reorderFrames = useAnimationStore((s) => s.reorderFrames);
   const removeFrame = useAnimationStore((s) => s.removeFrame);
+  const updateFrame = useAnimationStore((s) => s.updateFrame);
   const addFrameWithImage = useAnimationStore((s) => s.addFrameWithImage);
+  const insertFrame = useAnimationStore((s) => s.insertFrame);
+  const duplicateFrame = useAnimationStore((s) => s.duplicateFrame);
+  const copyFrame = useAnimationStore((s) => s.copyFrame);
+  const cutFrame = useAnimationStore((s) => s.cutFrame);
+  const pasteFrame = useAnimationStore((s) => s.pasteFrame);
+  const frameClipboard = useAnimationStore((s) => s.frameClipboard);
 
   const [isDragOver, setIsDragOver] = useState(false);
+  const [dropTargetFrameId, setDropTargetFrameId] = useState<string | null>(null);
+  const [menuState, setMenuState] = useState<TimelineMenuState | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ left: number; top: number } | null>(
+    null,
+  );
+  const menuRef = useRef<HTMLDivElement>(null);
+  const framesInputRef = useRef<HTMLInputElement>(null);
+
+  // Stable ref to the current frame count — readable inside async effects and
+  // callbacks without making them re-subscribe on every frame addition.
+  const framesCountRef = useRef(frames.length);
+  framesCountRef.current = frames.length;
+
+  // Prevents the HTML5 drop handler from double-processing files that were
+  // already handled by the Tauri onDragDropEvent listener.
+  const isHandlingDrop = useRef(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor),
   );
 
   const frameIds = useMemo(() => frames.map((f) => f.id), [frames]);
 
-  const playableFrames = useMemo(
-    () => frames.filter((f) => f.imageUrl),
-    [frames],
-  );
-
+  const playableFrames = useMemo(() => frames.filter((f) => f.imageUrl), [frames]);
   const currentPlayableId = playableFrames[currentFrameIndex]?.id;
+  const hasFrameClipboard = Boolean(frameClipboard);
+  const canCreateFrame = frames.length < MAX_FRAMES;
+  const clipboardPasteLabel =
+    frameClipboard?.mode === "cut" ? "Paste cut frame" : "Paste frame";
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -167,127 +338,925 @@ export function AnimationTimeline() {
     [frames, reorderFrames],
   );
 
-  const handleDeleteFrame = useCallback(
-    (id: string) => {
-      removeFrame(id);
-    },
-    [removeFrame],
-  );
+  const handleFramesImportChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const fileList = event.target.files;
+      if (!fileList || fileList.length === 0) return;
 
-  const handleExternalDragOver = useCallback(
-    (e: React.DragEvent) => {
-      if (e.dataTransfer.types.includes("Files")) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "copy";
-        setIsDragOver(true);
-      }
-    },
-    [],
-  );
-
-  const handleExternalDragLeave = useCallback(
-    (e: React.DragEvent) => {
-      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-      setIsDragOver(false);
-    },
-    [],
-  );
-
-  const handleExternalDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(false);
-
-      const files = Array.from(e.dataTransfer.files).filter((f) =>
-        f.type.startsWith("image/"),
+      await processImageFiles(
+        Array.from(fileList),
+        framesCountRef.current,
+        addFrameWithImage,
       );
+
+      event.target.value = "";
+    },
+    [addFrameWithImage],
+  );
+
+  const replaceFrameImage = useCallback(
+    (frameId: string, imageUrl: string, prompt: string) => {
+      const targetFrame = frames.find((frame) => frame.id === frameId);
+      if (!targetFrame || !targetFrame.isBlank) return false;
+
+      updateFrame(frameId, {
+        imageUrl,
+        prompt: targetFrame.prompt.trim() ? targetFrame.prompt : prompt,
+        status: "done",
+        errorMessage: undefined,
+        isBlank: false,
+      });
+      selectFrame(frameId);
+      return true;
+    },
+    [frames, selectFrame, updateFrame],
+  );
+
+  const replaceBlankFrameFromFiles = useCallback(
+    async (frameId: string, files: File[]) => {
+      const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+      if (imageFiles.length === 0) return false;
+
+      const [firstFile, ...remainingFiles] = imageFiles;
+      const imported = await readImageFile(firstFile);
+      if (!imported) return false;
+
+      const replaced = replaceFrameImage(frameId, imported.imageUrl, imported.prompt);
+      if (!replaced) return false;
+
+      if (remainingFiles.length > 0) {
+        await processImageFiles(
+          remainingFiles,
+          framesCountRef.current,
+          addFrameWithImage,
+        );
+      }
+
+      return true;
+    },
+    [addFrameWithImage, replaceFrameImage],
+  );
+
+  const replaceBlankFrameFromPaths = useCallback(
+    async (frameId: string, paths: string[]) => {
+      if (paths.length === 0) return false;
+
+      const [firstPath, ...remainingPaths] = paths;
+      const imported = await readImagePath(firstPath);
+      if (!imported) return false;
+
+      const replaced = replaceFrameImage(frameId, imported.imageUrl, imported.prompt);
+      if (!replaced) return false;
+
+      if (remainingPaths.length > 0) {
+        await processImagePaths(
+          remainingPaths,
+          framesCountRef.current,
+          addFrameWithImage,
+        );
+      }
+
+      return true;
+    },
+    [addFrameWithImage, replaceFrameImage],
+  );
+
+  const getBlankFrameAtViewportPoint = useCallback(
+    (position?: { x: number; y: number }) => {
+      if (!position || typeof document === "undefined") return null;
+
+      // Tauri reports drag coordinates in physical pixels; DOM hit-testing uses CSS pixels.
+      const scale = window.devicePixelRatio || 1;
+      const element = document.elementFromPoint(
+        position.x / scale,
+        position.y / scale,
+      ) as HTMLElement | null;
+      const frameId = element?.closest<HTMLElement>("[data-frame-id]")?.dataset.frameId;
+      if (!frameId) return null;
+
+      const frame = frames.find((candidate) => candidate.id === frameId);
+      return frame?.isBlank ? frameId : null;
+    },
+    [frames],
+  );
+
+  const closeContextMenu = useCallback(() => {
+    setMenuState(null);
+    setMenuPosition(null);
+  }, []);
+
+  const handleOpenContextMenu = useCallback(
+    (x: number, y: number, frameId: string | null) => {
+      setMenuPosition({ left: x, top: y });
+      setMenuState({ x, y, frameId });
+    },
+    [],
+  );
+
+  const handleFrameContextMenu = useCallback(
+    (event: React.MouseEvent, frameId: string) => {
+      event.preventDefault();
+      event.stopPropagation();
+      selectFrame(frameId);
+      handleOpenContextMenu(event.clientX, event.clientY, frameId);
+    },
+    [handleOpenContextMenu, selectFrame],
+  );
+
+  const handleTimelineContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      if ((event.target as HTMLElement).closest("[data-frame-id]")) return;
+
+      event.preventDefault();
+      handleOpenContextMenu(event.clientX, event.clientY, null);
+    },
+    [handleOpenContextMenu],
+  );
+
+  const runMenuAction = useCallback(
+    (action: () => void) => {
+      action();
+      closeContextMenu();
+    },
+    [closeContextMenu],
+  );
+
+  useEffect(() => {
+    if (!menuState || !menuRef.current) return;
+
+    const { width, height } = menuRef.current.getBoundingClientRect();
+    const margin = 8;
+    setMenuPosition({
+      left: Math.min(menuState.x, window.innerWidth - width - margin),
+      top: Math.min(menuState.y, window.innerHeight - height - margin),
+    });
+  }, [menuState]);
+
+  useEffect(() => {
+    if (!menuState) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (menuRef.current?.contains(event.target as Node)) return;
+      closeContextMenu();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeContextMenu();
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", closeContextMenu, true);
+    window.addEventListener("resize", closeContextMenu);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", closeContextMenu, true);
+      window.removeEventListener("resize", closeContextMenu);
+    };
+  }, [closeContextMenu, menuState]);
+
+  // ── External image drop ────────────────────────────────────────────────────
+  const handleFrameImageDragOver = useCallback(
+    (event: React.DragEvent, frameId: string) => {
+      const frame = frames.find((candidate) => candidate.id === frameId);
+      if (!frame || !frame.isBlank || !event.dataTransfer.types.includes("Files")) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = "copy";
+      setDropTargetFrameId(frameId);
+      setIsDragOver(false);
+    },
+    [frames],
+  );
+
+  const handleFrameImageDragLeave = useCallback(
+    (event: React.DragEvent, frameId: string) => {
+      if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+
+      setDropTargetFrameId((current) => (current === frameId ? null : current));
+    },
+    [],
+  );
+
+  const handleFrameImageDrop = useCallback(
+    async (event: React.DragEvent, frameId: string) => {
+      const frame = frames.find((candidate) => candidate.id === frameId);
+      if (!frame || !frame.isBlank) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      setDropTargetFrameId(null);
+      setIsDragOver(false);
+
+      if (isHandlingDrop.current) return;
+
+      const files = Array.from(event.dataTransfer.files);
       if (files.length === 0) return;
 
-      const remaining = MAX_FRAMES - frames.length;
-      const toAdd = files.slice(0, remaining);
-
-      for (const file of toAdd) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = reader.result as string;
-          addFrameWithImage(dataUrl, file.name.replace(/\.[^.]+$/, ""));
-        };
-        reader.readAsDataURL(file);
+      isHandlingDrop.current = true;
+      try {
+        const replaced = await replaceBlankFrameFromFiles(frameId, files);
+        if (!replaced) {
+          await processImageFiles(files, framesCountRef.current, addFrameWithImage);
+        }
+      } finally {
+        isHandlingDrop.current = false;
       }
     },
-    [frames.length, addFrameWithImage],
+    [addFrameWithImage, frames, replaceBlankFrameFromFiles],
   );
 
+  const handleExternalDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes("Files")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleExternalDragLeave = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragOver(false);
+    setDropTargetFrameId(null);
+  }, []);
+
+  const handleExternalDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      setDropTargetFrameId(null);
+      // In Tauri desktop mode the drop is already handled by onDragDropEvent;
+      // bail out to avoid processing the same files twice.
+      if (isHandlingDrop.current) return;
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 0) return;
+      isHandlingDrop.current = true;
+      try {
+        await processImageFiles(files, framesCountRef.current, addFrameWithImage);
+      } finally {
+        isHandlingDrop.current = false;
+      }
+    },
+    [addFrameWithImage],
+  );
+
+  // ── Tauri OS file-drop handler ─────────────────────────────────────────────
+  // In Tauri v2, WebView2/WKWebView intercepts OS file drops at the native
+  // level *before* HTML5 drag events fire.  We use the official Tauri webview
+  // API to handle them, keeping the HTML5 handlers as a fallback for browser
+  // dev mode (pnpm dev:vite).
+  useEffect(() => {
+    const isTauriEnv =
+      typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+    if (!isTauriEnv) return;
+
+    let canceled = false;
+    let unlistenFn: (() => void) | null = null;
+
+    (async () => {
+      try {
+        const { getCurrentWebview } = await import("@tauri-apps/api/webview");
+        if (canceled) return;
+
+        unlistenFn = await getCurrentWebview().onDragDropEvent(
+          async (event) => {
+            const payload = event.payload as {
+              type: "enter" | "over" | "drop" | "leave";
+              paths?: string[];
+              position?: { x: number; y: number };
+            };
+
+            if (payload.type === "enter" || payload.type === "over") {
+              // Show the drop indicator only when the dragged items include images
+              const hasImages = (payload.paths ?? []).some((p) =>
+                /\.(png|jpe?g|gif|webp|bmp|tiff?|avif|svg)$/i.test(p),
+              );
+              if (hasImages) {
+                setIsDragOver(true);
+                setDropTargetFrameId(
+                  getBlankFrameAtViewportPoint(payload.position),
+                );
+              }
+            } else if (payload.type === "leave") {
+              setIsDragOver(false);
+              setDropTargetFrameId(null);
+            } else if (payload.type === "drop") {
+              const targetFrameId = getBlankFrameAtViewportPoint(payload.position);
+              setIsDragOver(false);
+              setDropTargetFrameId(null);
+              if (isHandlingDrop.current) return;
+              isHandlingDrop.current = true;
+              try {
+                const replaced = targetFrameId
+                  ? await replaceBlankFrameFromPaths(
+                      targetFrameId,
+                      payload.paths ?? [],
+                    )
+                  : false;
+
+                if (!replaced) {
+                  await processImagePaths(
+                    payload.paths ?? [],
+                    framesCountRef.current,
+                    addFrameWithImage,
+                  );
+                }
+              } finally {
+                isHandlingDrop.current = false;
+              }
+            }
+          },
+        );
+      } catch (err) {
+        console.error(
+          "[AnimationTimeline] Tauri drag-drop setup failed:",
+          err,
+        );
+      }
+    })();
+
+    return () => {
+      canceled = true;
+      unlistenFn?.();
+    };
+  }, [addFrameWithImage, getBlankFrameAtViewportPoint, replaceBlankFrameFromPaths]);
+
+  const contextMenu = menuState
+    ? createPortal(
+        <TimelineContextMenu
+          ref={menuRef}
+          left={menuPosition?.left ?? menuState.x}
+          top={menuPosition?.top ?? menuState.y}
+          title={menuState.frameId ? "Frame Actions" : "Timeline Actions"}
+          onClose={closeContextMenu}
+        >
+          {menuState.frameId ? (
+            <>
+              <TimelineContextMenuItem
+                label="Add frames..."
+                description="Pick one or more images to append as timeline frames"
+                disabled={!canCreateFrame}
+                icon={<AddFramesIcon />}
+                onClick={() =>
+                  runMenuAction(() => framesInputRef.current?.click())
+                }
+              />
+              <TimelineContextMenuDivider />
+              <TimelineContextMenuItem
+                label="Add blank frame before"
+                description="Insert a transparent placeholder ahead of this one"
+                disabled={!canCreateFrame}
+                icon={<PlusSmIcon className="size-3.5" />}
+                onClick={() =>
+                  runMenuAction(() => insertFrame(menuState.frameId, "before"))
+                }
+              />
+              <TimelineContextMenuItem
+                label="Add blank frame after"
+                description="Insert a transparent placeholder right after this one"
+                disabled={!canCreateFrame}
+                icon={<PlusSmIcon className="size-3.5" />}
+                onClick={() =>
+                  runMenuAction(() => insertFrame(menuState.frameId, "after"))
+                }
+              />
+              <TimelineContextMenuDivider />
+              <TimelineContextMenuItem
+                label="Duplicate frame"
+                description="Clone this frame and place the copy after it"
+                disabled={!canCreateFrame}
+                icon={<DuplicateIcon />}
+                onClick={() => runMenuAction(() => duplicateFrame(menuState.frameId!))}
+              />
+              <TimelineContextMenuItem
+                label="Copy frame"
+                description="Store this frame in the timeline clipboard"
+                icon={<CopyFrameIcon />}
+                onClick={() => runMenuAction(() => copyFrame(menuState.frameId!))}
+              />
+              <TimelineContextMenuItem
+                label="Cut frame"
+                description="Move this frame into the timeline clipboard"
+                icon={<CutFrameIcon />}
+                onClick={() => runMenuAction(() => cutFrame(menuState.frameId!))}
+              />
+              <TimelineContextMenuItem
+                label="Paste before"
+                description={`${clipboardPasteLabel} before this frame`}
+                disabled={!canCreateFrame || !hasFrameClipboard}
+                icon={<PasteFrameIcon />}
+                onClick={() =>
+                  runMenuAction(() => pasteFrame(menuState.frameId, "before"))
+                }
+              />
+              <TimelineContextMenuItem
+                label="Paste after"
+                description={`${clipboardPasteLabel} after this frame`}
+                disabled={!canCreateFrame || !hasFrameClipboard}
+                icon={<PasteFrameIcon />}
+                onClick={() =>
+                  runMenuAction(() => pasteFrame(menuState.frameId, "after"))
+                }
+              />
+              <TimelineContextMenuDivider />
+              <TimelineContextMenuItem
+                label="Delete frame"
+                description="Remove this frame from the timeline"
+                tone="danger"
+                icon={<TrashFrameIcon />}
+                onClick={() => runMenuAction(() => removeFrame(menuState.frameId!))}
+              />
+            </>
+          ) : (
+            <>
+              <TimelineContextMenuItem
+                label="Add frames..."
+                description="Pick one or more images to append as timeline frames"
+                disabled={!canCreateFrame}
+                icon={<AddFramesIcon />}
+                onClick={() =>
+                  runMenuAction(() => framesInputRef.current?.click())
+                }
+              />
+              <TimelineContextMenuItem
+                label="Add blank frame"
+                description="Append a transparent placeholder to the end of the timeline"
+                disabled={!canCreateFrame}
+                icon={<PlusSmIcon className="size-3.5" />}
+                onClick={() => runMenuAction(() => insertFrame(null, "after"))}
+              />
+              <TimelineContextMenuItem
+                label={clipboardPasteLabel}
+                description="Append the stored frame to the end of the timeline"
+                disabled={!canCreateFrame || !hasFrameClipboard}
+                icon={<PasteFrameIcon />}
+                onClick={() => runMenuAction(() => pasteFrame(null, "after"))}
+              />
+            </>
+          )}
+        </TimelineContextMenu>,
+        document.body,
+      )
+    : null;
+
+  // ── Empty state ────────────────────────────────────────────────────────────
   if (frames.length === 0) {
     return (
-      <div
-        onDragOver={handleExternalDragOver}
-        onDragLeave={handleExternalDragLeave}
-        onDrop={handleExternalDrop}
-        className={cn(
-          "flex h-full min-h-[88px] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground transition-colors",
-          isDragOver
-            ? "border-primary bg-primary/5 text-primary"
-            : "border-border/50 bg-muted/10",
-        )}
-      >
-        <div className="flex flex-col items-center gap-1">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
-            <rect width="18" height="18" x="3" y="3" rx="2" />
-            <path d="M3 9h18" />
-            <path d="M9 21V9" />
-          </svg>
-          <span className="text-xs">
+      <>
+        <input
+          ref={framesInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={handleFramesImportChange}
+        />
+        <div
+          onDragOver={handleExternalDragOver}
+          onDragLeave={handleExternalDragLeave}
+          onDrop={handleExternalDrop}
+          onContextMenu={handleTimelineContextMenu}
+          className={cn(
+            "flex h-full items-center justify-center rounded-lg border border-dashed text-sm transition-all duration-200",
+            isDragOver
+              ? "border-primary bg-primary/5 text-primary scale-[0.99]"
+              : "border-border/40 bg-muted/10 text-muted-foreground",
+          )}
+        >
+          <div className="flex flex-col items-center gap-2 py-2">
+            <FilmStripIcon className={cn("opacity-30", isDragOver && "opacity-60 text-primary")} />
+            <span className="text-[11px]">
             {isDragOver
               ? "Drop images to add frames"
-              : "No frames yet — add a frame or drop images here"}
+              : "No frames yet — right-click to add frames or drop images here"}
           </span>
         </div>
-      </div>
+        </div>
+        {contextMenu}
+      </>
     );
   }
 
+  // ── Populated timeline ─────────────────────────────────────────────────────
   return (
     <div
       onDragOver={handleExternalDragOver}
       onDragLeave={handleExternalDragLeave}
       onDrop={handleExternalDrop}
+      onContextMenu={handleTimelineContextMenu}
       className={cn(
-        "relative h-full transition-colors",
-        isDragOver && "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg",
+        "relative h-full overflow-hidden rounded-lg transition-all duration-200",
+        isDragOver &&
+          !dropTargetFrameId &&
+          "ring-2 ring-primary ring-offset-1 ring-offset-background",
       )}
     >
-      {isDragOver && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary/5 backdrop-blur-[2px]">
-          <div className="flex flex-col items-center gap-1 text-sm font-medium text-primary">
-            <span className="text-base">+</span>
-            <span className="text-xs">Drop images to add frames</span>
+      <input
+        ref={framesInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={handleFramesImportChange}
+      />
+
+      {/* External drop overlay */}
+      {isDragOver && !dropTargetFrameId && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-primary/8 backdrop-blur-[1px]">
+          <div className="flex flex-col items-center gap-1.5 rounded-lg border border-primary/40 bg-card/80 px-5 py-3 text-primary shadow-lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span className="text-xs font-medium">Drop to add frames</span>
           </div>
         </div>
       )}
-      <ScrollArea className="h-full">
+
+      {/* ── Vertical scrolling grid strip ───────────────────────────── */}
+      <div className="h-full overflow-y-auto overflow-x-hidden">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={frameIds} strategy={rectSortingStrategy}>
-            <div className="flex flex-wrap gap-1.5 p-1">
+            {/* Wrapped/grid-like track for vertical scrolling */}
+            <div className="flex flex-wrap items-start gap-1.5 px-2 py-1.5">
               {frames.map((frame, idx) => (
                 <SortableFrame
                   key={frame.id}
                   frame={frame}
                   index={idx}
                   isSelected={frame.id === selectedFrameId}
-                  isCurrent={frame.id === currentPlayableId}
+                  isPlaying={isPlaying && frame.id === currentPlayableId}
+                  isDropTarget={frame.id === dropTargetFrameId}
                   onSelect={selectFrame}
-                  onDelete={handleDeleteFrame}
+                  onDelete={removeFrame}
+                  onOpenContextMenu={handleFrameContextMenu}
+                  onFrameImageDragOver={handleFrameImageDragOver}
+                  onFrameImageDragLeave={handleFrameImageDragLeave}
+                  onFrameImageDrop={handleFrameImageDrop}
                 />
               ))}
+
+              {/* ── End-of-track add button ─────────────────────────── */}
             </div>
           </SortableContext>
         </DndContext>
-      </ScrollArea>
+      </div>
+
+      {/* ── Frame count badge ───────────────────────────────────────── */}
+      <div className="pointer-events-none absolute right-2 top-1.5 flex items-center gap-1 rounded-md bg-background/70 px-1.5 py-0.5 backdrop-blur-sm">
+        <span className="tabular-nums text-[9px] font-medium text-muted-foreground">
+          {frames.length} / {MAX_FRAMES}
+        </span>
+      </div>
+      {contextMenu}
     </div>
+  );
+}
+
+// ── Add frame button at end of strip ─────────────────────────────────────────
+
+const timelineContextMenuItemBase =
+  "flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition-colors";
+
+type TimelineContextMenuProps = {
+  children: ReactNode;
+  left: number;
+  top: number;
+  title: string;
+  onClose: () => void;
+};
+
+const TimelineContextMenu = forwardRef<HTMLDivElement, TimelineContextMenuProps>(
+  ({ children, left, top, title, onClose }, ref) => {
+    return (
+      <div
+        ref={ref}
+        role="menu"
+        onContextMenu={(event) => event.preventDefault()}
+        className={cn(
+          "fixed z-50 w-64 rounded-2xl border border-border/70 bg-popover/95 p-1.5 text-popover-foreground shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-xl",
+          "ring-1 ring-black/5",
+        )}
+        style={{ left, top }}
+      >
+        <div className="flex items-center justify-between px-2.5 pb-1 pt-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {title}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Close timeline menu"
+          >
+            <CloseMenuIcon />
+          </button>
+        </div>
+        <div className="space-y-0.5">{children}</div>
+      </div>
+    );
+  },
+);
+
+TimelineContextMenu.displayName = "TimelineContextMenu";
+
+function TimelineContextMenuItem({
+  label,
+  description,
+  icon,
+  disabled = false,
+  onClick,
+  tone = "default",
+}: {
+  label: string;
+  description: string;
+  icon: ReactNode;
+  disabled?: boolean;
+  onClick: () => void;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        timelineContextMenuItemBase,
+        tone === "danger"
+          ? "text-destructive hover:bg-destructive/10 disabled:text-destructive/50"
+          : "text-foreground hover:bg-accent disabled:text-muted-foreground/45",
+        "disabled:cursor-not-allowed disabled:hover:bg-transparent",
+      )}
+    >
+      <span
+        className={cn(
+          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
+          tone === "danger"
+            ? "border-destructive/15 bg-destructive/10"
+            : "border-border/60 bg-background/80",
+        )}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[11px] font-medium leading-none">{label}</span>
+        <span
+          className={cn(
+            "text-[10px] leading-snug",
+            tone === "danger" ? "text-destructive/75" : "text-muted-foreground",
+          )}
+        >
+          {description}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function TimelineContextMenuDivider() {
+  return <div className="my-1 h-px bg-border/70" />;
+}
+
+// ── Inline icons ─────────────────────────────────────────────────────────────
+
+function FilmStripIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M7 3v18" />
+      <path d="M3 7.5h4" />
+      <path d="M3 12h18" />
+      <path d="M3 16.5h4" />
+      <path d="M17 3v18" />
+      <path d="M17 7.5h4" />
+      <path d="M17 16.5h4" />
+    </svg>
+  );
+}
+
+function EmptyFrameIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-muted-foreground/30"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M9 21V9" />
+    </svg>
+  );
+}
+
+function ErrorIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-destructive/70"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+function AddFramesIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-primary"
+    >
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <path d="M7 11h10" />
+      <path d="M7 15h10" />
+      <path d="M10 7V5" />
+    </svg>
+  );
+}
+
+function PlusSmIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  );
+}
+
+function DuplicateIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-primary"
+    >
+      <rect x="9" y="9" width="10" height="10" rx="2" />
+      <rect x="5" y="5" width="10" height="10" rx="2" />
+    </svg>
+  );
+}
+
+function CopyFrameIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-primary"
+    >
+      <rect x="9" y="9" width="10" height="10" rx="2" />
+      <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CutFrameIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-primary"
+    >
+      <circle cx="6.5" cy="6.5" r="2.5" />
+      <circle cx="6.5" cy="17.5" r="2.5" />
+      <path d="M20 4 8.12 15.88" />
+      <path d="M14 14 20 20" />
+      <path d="M8.5 8.5 11 11" />
+    </svg>
+  );
+}
+
+function PasteFrameIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-primary"
+    >
+      <path d="M16 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-2" />
+      <path d="M9 4h6" />
+      <path d="M10 2h4a1 1 0 0 1 1 1v3H9V3a1 1 0 0 1 1-1Z" />
+      <path d="M4 12h8" />
+      <path d="m8 8 4 4-4 4" />
+    </svg>
+  );
+}
+
+function TrashFrameIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-current"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="m19 6-1 14H6L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
+}
+
+function CloseMenuIcon() {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
   );
 }

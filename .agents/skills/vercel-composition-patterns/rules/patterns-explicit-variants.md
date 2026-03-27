@@ -1,8 +1,12 @@
 ---
-title: Create Explicit Component Variants
+title: "Create Explicit Component Variants"
 impact: MEDIUM
-impactDescription: self-documenting code, no hidden conditionals
-tags: composition, variants, architecture
+impactDescription: "self-documenting code, no hidden conditionals"
+tags: "composition, variants, architecture"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: universal
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Create Explicit Component Variants

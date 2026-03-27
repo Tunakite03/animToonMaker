@@ -1,8 +1,12 @@
 ---
-title: Use Single Dependency Versions Across Monorepo
+title: "Use Single Dependency Versions Across Monorepo"
 impact: MEDIUM
-impactDescription: avoids duplicate bundles, version conflicts
-tags: monorepo, dependencies, installation
+impactDescription: "avoids duplicate bundles, version conflicts"
+tags: "monorepo, dependencies, installation, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use Single Dependency Versions Across Monorepo

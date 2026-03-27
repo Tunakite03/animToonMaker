@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 
 /**
  * Preload an array of image URLs into HTMLImageElement objects.
@@ -7,30 +7,31 @@ import { useCallback, useEffect, useRef } from "react";
 export function useImagePreloader() {
   const cacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
-  const preload = useCallback((urls: string[]): Promise<Map<string, HTMLImageElement>> => {
-    const cache = cacheRef.current;
-    const promises: Promise<void>[] = [];
+  const preload = useCallback(
+    (urls: string[]): Promise<Map<string, HTMLImageElement>> => {
+      const cache = cacheRef.current;
+      const promises: Promise<void>[] = [];
 
-    for (const url of urls) {
-      if (cache.has(url)) continue;
-      promises.push(
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            cache.set(url, img);
-            resolve();
-          };
-          img.onerror = () => {
-            // Still resolve so we don't block playback
-            resolve();
-          };
-          img.src = url;
-        }),
-      );
-    }
+      for (const url of urls) {
+        if (cache.has(url)) continue;
 
-    return Promise.all(promises).then(() => cache);
-  }, []);
+        promises.push(
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              cache.set(url, img);
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = url;
+          }),
+        );
+      }
+
+      return Promise.all(promises).then(() => cache);
+    },
+    [],
+  );
 
   const getImage = useCallback((url: string): HTMLImageElement | undefined => {
     return cacheRef.current.get(url);
@@ -44,8 +45,8 @@ export function useImagePreloader() {
 }
 
 /**
- * High-precision playback loop using requestAnimationFrame with
- * accumulated delta time to avoid frame drops.
+ * High-precision playback loop using requestAnimationFrame with accumulated
+ * delta time to avoid frame drops.
  */
 export function usePlaybackLoop(
   onTick: (frameIndex: number) => void,
@@ -53,6 +54,8 @@ export function usePlaybackLoop(
     isPlaying: boolean;
     frames: { duration: number; imageUrl: string | null }[];
     loop: boolean;
+    onStop?: (frameIndex: number) => void;
+    startIndex?: number;
   },
 ) {
   const rafRef = useRef<number>(0);
@@ -60,7 +63,11 @@ export function usePlaybackLoop(
   const accumulatedRef = useRef<number>(0);
   const frameIndexRef = useRef<number>(0);
 
-  const { isPlaying, frames, loop } = deps;
+  const { isPlaying, frames, loop, onStop, startIndex = 0 } = deps;
+  const emitTick = useEffectEvent(onTick);
+  const emitStop = useEffectEvent((frameIndex: number) => {
+    onStop?.(frameIndex);
+  });
 
   const stop = useCallback(() => {
     if (rafRef.current) {
@@ -69,8 +76,8 @@ export function usePlaybackLoop(
     }
   }, []);
 
-  const reset = useCallback(() => {
-    frameIndexRef.current = 0;
+  const reset = useCallback((toIndex = 0) => {
+    frameIndexRef.current = Math.max(0, toIndex);
     accumulatedRef.current = 0;
     lastTimeRef.current = 0;
   }, []);
@@ -81,13 +88,17 @@ export function usePlaybackLoop(
       return;
     }
 
-    // Only play frames that have images
-    const playableFrames = frames.filter((f) => f.imageUrl);
+    const playableFrames = frames.filter((frame) => frame.imageUrl);
     if (playableFrames.length === 0) {
       stop();
       return;
     }
 
+    const safeStartIndex = Math.max(
+      0,
+      Math.min(startIndex, playableFrames.length - 1),
+    );
+    frameIndexRef.current = safeStartIndex;
     lastTimeRef.current = 0;
     accumulatedRef.current = 0;
 
@@ -111,25 +122,25 @@ export function usePlaybackLoop(
           if (loop) {
             nextIdx = 0;
           } else {
-            // Stop at the last frame
-            onTick(playableFrames.length - 1);
+            stop();
+            emitTick(playableFrames.length - 1);
+            emitStop(playableFrames.length - 1);
             return;
           }
         }
 
         frameIndexRef.current = nextIdx;
-        onTick(nextIdx);
+        emitTick(nextIdx);
       }
 
       rafRef.current = requestAnimationFrame(tick);
     };
 
-    // Emit the first frame immediately
-    onTick(frameIndexRef.current);
+    emitTick(frameIndexRef.current);
     rafRef.current = requestAnimationFrame(tick);
 
     return () => stop();
-  }, [isPlaying, frames, loop, onTick, stop]);
+  }, [emitStop, emitTick, frames, isPlaying, loop, startIndex, stop]);
 
   return { stop, reset, frameIndexRef };
 }

@@ -1,8 +1,12 @@
 ---
-title: Use Lazy State Initialization
+title: "Use Lazy State Initialization"
 impact: MEDIUM
-impactDescription: wasted computation on every render
-tags: react, hooks, useState, performance, initialization
+impactDescription: "wasted computation on every render"
+tags: "react, hooks, useState, performance, initialization"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Use Lazy State Initialization

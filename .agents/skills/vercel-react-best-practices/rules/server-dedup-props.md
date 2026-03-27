@@ -1,8 +1,12 @@
 ---
-title: Avoid Duplicate Serialization in RSC Props
+title: "Avoid Duplicate Serialization in RSC Props"
 impact: LOW
-impactDescription: reduces network payload by avoiding duplicate serialization
-tags: server, rsc, serialization, props, client-components
+impactDescription: "reduces network payload by avoiding duplicate serialization"
+tags: "server, rsc, serialization, props, client-components, nextjs"
+appliesTo: [react-web, nextjs-app-router]
+runtime: server
+minReact: 19
+incompatibleWith: [vite-spa-without-next]
 ---
 
 ## Avoid Duplicate Serialization in RSC Props

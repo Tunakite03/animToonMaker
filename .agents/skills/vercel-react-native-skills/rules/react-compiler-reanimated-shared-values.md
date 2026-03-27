@@ -1,8 +1,12 @@
 ---
-title: Use .get() and .set() for Reanimated Shared Values (not .value)
+title: "Use .get() and .set() for Reanimated Shared Values (not .value)"
 impact: LOW
-impactDescription: required for React Compiler compatibility
-tags: reanimated, react-compiler, shared-values
+impactDescription: "required for React Compiler compatibility"
+tags: "reanimated, react-compiler, shared-values, react-native"
+appliesTo: [react-native, expo]
+runtime: native
+minReact: 18
+incompatibleWith: [react-dom-only-web]
 ---
 
 ## Use .get() and .set() for Shared Values with React Compiler

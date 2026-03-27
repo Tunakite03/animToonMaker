@@ -1,8 +1,12 @@
 ---
-title: Deduplicate Global Event Listeners
+title: "Deduplicate Global Event Listeners"
 impact: LOW
-impactDescription: single listener for N components
-tags: client, swr, event-listeners, subscription
+impactDescription: "single listener for N components"
+tags: "client, swr, event-listeners, subscription"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Deduplicate Global Event Listeners

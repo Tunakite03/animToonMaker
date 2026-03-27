@@ -1,8 +1,12 @@
 ---
-title: Animate SVG Wrapper Instead of SVG Element
+title: "Animate SVG Wrapper Instead of SVG Element"
 impact: LOW
-impactDescription: enables hardware acceleration
-tags: rendering, svg, css, animation, performance
+impactDescription: "enables hardware acceleration"
+tags: "rendering, svg, css, animation, performance"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Animate SVG Wrapper Instead of SVG Element

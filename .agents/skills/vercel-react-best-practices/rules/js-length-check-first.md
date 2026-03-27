@@ -1,8 +1,12 @@
 ---
-title: Early Length Check for Array Comparisons
+title: "Early Length Check for Array Comparisons"
 impact: MEDIUM-HIGH
-impactDescription: avoids expensive operations when lengths differ
-tags: javascript, arrays, performance, optimization, comparison
+impactDescription: "avoids expensive operations when lengths differ"
+tags: "javascript, arrays, performance, optimization, comparison"
+appliesTo: [react-web, vite-react, nextjs-app-router]
+runtime: browser
+minReact: 18
+incompatibleWith: []
 ---
 
 ## Early Length Check for Array Comparisons
