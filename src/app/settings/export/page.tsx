@@ -32,6 +32,13 @@ const formats: {
     pros: "Better compression, modern format",
     icon: "🎬",
   },
+  {
+    id: "frames",
+    name: "PNG Frames",
+    desc: "Folder of numbered images",
+    pros: "Best for game engines and sprite pipelines",
+    icon: "🗂️",
+  },
 ]
 
 export default function ExportSettingsPage() {
@@ -62,7 +69,7 @@ export default function ExportSettingsPage() {
         <Label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
           Format
         </Label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {formats.map((f) => {
             const isActive = format === f.id
             return (
@@ -150,7 +157,9 @@ export default function ExportSettingsPage() {
         <div className="text-xs text-muted-foreground">
           <p>
             Your animation will export as{" "}
-            <strong className="text-foreground">{format.toUpperCase()}</strong>{" "}
+            <strong className="text-foreground">
+              {format === "frames" ? "PNG Frames" : format.toUpperCase()}
+            </strong>{" "}
             at{" "}
             <strong className="text-foreground">
               {outputWidth}×{outputHeight}

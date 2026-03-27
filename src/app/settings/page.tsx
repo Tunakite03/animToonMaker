@@ -27,6 +27,8 @@ export default function SettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false)
 
   const hasApiKey = apiKey.length > 0
+  const exportFormatLabel =
+    exportFormat === "frames" ? "PNG Frames" : exportFormat.toUpperCase()
   const providerName =
     aiProvider === "placeholder"
       ? "None"
@@ -180,8 +182,8 @@ export default function SettingsPage() {
                 <p className="text-xs font-medium text-muted-foreground">
                   Export
                 </p>
-                <p className="mt-0.5 text-lg font-semibold tracking-tight uppercase">
-                  {exportFormat}
+                <p className="mt-0.5 text-lg font-semibold tracking-tight">
+                  {exportFormatLabel}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">format</p>
               </div>

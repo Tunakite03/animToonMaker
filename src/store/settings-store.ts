@@ -1,62 +1,69 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { STYLE_SUFFIX } from "@/lib/constants";
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
+import { STYLE_SUFFIX } from "@/lib/constants"
 
-export type CanvasQuality = "low" | "medium" | "high";
-export type ExportFormat = "gif" | "webm";
-export type AIProvider = "fal" | "replicate" | "openai" | "stability" | "together" | "gemini" | "placeholder";
+export type CanvasQuality = "low" | "medium" | "high"
+export type ExportFormat = "gif" | "webm" | "frames"
+export type AIProvider =
+  | "fal"
+  | "replicate"
+  | "openai"
+  | "stability"
+  | "together"
+  | "gemini"
+  | "placeholder"
 
 interface SettingsState {
   // Canvas
-  canvasWidth: number;
-  canvasHeight: number;
-  canvasBackground: string;
-  canvasQuality: CanvasQuality;
-  showGrid: boolean;
+  canvasWidth: number
+  canvasHeight: number
+  canvasBackground: string
+  canvasQuality: CanvasQuality
+  showGrid: boolean
 
   // AI Provider
-  aiProvider: AIProvider;
-  apiKey: string; // computed: returns apiKeys[aiProvider] ?? ""
-  apiKeys: Partial<Record<AIProvider, string>>;
-  aiModel: string;
-  aiModels: Partial<Record<AIProvider, string>>;
+  aiProvider: AIProvider
+  apiKey: string // computed: returns apiKeys[aiProvider] ?? ""
+  apiKeys: Partial<Record<AIProvider, string>>
+  aiModel: string
+  aiModels: Partial<Record<AIProvider, string>>
 
   // AI Generation
-  styleSuffix: string;
-  negativePrompt: string;
-  autoGenerate: boolean;
+  styleSuffix: string
+  negativePrompt: string
+  autoGenerate: boolean
 
   // Export
-  exportFormat: ExportFormat;
-  exportQuality: number; // 1-100
-  exportScale: number; // 1x, 2x
+  exportFormat: ExportFormat
+  exportQuality: number // 1-100
+  exportScale: number // 1x, 2x
 
   // UI
-  showOnionSkin: boolean;
-  onionSkinOpacity: number;
-  timelineThumbnailSize: number; // px
+  showOnionSkin: boolean
+  onionSkinOpacity: number
+  timelineThumbnailSize: number // px
 
   // Actions
-  setCanvasWidth: (w: number) => void;
-  setCanvasHeight: (h: number) => void;
-  setCanvasBackground: (bg: string) => void;
-  setCanvasQuality: (q: CanvasQuality) => void;
-  setShowGrid: (v: boolean) => void;
-  setAIProvider: (p: AIProvider) => void;
-  setApiKey: (k: string) => void;
-  setApiKeyFor: (provider: AIProvider, k: string) => void;
-  setAIModel: (m: string) => void;
-  setAIModelFor: (provider: AIProvider, m: string) => void;
-  setStyleSuffix: (s: string) => void;
-  setNegativePrompt: (s: string) => void;
-  setAutoGenerate: (v: boolean) => void;
-  setExportFormat: (f: ExportFormat) => void;
-  setExportQuality: (q: number) => void;
-  setExportScale: (s: number) => void;
-  setShowOnionSkin: (v: boolean) => void;
-  setOnionSkinOpacity: (o: number) => void;
-  setTimelineThumbnailSize: (s: number) => void;
-  resetToDefaults: () => void;
+  setCanvasWidth: (w: number) => void
+  setCanvasHeight: (h: number) => void
+  setCanvasBackground: (bg: string) => void
+  setCanvasQuality: (q: CanvasQuality) => void
+  setShowGrid: (v: boolean) => void
+  setAIProvider: (p: AIProvider) => void
+  setApiKey: (k: string) => void
+  setApiKeyFor: (provider: AIProvider, k: string) => void
+  setAIModel: (m: string) => void
+  setAIModelFor: (provider: AIProvider, m: string) => void
+  setStyleSuffix: (s: string) => void
+  setNegativePrompt: (s: string) => void
+  setAutoGenerate: (v: boolean) => void
+  setExportFormat: (f: ExportFormat) => void
+  setExportQuality: (q: number) => void
+  setExportScale: (s: number) => void
+  setShowOnionSkin: (v: boolean) => void
+  setOnionSkinOpacity: (o: number) => void
+  setTimelineThumbnailSize: (s: number) => void
+  resetToDefaults: () => void
 }
 
 const defaults = {
@@ -79,7 +86,7 @@ const defaults = {
   showOnionSkin: false,
   onionSkinOpacity: 30,
   timelineThumbnailSize: 72,
-};
+}
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -133,12 +140,12 @@ export const useSettingsStore = create<SettingsState>()(
       name: "animtoon-settings",
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { resetToDefaults, ...rest } = state;
+        const { resetToDefaults, ...rest } = state
         // Strip all function keys
         return Object.fromEntries(
-          Object.entries(rest).filter(([, v]) => typeof v !== "function"),
-        );
+          Object.entries(rest).filter(([, v]) => typeof v !== "function")
+        )
       },
-    },
-  ),
-);
+    }
+  )
+)

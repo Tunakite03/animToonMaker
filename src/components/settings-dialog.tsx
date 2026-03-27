@@ -257,6 +257,7 @@ function ExportSettings() {
           <SelectContent>
             <SelectItem value="gif">GIF</SelectItem>
             <SelectItem value="webm">WebM</SelectItem>
+            <SelectItem value="frames">PNG Frames</SelectItem>
           </SelectContent>
         </Select>
       </SettingRow>

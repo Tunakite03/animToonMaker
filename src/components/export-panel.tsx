@@ -13,6 +13,7 @@ import {
 import {
   CheckIcon,
   ExportIcon,
+  FolderIcon,
   GifIcon,
   SpinnerIcon,
   VideoIcon,
@@ -24,6 +25,31 @@ const WEBM_MIME_TYPES = [
   "video/webm;codecs=vp8",
   "video/webm",
 ] as const
+
+interface ExportWritableFileStream {
+  write: (data: Blob | string) => Promise<void>
+  close: () => Promise<void>
+}
+
+interface ExportFileHandle {
+  createWritable: () => Promise<ExportWritableFileStream>
+}
+
+interface ExportDirectoryHandle {
+  getDirectoryHandle: (
+    name: string,
+    options?: { create?: boolean }
+  ) => Promise<ExportDirectoryHandle>
+  getFileHandle: (
+    name: string,
+    options?: { create?: boolean }
+  ) => Promise<ExportFileHandle>
+}
+
+type DirectoryPickerWindow = Window &
+  typeof globalThis & {
+    showDirectoryPicker?: () => Promise<ExportDirectoryHandle>
+  }
 
 export function ExportPanel() {
   const frames = useAnimationStore((state) => {
@@ -55,6 +81,7 @@ export function ExportPanel() {
   const canExport = playableFrames.length > 0
   const outputWidth = canvasWidth * exportScale
   const outputHeight = canvasHeight * exportScale
+  const canExportToDirectory = supportsDirectoryExport()
   const totalDurationMs = useMemo(
     () =>
       playableFrames.reduce(
@@ -87,6 +114,12 @@ export function ExportPanel() {
     () => createBaseFileName(projectName || "animation"),
     [projectName]
   )
+
+  const cancelExport = useCallback(() => {
+    setExporting(false)
+    setProgress(0)
+    setProgressLabel("")
+  }, [])
 
   const finishExport = useCallback((label: string) => {
     setProgress(100)
@@ -281,30 +314,18 @@ export function ExportPanel() {
 
     try {
       const images = await loadImages(playableFrames)
-      const canvas = createExportCanvas(outputWidth, outputHeight)
-      const context = canvas.getContext("2d")
-
-      if (!context) {
-        throw new Error("Canvas export is unavailable.")
-      }
-
-      for (let index = 0; index < images.length; index += 1) {
-        drawImageFrame(
-          context,
-          images[index],
-          outputWidth,
-          outputHeight,
-          canvasBackground
-        )
-
-        const blob = await canvasToBlob(canvas, "image/png")
-        downloadBlob(
-          blob,
-          `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`
-        )
-        setProgress(Math.round(((index + 1) / images.length) * 100))
-        await sleep(32)
-      }
+      await processPngSequenceFrames({
+        images,
+        width: outputWidth,
+        height: outputHeight,
+        background: canvasBackground,
+        baseFileName,
+        onFrame: async ({ blob, fileName, index, total }) => {
+          downloadBlob(blob, fileName)
+          setProgress(Math.round(((index + 1) / total) * 100))
+          await sleep(32)
+        },
+      })
 
       finishExport("PNG sequence ready.")
     } catch (error) {
@@ -321,14 +342,119 @@ export function ExportPanel() {
     playableFrames,
   ])
 
+  const exportFramesFolder = useCallback(async () => {
+    if (!canExport) return
+
+    setExporting(true)
+    setProgress(0)
+    setProgressLabel("Preparing frames folder...")
+
+    try {
+      const images = await loadImages(playableFrames)
+      const pickerWindow = window as DirectoryPickerWindow
+
+      if (!pickerWindow.showDirectoryPicker) {
+        setProgressLabel("Folder export unavailable. Downloading PNG files...")
+
+        await processPngSequenceFrames({
+          images,
+          width: outputWidth,
+          height: outputHeight,
+          background: canvasBackground,
+          baseFileName,
+          onFrame: async ({ blob, fileName, index, total }) => {
+            downloadBlob(blob, fileName)
+            setProgress(Math.round(((index + 1) / total) * 100))
+            await sleep(32)
+          },
+        })
+
+        finishExport("PNG sequence ready.")
+        return
+      }
+
+      const selectedDirectory = await pickerWindow.showDirectoryPicker()
+      const exportFolderName = createSequenceFolderName(baseFileName)
+      const exportDirectory = await selectedDirectory.getDirectoryHandle(
+        exportFolderName,
+        { create: true }
+      )
+
+      await processPngSequenceFrames({
+        images,
+        width: outputWidth,
+        height: outputHeight,
+        background: canvasBackground,
+        baseFileName,
+        onFrame: async ({ blob, fileName, index, total }) => {
+          setProgressLabel(`Saving frame ${index + 1} of ${total}...`)
+          await writeFileHandle(exportDirectory, fileName, blob)
+          setProgress(Math.round(((index + 1) / total) * 96))
+        },
+      })
+
+      setProgress(98)
+      setProgressLabel("Writing manifest...")
+
+      await writeFileHandle(
+        exportDirectory,
+        "animation.json",
+        new Blob(
+          [
+            JSON.stringify(
+              createFrameSequenceManifest({
+                baseFileName,
+                fps,
+                frameCount: playableFrames.length,
+                frames: playableFrames,
+                height: outputHeight,
+                projectName,
+                width: outputWidth,
+              }),
+              null,
+              2
+            ),
+          ],
+          { type: "application/json" }
+        )
+      )
+
+      finishExport(`Frames saved to ${exportFolderName}.`)
+    } catch (error) {
+      if (isUserCancelledExport(error)) {
+        cancelExport()
+        return
+      }
+
+      failExport(error)
+    }
+  }, [
+    baseFileName,
+    canExport,
+    canvasBackground,
+    cancelExport,
+    failExport,
+    finishExport,
+    fps,
+    outputHeight,
+    outputWidth,
+    playableFrames,
+    projectName,
+  ])
+
   const handleExport = useCallback(() => {
     if (exportFormat === "gif") {
       void exportGif()
       return
     }
 
+    if (exportFormat === "frames") {
+      void exportFramesFolder()
+      return
+    }
+
     void exportWebm()
-  }, [exportFormat, exportGif, exportWebm])
+  }, [exportFormat, exportFramesFolder, exportGif, exportWebm])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -348,7 +474,7 @@ export function ExportPanel() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-md gap-0 overflow-hidden p-0">
+      <DialogContent className="max-w-xl gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border/50 px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
@@ -370,22 +496,30 @@ export function ExportPanel() {
             <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
               Format
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <FormatCard
                 selected={exportFormat === "gif"}
                 onSelect={() => setExportFormat("gif")}
                 icon={<GifIcon />}
                 title="Animated GIF"
-                description="Shareable everywhere, single file output"
-                badge="Compatible"
+                description=""
+                badge=""
               />
               <FormatCard
                 selected={exportFormat === "webm"}
                 onSelect={() => setExportFormat("webm")}
                 icon={<VideoIcon />}
                 title="WebM Video"
-                description="Smaller output with better quality retention"
-                badge="Smaller"
+                description=""
+                badge=""
+              />
+              <FormatCard
+                selected={exportFormat === "frames"}
+                onSelect={() => setExportFormat("frames")}
+                icon={<FolderIcon />}
+                title="PNG Frames"
+                description=""
+                badge=""
               />
             </div>
           </div>
@@ -394,7 +528,11 @@ export function ExportPanel() {
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">Output</span>
               <span className="font-medium text-foreground/80">
-                1 {exportFormat.toUpperCase()} file | ~{estimatedSizeMb} MB
+                {getExportOutputLabel(
+                  exportFormat,
+                  playableFrames.length,
+                  estimatedSizeMb
+                )}
               </span>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px]">
@@ -406,7 +544,9 @@ export function ExportPanel() {
             <div className="mt-1 flex items-center justify-between text-[11px]">
               <span className="text-muted-foreground">Quality</span>
               <span className="font-medium text-foreground/80">
-                {exportQuality}% at {exportScale}x scale
+                {exportFormat === "frames"
+                  ? `Lossless PNG at ${exportScale}x scale`
+                  : `${exportQuality}% at ${exportScale}x scale`}
               </span>
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px]">
@@ -415,6 +555,16 @@ export function ExportPanel() {
                 {durationSec}s at {fps} FPS
               </span>
             </div>
+            {exportFormat === "frames" ? (
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">Delivery</span>
+                <span className="font-medium text-foreground/80">
+                  {canExportToDirectory
+                    ? "Folder export + manifest"
+                    : "PNG downloads fallback"}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {exporting ? (
@@ -445,26 +595,28 @@ export function ExportPanel() {
             ) : progress === 100 ? (
               <>
                 <CheckIcon />
-                Downloaded
+                Completed
               </>
             ) : (
               <>
                 <ExportIcon size={14} />
-                {exportFormat === "gif" ? "Export GIF" : "Export WebM"}
+                {getPrimaryExportLabel(exportFormat)}
               </>
             )}
           </Button>
 
-          <Button
-            variant="ghost"
-            onClick={() => {
-              void downloadPngSequence()
-            }}
-            disabled={exporting || !canExport}
-            className="h-8 text-xs text-muted-foreground hover:text-foreground"
-          >
-            Download PNG sequence
-          </Button>
+          {exportFormat !== "frames" || !canExportToDirectory ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                void downloadPngSequence()
+              }}
+              disabled={exporting || !canExport}
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Download PNG files individually
+            </Button>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
@@ -654,7 +806,9 @@ function estimateExportSizeMb({
   const estimatedMb =
     format === "gif"
       ? frameCount * megapixels * (0.4 + qualityFactor * 0.45)
-      : durationSec * megapixels * (0.7 + qualityFactor * 0.6)
+      : format === "frames"
+        ? frameCount * megapixels * 1.35
+        : durationSec * megapixels * (0.7 + qualityFactor * 0.6)
 
   return estimatedMb.toFixed(1)
 }
@@ -696,6 +850,127 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
       resolve(blob)
     }, type)
   })
+}
+
+async function processPngSequenceFrames({
+  images,
+  width,
+  height,
+  background,
+  baseFileName,
+  onFrame,
+}: {
+  images: HTMLImageElement[]
+  width: number
+  height: number
+  background: string
+  baseFileName: string
+  onFrame: (params: {
+    blob: Blob
+    fileName: string
+    index: number
+    total: number
+  }) => Promise<void>
+}) {
+  const canvas = createExportCanvas(width, height)
+  const context = canvas.getContext("2d")
+
+  if (!context) {
+    throw new Error("Canvas export is unavailable.")
+  }
+
+  for (let index = 0; index < images.length; index += 1) {
+    drawImageFrame(context, images[index], width, height, background)
+
+    await onFrame({
+      blob: await canvasToBlob(canvas, "image/png"),
+      fileName: createSequenceFileName(baseFileName, index),
+      index,
+      total: images.length,
+    })
+  }
+}
+
+async function writeFileHandle(
+  directoryHandle: ExportDirectoryHandle,
+  fileName: string,
+  contents: Blob
+) {
+  const fileHandle = await directoryHandle.getFileHandle(fileName, {
+    create: true,
+  })
+  const writable = await fileHandle.createWritable()
+  await writable.write(contents)
+  await writable.close()
+}
+
+function createFrameSequenceManifest({
+  baseFileName,
+  fps,
+  frameCount,
+  frames,
+  height,
+  projectName,
+  width,
+}: {
+  baseFileName: string
+  fps: number
+  frameCount: number
+  frames: Array<{ duration?: number | undefined }>
+  height: number
+  projectName: string
+  width: number
+}) {
+  return {
+    projectName,
+    filePrefix: baseFileName,
+    format: "png-sequence",
+    fps,
+    frameCount,
+    width,
+    height,
+    exportedAt: new Date().toISOString(),
+    frames: frames.map((frame, index) => ({
+      index: index + 1,
+      fileName: createSequenceFileName(baseFileName, index),
+      durationMs: getFrameDuration(frame.duration, fps),
+    })),
+  }
+}
+
+function createSequenceFileName(baseFileName: string, index: number) {
+  return `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`
+}
+
+function createSequenceFolderName(baseFileName: string) {
+  return `${baseFileName}-frames-${Date.now()}`
+}
+
+function supportsDirectoryExport() {
+  const pickerWindow = window as DirectoryPickerWindow
+  return typeof pickerWindow.showDirectoryPicker === "function"
+}
+
+function isUserCancelledExport(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError"
+}
+
+function getExportOutputLabel(
+  format: ExportFormat,
+  frameCount: number,
+  estimatedSizeMb: string
+) {
+  if (format === "frames") {
+    return `1 folder | ${frameCount} PNG files | ~${estimatedSizeMb} MB`
+  }
+
+  return `1 ${format.toUpperCase()} file | ~${estimatedSizeMb} MB`
+}
+
+function getPrimaryExportLabel(format: ExportFormat) {
+  if (format === "gif") return "Export GIF"
+  if (format === "webm") return "Export WebM"
+  return "Export Frames Folder"
 }
 
 function sleep(durationMs: number) {
