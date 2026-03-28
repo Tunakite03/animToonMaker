@@ -1,5 +1,12 @@
 import { useRef } from "react"
-import { useAnimationStore } from "@/store/animation-store"
+import { useShallow } from "zustand/react/shallow"
+import { formatShortcutLabel } from "@/lib/shortcuts"
+import {
+  selectActiveAnimation,
+  selectActiveFrames,
+  useAnimationStore,
+} from "@/store/animation-store"
+import { useSettingsStore } from "@/store/settings-store"
 import { useUndoStore } from "@/store/undo-store"
 import {
   ImportIcon,
@@ -19,24 +26,20 @@ import { processImageFiles } from "@/lib/import-utils"
 import { cn } from "@/lib/utils"
 
 export function Toolbar() {
-  const frames = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    return anim?.frames ?? []
-  })
-  const selectedAnimName = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    return anim?.name ?? ""
-  })
-  const addFrame = useAnimationStore((s) => s.addFrame)
-  const addFrameWithImage = useAnimationStore((s) => s.addFrameWithImage)
+  const frames = useAnimationStore(selectActiveFrames)
+  const { selectedAnimName, addFrame, addFrameWithImage } = useAnimationStore(
+    useShallow((s) => ({
+      selectedAnimName: selectActiveAnimation(s)?.name ?? "",
+      addFrame: s.addFrame,
+      addFrameWithImage: s.addFrameWithImage,
+    }))
+  )
   const undo = useUndoStore((s) => s.undo)
   const redo = useUndoStore((s) => s.redo)
   const canUndo = useUndoStore((s) => s.pastStates.length > 0)
   const canRedo = useUndoStore((s) => s.futureStates.length > 0)
+  const undoShortcut = useSettingsStore((s) => s.shortcutBindings.undo)
+  const redoShortcut = useSettingsStore((s) => s.shortcutBindings.redo)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const totalCount = frames.length
@@ -76,7 +79,9 @@ export function Toolbar() {
               <UndoIcon />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Undo (Ctrl+Z)</TooltipContent>
+          <TooltipContent side="bottom">
+            Undo{undoShortcut ? ` (${formatShortcutLabel(undoShortcut)})` : ""}
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -91,7 +96,9 @@ export function Toolbar() {
               <RedoIcon />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Redo (Ctrl+Shift+Z)</TooltipContent>
+          <TooltipContent side="bottom">
+            Redo{redoShortcut ? ` (${formatShortcutLabel(redoShortcut)})` : ""}
+          </TooltipContent>
         </Tooltip>
       </div>
 

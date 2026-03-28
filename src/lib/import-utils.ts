@@ -1,110 +1,115 @@
-import { MAX_FRAMES } from "@/lib/constants";
+import { MAX_FRAMES } from "@/lib/constants"
+import {
+  importImagePathAsAsset,
+  importImagePathsAsAssets,
+  saveImageFileAsAsset,
+} from "@/lib/image-assets"
 
-const IMAGE_PATH_PATTERN = /\.(png|jpe?g|gif|webp|bmp|tiff?|avif|svg)$/i;
+const IMAGE_PATH_PATTERN = /\.(png|jpe?g|gif|webp|bmp|tiff?|avif|svg)$/i
 
 export type ImportedImage = {
-  imageUrl: string;
-  prompt: string;
-};
-
-function readFileAsDataUrl(
-  file: File,
-): Promise<ImportedImage | null> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      resolve({
-        imageUrl: reader.result as string,
-        prompt: file.name.replace(/\.[^.]+$/, ""),
-      });
-    };
-    reader.onerror = () => resolve(null);
-    reader.readAsDataURL(file);
-  });
+  imageAssetId: string
+  imageUrl: string
+  prompt: string
 }
 
-export async function readImageFile(
-  file: File,
-): Promise<ImportedImage | null> {
-  if (!file.type.startsWith("image/")) return null;
-  return readFileAsDataUrl(file);
+export async function readImageFile(file: File): Promise<ImportedImage | null> {
+  if (!file.type.startsWith("image/")) return null
+
+  try {
+    const asset = await saveImageFileAsAsset(file)
+    return {
+      imageAssetId: asset.assetId,
+      imageUrl: asset.imageUrl,
+      prompt: file.name.replace(/\.[^.]+$/, ""),
+    }
+  } catch (err) {
+    console.error("[import] Failed to import image file:", file.name, err)
+    return null
+  }
 }
 
 export async function readImagePath(
-  filePath: string,
+  filePath: string
 ): Promise<ImportedImage | null> {
-  if (!IMAGE_PATH_PATTERN.test(filePath)) return null;
+  if (!IMAGE_PATH_PATTERN.test(filePath)) return null
 
-  const { invoke } = await import("@tauri-apps/api/core");
+  const imported = await importImagePathAsAsset(filePath)
+  if (!imported) return null
 
-  try {
-    const dataUrl = await invoke<string>("read_image_as_data_url", {
-      path: filePath,
-    });
-
-    return {
-      imageUrl: dataUrl,
-      prompt: filePath.split(/[/\\]/).pop()?.replace(/\.[^.]+$/, "") ?? "",
-    };
-  } catch (err) {
-    console.error("[import] Failed to read image path:", filePath, err);
-    return null;
+  return {
+    imageAssetId: imported.assetId,
+    imageUrl: imported.imageUrl,
+    prompt: imported.prompt,
   }
 }
 
 /**
  * Process browser File objects (from <input type="file"> or HTML5 drag-drop)
- * into animation frames by reading each as a base64 data URL.
+ * into animation frames by storing them as asset handles first.
  */
 export async function processImageFiles(
   files: File[],
   currentFrameCount: number,
-  addFrameWithImage: (imageUrl: string, prompt?: string) => string,
+  addFrameWithImage: (
+    imageUrl: string,
+    prompt?: string,
+    imageAssetId?: string | null
+  ) => string
 ): Promise<void> {
-  const imageFiles = files.filter((file) => file.type.startsWith("image/"));
-  if (imageFiles.length === 0) return;
+  const imageFiles = files.filter((file) => file.type.startsWith("image/"))
+  if (imageFiles.length === 0) return
 
-  const remaining = MAX_FRAMES - currentFrameCount;
-  if (remaining <= 0) return;
+  const remaining = MAX_FRAMES - currentFrameCount
+  if (remaining <= 0) return
 
   const importedFiles = await Promise.all(
-    imageFiles.slice(0, remaining).map(readImageFile),
-  );
+    imageFiles.slice(0, remaining).map(readImageFile)
+  )
 
   for (const imported of importedFiles) {
-    if (!imported) continue;
-    addFrameWithImage(imported.imageUrl, imported.prompt);
+    if (!imported) continue
+    addFrameWithImage(imported.imageUrl, imported.prompt, imported.imageAssetId)
   }
 }
 
 /**
  * Process OS file paths (from Tauri's onDragDropEvent) into animation frames.
  *
- * Uses the `read_image_as_data_url` Tauri command (defined in src-tauri/src/lib.rs)
- * which reads the file on the Rust side and returns a ready-made base64 data URL.
- * This approach is reliable on all platforms and avoids the asset:// protocol
- * pitfalls (ERR_CONNECTION_REFUSED in dev mode, permission config, etc.).
+ * Uses Tauri asset commands to copy source files into the app-managed asset
+ * directory and return stable asset handles + webview URLs.
  *
- * Only call this inside a Tauri runtime. It dynamically imports
- * `@tauri-apps/api/core`, which is unavailable in browser-only dev mode.
+ * Only call this inside a Tauri runtime. In browser-only mode this helper
+ * will no-op because native path import APIs are unavailable.
  */
 export async function processImagePaths(
   paths: string[],
   currentFrameCount: number,
-  addFrameWithImage: (imageUrl: string, prompt?: string) => string,
+  addFrameWithImage: (
+    imageUrl: string,
+    prompt?: string,
+    imageAssetId?: string | null
+  ) => string
 ): Promise<void> {
-  const imagePaths = paths.filter((path) => IMAGE_PATH_PATTERN.test(path));
-  if (imagePaths.length === 0) return;
+  const imagePaths = paths.filter((path) => IMAGE_PATH_PATTERN.test(path))
+  if (imagePaths.length === 0) return
 
-  const remaining = MAX_FRAMES - currentFrameCount;
-  if (remaining <= 0) return;
+  const remaining = MAX_FRAMES - currentFrameCount
+  if (remaining <= 0) return
 
-  const importedPaths = await Promise.all(
-    imagePaths.slice(0, remaining).map(readImagePath),
-  );
+  const limitedPaths = imagePaths.slice(0, remaining)
 
-  for (const imported of importedPaths) {
-    if (!imported) continue;
-    addFrameWithImage(imported.imageUrl, imported.prompt);
+  const importedPaths = await importImagePathsAsAssets(limitedPaths)
+  if (importedPaths.length > 0) {
+    for (const imported of importedPaths) {
+      addFrameWithImage(imported.imageUrl, imported.prompt, imported.assetId)
+    }
+    return
+  }
+
+  const fallbackImports = await Promise.all(limitedPaths.map(readImagePath))
+  for (const imported of fallbackImports) {
+    if (!imported) continue
+    addFrameWithImage(imported.imageUrl, imported.prompt, imported.imageAssetId)
   }
 }

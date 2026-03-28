@@ -1,16 +1,86 @@
+import { useState } from "react"
+import {
+  DEFAULT_SHORTCUT_BINDINGS,
+  formatShortcutLabel,
+  shortcutFromKeyboardEvent,
+  type ShortcutAction,
+} from "@/lib/shortcuts"
 import { useSettingsStore } from "@/store/settings-store"
 import { OnionIcon, TimelineIcon } from "@/components/icons"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+
+const SHORTCUT_FIELDS: Array<{
+  action: ShortcutAction
+  label: string
+  description: string
+}> = [
+  {
+    action: "saveProject",
+    label: "Save project",
+    description: "Quick-save the current project from anywhere in the editor.",
+  },
+  {
+    action: "undo",
+    label: "Undo",
+    description: "Revert the latest change in the canvas or timeline.",
+  },
+  {
+    action: "redo",
+    label: "Redo",
+    description: "Restore the most recently undone change.",
+  },
+]
 
 export default function EditorSettingsPage() {
   const showOnionSkin = useSettingsStore((s) => s.showOnionSkin)
   const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity)
   const thumbnailSize = useSettingsStore((s) => s.timelineThumbnailSize)
+  const shortcutBindings = useSettingsStore((s) => s.shortcutBindings)
   const setShowOnionSkin = useSettingsStore((s) => s.setShowOnionSkin)
   const setOnionSkinOpacity = useSettingsStore((s) => s.setOnionSkinOpacity)
   const setThumbnailSize = useSettingsStore((s) => s.setTimelineThumbnailSize)
+  const setShortcutBinding = useSettingsStore((s) => s.setShortcutBinding)
+  const resetShortcutBindings = useSettingsStore((s) => s.resetShortcutBindings)
+  const [capturingAction, setCapturingAction] = useState<ShortcutAction | null>(
+    null
+  )
+
+  const handleShortcutKeyDown = (
+    action: ShortcutAction,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Tab") {
+      return
+    }
+
+    if (event.key === "Escape") {
+      setCapturingAction(null)
+      event.currentTarget.blur()
+      return
+    }
+
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault()
+      setShortcutBinding(action, "")
+      setCapturingAction(null)
+      event.currentTarget.blur()
+      return
+    }
+
+    const shortcut = shortcutFromKeyboardEvent(event.nativeEvent)
+    if (!shortcut) {
+      return
+    }
+
+    event.preventDefault()
+    setShortcutBinding(action, shortcut)
+    setCapturingAction(null)
+    event.currentTarget.blur()
+  }
 
   return (
     <div className="space-y-8">
@@ -138,6 +208,72 @@ export default function EditorSettingsPage() {
               <span>Large (128px)</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-xl border border-border p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Label className="text-sm font-semibold">Keyboard shortcuts</Label>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Click a field, then press the new key combination. Use Backspace
+              or Delete to clear a shortcut. Ctrl also maps to Command on macOS.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={resetShortcutBindings}>
+            Reset all
+          </Button>
+        </div>
+
+        <div className="space-y-3 border-t border-border pt-4">
+          {SHORTCUT_FIELDS.map((field) => (
+            <div
+              key={field.action}
+              className="grid gap-3 rounded-xl border border-border/70 bg-background/60 p-3 md:grid-cols-[minmax(0,1fr)_220px_auto]"
+            >
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {field.label}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {field.description}
+                </p>
+              </div>
+
+              <Input
+                readOnly
+                value={
+                  capturingAction === field.action
+                    ? "Press shortcut..."
+                    : formatShortcutLabel(shortcutBindings[field.action])
+                }
+                onFocus={() => setCapturingAction(field.action)}
+                onBlur={() =>
+                  setCapturingAction((current) =>
+                    current === field.action ? null : current
+                  )
+                }
+                onKeyDown={(event) =>
+                  handleShortcutKeyDown(field.action, event)
+                }
+                className="h-9 font-mono text-sm"
+                aria-label={`${field.label} shortcut`}
+              />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setShortcutBinding(
+                    field.action,
+                    DEFAULT_SHORTCUT_BINDINGS[field.action]
+                  )
+                }
+              >
+                Reset
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

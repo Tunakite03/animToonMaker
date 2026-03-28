@@ -1,7 +1,7 @@
 import { Suspense, lazy, type ReactNode } from "react"
 import { Route, Routes } from "react-router-dom"
 import { EditorLayout } from "@/components/editor-layout"
-import { Providers } from "./provider/provider"
+import { Providers } from "./app/provider"
 
 const SettingsLayout = lazy(() => import("@/app/settings/layout"))
 const SettingsPage = lazy(() => import("@/app/settings/page"))

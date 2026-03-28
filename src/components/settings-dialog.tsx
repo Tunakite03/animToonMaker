@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { ColorField } from "@/components/ui/color-field"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -150,19 +151,7 @@ function CanvasSettings() {
       <Separator />
 
       <SettingRow label="Background Color">
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={bg}
-            onChange={(e) => setBg(e.target.value)}
-            className="h-8 w-8 cursor-pointer rounded border border-border"
-          />
-          <Input
-            value={bg}
-            onChange={(e) => setBg(e.target.value)}
-            className="h-8 w-28 font-mono text-xs"
-          />
-        </div>
+        <ColorField value={bg} onChange={setBg} />
       </SettingRow>
 
       <SettingRow label="Render Quality">
@@ -192,10 +181,10 @@ function CanvasSettings() {
 function AISettings() {
   const styleSuffix = useSettingsStore((s) => s.styleSuffix)
   const negativePrompt = useSettingsStore((s) => s.negativePrompt)
-  const autoGenerate = useSettingsStore((s) => s.autoGenerate)
+  const motionStrength = useSettingsStore((s) => s.motionStrength)
   const setStyleSuffix = useSettingsStore((s) => s.setStyleSuffix)
   const setNegativePrompt = useSettingsStore((s) => s.setNegativePrompt)
-  const setAutoGenerate = useSettingsStore((s) => s.setAutoGenerate)
+  const setMotionStrength = useSettingsStore((s) => s.setMotionStrength)
 
   return (
     <>
@@ -226,11 +215,23 @@ function AISettings() {
       <Separator />
 
       <SettingRow
-        label="Auto-generate on Add"
-        description="Automatically generate image when a new frame is added"
+        label={`Motion Strength: ${Math.round(motionStrength * 100)}%`}
+        description="Controls how far continuity mode can drift from the previous frame"
       >
-        <Switch checked={autoGenerate} onCheckedChange={setAutoGenerate} />
+        <Slider
+          value={[motionStrength]}
+          onValueChange={([value]) => setMotionStrength(value)}
+          min={0.05}
+          max={0.95}
+          step={0.05}
+          className="w-44"
+        />
       </SettingRow>
+
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Continuity mode currently uses the previous frame as a visual reference
+        when the selected provider supports it.
+      </p>
     </>
   )
 }

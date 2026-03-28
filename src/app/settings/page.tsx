@@ -13,9 +13,20 @@ import {
 } from "@/components/icons"
 import { ArrowRightIcon, FileWarningIcon, RocketIcon } from "lucide-react"
 
+const PROVIDER_LABELS: Record<string, string> = {
+  placeholder: "None",
+  fal: "fal.ai",
+  replicate: "Replicate",
+  openai: "OpenAI",
+  stability: "Stability",
+  together: "Together",
+  gemini: "Gemini",
+}
+
 export default function SettingsPage() {
   const aiProvider = useSettingsStore((s) => s.aiProvider)
   const apiKey = useSettingsStore((s) => s.apiKey)
+  const aiModels = useSettingsStore((s) => s.aiModels)
   const canvasWidth = useSettingsStore((s) => s.canvasWidth)
   const canvasHeight = useSettingsStore((s) => s.canvasHeight)
   const exportFormat = useSettingsStore((s) => s.exportFormat)
@@ -29,14 +40,8 @@ export default function SettingsPage() {
   const hasApiKey = apiKey.length > 0
   const exportFormatLabel =
     exportFormat === "frames" ? "PNG Frames" : exportFormat.toUpperCase()
-  const providerName =
-    aiProvider === "placeholder"
-      ? "None"
-      : aiProvider === "fal"
-        ? "fal.ai"
-        : aiProvider === "replicate"
-          ? "Replicate"
-          : "OpenAI"
+  const providerName = PROVIDER_LABELS[aiProvider] ?? aiProvider
+  const activeProviderModel = aiModels[aiProvider] ?? aiModel
 
   return (
     <div className="space-y-8">
@@ -50,7 +55,7 @@ export default function SettingsPage() {
 
       {/* Quick start guide */}
       {!hasApiKey && aiProvider === "placeholder" && (
-        <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent p-6">
+        <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-linear-to-br from-primary/5 via-primary/3 to-transparent p-6">
           <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-primary/5" />
           <div className="absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-primary/3" />
           <div className="relative">
@@ -131,9 +136,9 @@ export default function SettingsPage() {
                 <p className="mt-0.5 text-lg font-semibold tracking-tight">
                   {providerName}
                 </p>
-                {aiModel && aiProvider !== "placeholder" && (
+                {activeProviderModel && aiProvider !== "placeholder" && (
                   <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {aiModel.split("/").pop()}
+                    {activeProviderModel.split("/").pop()}
                   </p>
                 )}
               </div>
@@ -233,7 +238,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Danger zone */}
-      <div className="space-y-3 rounded-xl border border-destructive/15 bg-destructive/[0.02] p-4">
+      <div className="space-y-3 rounded-xl border border-destructive/15 bg-destructive/2 p-4">
         <div className="flex items-center gap-2">
           <FileWarningIcon />
           <h3 className="text-sm font-semibold text-destructive">

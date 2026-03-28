@@ -1,6 +1,11 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react"
-import { useAnimationStore } from "@/store/animation-store"
-import { useSettingsStore, type ExportFormat } from "@/store/settings-store"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useShallow } from "zustand/react/shallow"
+import {
+  selectActiveAnimation,
+  selectActiveFrames,
+  useAnimationStore,
+} from "@/store/animation-store"
+import { useSettingsStore } from "@/store/settings-store"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -19,53 +24,51 @@ import {
   VideoIcon,
 } from "@/components/icons"
 import { cn } from "@/lib/utils"
+import { FormatCard } from "@/components/export-panel/format-card"
+import {
+  createBaseFileName,
+  createExportCanvas,
+  createExportFolderViaRust,
+  createFrameSequenceManifest,
+  createSequenceFolderName,
+  drawBlankFrame,
+  drawImageFrame,
+  downloadBlob,
+  estimateExportSizeMb,
+  estimateVideoBitrate,
+  getExportOutputLabel,
+  getFrameDuration,
+  getPrimaryExportLabel,
+  getSupportedWebmMimeType,
+  isTauriDesktopRuntime,
+  isUserCancelledExport,
+  joinPath,
+  loadImages,
+  mapQualityToGifSample,
+  pickExportDirectoryWithNativeDialog,
+  processPngSequenceFrames,
+  saveBlobViaRust,
+  saveBlobWithNativeDialog,
+  sleep,
+  waitForNextFrame,
+} from "@/components/export-panel/utils"
 
-const WEBM_MIME_TYPES = [
-  "video/webm;codecs=vp9",
-  "video/webm;codecs=vp8",
-  "video/webm",
-] as const
+type ExportNoticeKind = "success" | "error"
 
-interface ExportWritableFileStream {
-  write: (data: Blob | string) => Promise<void>
-  close: () => Promise<void>
+interface ExportNotice {
+  kind: ExportNoticeKind
+  message: string
 }
-
-interface ExportFileHandle {
-  createWritable: () => Promise<ExportWritableFileStream>
-}
-
-interface ExportDirectoryHandle {
-  getDirectoryHandle: (
-    name: string,
-    options?: { create?: boolean }
-  ) => Promise<ExportDirectoryHandle>
-  getFileHandle: (
-    name: string,
-    options?: { create?: boolean }
-  ) => Promise<ExportFileHandle>
-}
-
-type DirectoryPickerWindow = Window &
-  typeof globalThis & {
-    showDirectoryPicker?: () => Promise<ExportDirectoryHandle>
-  }
 
 export function ExportPanel() {
-  const frames = useAnimationStore((state) => {
-    const anim = state.project.animations.find(
-      (a) => a.id === state.project.selectedAnimationId
-    )
-    return anim?.frames ?? []
-  })
-  const fps = useAnimationStore((state) => state.project.fps)
-  const projectName = useAnimationStore((state) => state.project.name)
-  const selectedAnimationName = useAnimationStore((state) => {
-    const anim = state.project.animations.find(
-      (a) => a.id === state.project.selectedAnimationId
-    )
-    return anim?.name ?? "animation"
-  })
+  const frames = useAnimationStore(selectActiveFrames)
+  const { fps, projectName, selectedAnimationName } = useAnimationStore(
+    useShallow((state) => ({
+      fps: state.project.fps,
+      projectName: state.project.name,
+      selectedAnimationName: selectActiveAnimation(state)?.name ?? "animation",
+    }))
+  )
 
   const exportFormat = useSettingsStore((state) => state.exportFormat)
   const exportQuality = useSettingsStore((state) => state.exportQuality)
@@ -78,16 +81,18 @@ export function ExportPanel() {
   const [exporting, setExporting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [progressLabel, setProgressLabel] = useState("")
+  const [exportNotice, setExportNotice] = useState<ExportNotice | null>(null)
   const [open, setOpen] = useState(false)
+  const exportNoticeTimeoutRef = useRef<number | null>(null)
 
   const playableFrames = useMemo(
-    () => frames.filter((frame) => frame.imageUrl),
+    () => frames.filter((frame) => frame.imageUrl || frame.imageAssetId),
     [frames]
   )
   const canExport = playableFrames.length > 0
   const outputWidth = canvasWidth * exportScale
   const outputHeight = canvasHeight * exportScale
-  const canExportToDirectory = supportsDirectoryExport()
+  const canExportToDirectory = isTauriDesktopRuntime()
   const totalDurationMs = useMemo(
     () =>
       playableFrames.reduce(
@@ -125,28 +130,61 @@ export function ExportPanel() {
     [selectedAnimationName]
   )
 
+  const showExportNotice = useCallback(
+    (kind: ExportNoticeKind, message: string) => {
+      setExportNotice({ kind, message })
+
+      if (exportNoticeTimeoutRef.current !== null) {
+        window.clearTimeout(exportNoticeTimeoutRef.current)
+      }
+
+      exportNoticeTimeoutRef.current = window.setTimeout(() => {
+        setExportNotice(null)
+        exportNoticeTimeoutRef.current = null
+      }, 4000)
+    },
+    []
+  )
+
+  useEffect(() => {
+    return () => {
+      if (exportNoticeTimeoutRef.current !== null) {
+        window.clearTimeout(exportNoticeTimeoutRef.current)
+      }
+    }
+  }, [])
+
   const cancelExport = useCallback(() => {
     setExporting(false)
     setProgress(0)
     setProgressLabel("")
   }, [])
 
-  const finishExport = useCallback((label: string) => {
-    setProgress(100)
-    setProgressLabel(label)
+  const finishExport = useCallback(
+    (label: string) => {
+      setProgress(100)
+      setProgressLabel(label)
+      showExportNotice("success", label)
 
-    window.setTimeout(() => {
+      window.setTimeout(() => {
+        setExporting(false)
+        setProgress(0)
+        setProgressLabel("")
+      }, 1200)
+    },
+    [showExportNotice]
+  )
+
+  const failExport = useCallback(
+    (error: unknown) => {
+      console.error("Export failed:", error)
       setExporting(false)
-      setProgress(0)
-      setProgressLabel("")
-    }, 1200)
-  }, [])
-
-  const failExport = useCallback((error: unknown) => {
-    console.error("Export failed:", error)
-    setExporting(false)
-    setProgressLabel(error instanceof Error ? error.message : "Export failed.")
-  }, [])
+      const message = error instanceof Error ? error.message : "Export failed."
+      setProgressLabel(message)
+      showExportNotice("error", message)
+    },
+    [showExportNotice]
+  )
 
   const exportGif = useCallback(async () => {
     if (!canExport) return
@@ -201,12 +239,30 @@ export function ExportPanel() {
         gif.render()
       })
 
-      downloadBlob(blob, `${projectBaseFileName}-${Date.now()}.gif`)
-      finishExport("GIF ready.")
+      const saved = await saveBlobWithNativeDialog({
+        blob,
+        defaultPath: `${projectBaseFileName}-${Date.now()}.gif`,
+        fallbackFileName: `${projectBaseFileName}-${Date.now()}.gif`,
+        title: "Save GIF",
+        filters: [{ name: "GIF", extensions: ["gif"] }],
+      })
+
+      if (!saved) {
+        cancelExport()
+        return
+      }
+
+      finishExport("GIF saved.")
     } catch (error) {
+      if (isUserCancelledExport(error)) {
+        cancelExport()
+        return
+      }
+
       failExport(error)
     }
   }, [
+    cancelExport,
     projectBaseFileName,
     canExport,
     canvasBackground,
@@ -295,14 +351,32 @@ export function ExportPanel() {
       await stopped
 
       const blob = new Blob(chunks, { type: mimeType })
-      downloadBlob(blob, `${projectBaseFileName}-${Date.now()}.webm`)
-      finishExport("WebM ready.")
+      const saved = await saveBlobWithNativeDialog({
+        blob,
+        defaultPath: `${projectBaseFileName}-${Date.now()}.webm`,
+        fallbackFileName: `${projectBaseFileName}-${Date.now()}.webm`,
+        title: "Save WebM",
+        filters: [{ name: "WebM video", extensions: ["webm"] }],
+      })
+
+      if (!saved) {
+        cancelExport()
+        return
+      }
+
+      finishExport("WebM saved.")
     } catch (error) {
+      if (isUserCancelledExport(error)) {
+        cancelExport()
+        return
+      }
+
       failExport(error)
     } finally {
       tracks.forEach((track) => track.stop())
     }
   }, [
+    cancelExport,
     projectBaseFileName,
     canExport,
     canvasBackground,
@@ -328,7 +402,6 @@ export function ExportPanel() {
         images,
         width: outputWidth,
         height: outputHeight,
-        background: canvasBackground,
         baseFileName: animationBaseFileName,
         onFrame: async ({ blob, fileName, index, total }) => {
           downloadBlob(blob, fileName)
@@ -344,7 +417,6 @@ export function ExportPanel() {
   }, [
     animationBaseFileName,
     canExport,
-    canvasBackground,
     failExport,
     finishExport,
     outputHeight,
@@ -355,85 +427,66 @@ export function ExportPanel() {
   const exportFramesFolder = useCallback(async () => {
     if (!canExport) return
 
+    if (!isTauriDesktopRuntime()) {
+      await downloadPngSequence()
+      return
+    }
+
     setExporting(true)
     setProgress(0)
     setProgressLabel("Preparing frames folder...")
 
     try {
       const images = await loadImages(playableFrames)
-      const pickerWindow = window as DirectoryPickerWindow
-
-      if (!pickerWindow.showDirectoryPicker) {
-        setProgressLabel("Folder export unavailable. Downloading PNG files...")
-
-        await processPngSequenceFrames({
-          images,
-          width: outputWidth,
-          height: outputHeight,
-          background: canvasBackground,
-          baseFileName: animationBaseFileName,
-          onFrame: async ({ blob, fileName, index, total }) => {
-            downloadBlob(blob, fileName)
-            setProgress(Math.round(((index + 1) / total) * 100))
-            await sleep(32)
-          },
-        })
-
-        finishExport("PNG sequence ready.")
+      const selectedDirectory = await pickExportDirectoryWithNativeDialog()
+      if (!selectedDirectory) {
+        cancelExport()
         return
       }
 
-      const selectedDirectory = await pickerWindow.showDirectoryPicker()
       const exportFolderName = createSequenceFolderName(
         projectBaseFileName,
         animationBaseFileName
       )
-      const exportDirectory = await selectedDirectory.getDirectoryHandle(
-        exportFolderName,
-        { create: true }
-      )
+      const { outputDir } = await createExportFolderViaRust({
+        baseOutputDir: selectedDirectory,
+        folderName: exportFolderName,
+      })
 
       await processPngSequenceFrames({
         images,
         width: outputWidth,
         height: outputHeight,
-        background: canvasBackground,
         baseFileName: animationBaseFileName,
         onFrame: async ({ blob, fileName, index, total }) => {
-          setProgressLabel(`Saving frame ${index + 1} of ${total}...`)
-          await writeFileHandle(exportDirectory, fileName, blob)
-          setProgress(Math.round(((index + 1) / total) * 96))
+          setProgressLabel(`Writing frame ${index + 1} of ${total}...`)
+          await saveBlobViaRust(joinPath(outputDir, fileName), blob)
+          setProgress(Math.round(((index + 1) / total) * 90))
         },
       })
 
-      setProgress(98)
-      setProgressLabel("Writing manifest...")
-
-      await writeFileHandle(
-        exportDirectory,
-        "animation.json",
-        new Blob(
-          [
-            JSON.stringify(
-              createFrameSequenceManifest({
-                baseFileName: animationBaseFileName,
-                fps,
-                frameCount: playableFrames.length,
-                frames: playableFrames,
-                animationName: selectedAnimationName,
-                height: outputHeight,
-                projectName,
-                width: outputWidth,
-              }),
-              null,
-              2
-            ),
-          ],
-          { type: "application/json" }
-        )
+      setProgress(94)
+      setProgressLabel("Writing animation manifest...")
+      const manifest = JSON.stringify(
+        createFrameSequenceManifest({
+          baseFileName: animationBaseFileName,
+          fps,
+          frameCount: playableFrames.length,
+          frames: playableFrames,
+          animationName: selectedAnimationName,
+          height: outputHeight,
+          projectName,
+          width: outputWidth,
+        }),
+        null,
+        2
+      )
+      await saveBlobViaRust(
+        joinPath(outputDir, "animation.json"),
+        new Blob([manifest], { type: "application/json" })
       )
 
-      finishExport(`Frames saved to ${exportFolderName}.`)
+      finishExport("Frames folder saved.")
     } catch (error) {
       if (isUserCancelledExport(error)) {
         cancelExport()
@@ -445,8 +498,8 @@ export function ExportPanel() {
   }, [
     animationBaseFileName,
     canExport,
-    canvasBackground,
     cancelExport,
+    downloadPngSequence,
     failExport,
     finishExport,
     fps,
@@ -541,9 +594,9 @@ export function ExportPanel() {
           </div>
 
           <div className="rounded-lg border border-border/50 bg-muted/30 px-3 py-2.5">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">Output</span>
-              <span className="font-medium text-foreground/80">
+            <div className="flex items-start justify-between gap-3 text-[11px]">
+              <span className="shrink-0 text-muted-foreground">Output</span>
+              <span className="min-w-0 text-right font-medium wrap-break-word text-foreground/80">
                 {getExportOutputLabel(
                   exportFormat,
                   playableFrames.length,
@@ -551,30 +604,30 @@ export function ExportPanel() {
                 )}
               </span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">Resolution</span>
-              <span className="font-medium text-foreground/80">
+            <div className="mt-1 flex items-start justify-between gap-3 text-[11px]">
+              <span className="shrink-0 text-muted-foreground">Resolution</span>
+              <span className="min-w-0 text-right font-medium wrap-break-word text-foreground/80">
                 {outputWidth} x {outputHeight} px
               </span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">Quality</span>
-              <span className="font-medium text-foreground/80">
+            <div className="mt-1 flex items-start justify-between gap-3 text-[11px]">
+              <span className="shrink-0 text-muted-foreground">Quality</span>
+              <span className="min-w-0 text-right font-medium wrap-break-word text-foreground/80">
                 {exportFormat === "frames"
                   ? `Lossless PNG at ${exportScale}x scale`
                   : `${exportQuality}% at ${exportScale}x scale`}
               </span>
             </div>
-            <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">Duration</span>
-              <span className="font-medium text-foreground/80">
+            <div className="mt-1 flex items-start justify-between gap-3 text-[11px]">
+              <span className="shrink-0 text-muted-foreground">Duration</span>
+              <span className="min-w-0 text-right font-medium wrap-break-word text-foreground/80">
                 {durationSec}s at {fps} FPS
               </span>
             </div>
             {exportFormat === "frames" ? (
-              <div className="mt-1 flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">Delivery</span>
-                <span className="font-medium text-foreground/80">
+              <div className="mt-1 flex items-start justify-between gap-3 text-[11px]">
+                <span className="shrink-0 text-muted-foreground">Delivery</span>
+                <span className="min-w-0 text-right font-medium wrap-break-word text-foreground/80">
                   {canExportToDirectory
                     ? "Folder export + manifest"
                     : "PNG downloads fallback"}
@@ -585,9 +638,11 @@ export function ExportPanel() {
 
           {exporting ? (
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">{progressLabel}</span>
-                <span className="font-medium text-foreground/70 tabular-nums">
+              <div className="flex items-start justify-between gap-3 text-[11px]">
+                <span className="min-w-0 flex-1 wrap-break-word text-muted-foreground">
+                  {progressLabel}
+                </span>
+                <span className="shrink-0 font-medium text-foreground/70 tabular-nums">
                   {progress}%
                 </span>
               </div>
@@ -599,410 +654,48 @@ export function ExportPanel() {
             onClick={handleExport}
             disabled={exporting || !canExport}
             className={cn(
-              "h-9 gap-2 font-medium",
+              "h-9 w-full min-w-0 gap-2 overflow-hidden font-medium",
               progress === 100 && "bg-emerald-600 hover:bg-emerald-600/90"
             )}
           >
             {exporting ? (
               <>
-                <SpinnerIcon />
-                {progressLabel || "Exporting..."}
+                <SpinnerIcon className="shrink-0" />
+                <span className="min-w-0 truncate">
+                  {progressLabel || "Exporting..."}
+                </span>
               </>
             ) : progress === 100 ? (
               <>
-                <CheckIcon />
-                Completed
+                <CheckIcon className="shrink-0" />
+                <span className="min-w-0 truncate">Completed</span>
               </>
             ) : (
               <>
-                <ExportIcon size={14} />
-                {getPrimaryExportLabel(exportFormat)}
+                <ExportIcon size={14} className="shrink-0" />
+                <span className="min-w-0 truncate">
+                  {getPrimaryExportLabel(exportFormat)}
+                </span>
               </>
             )}
           </Button>
 
-          {exportFormat !== "frames" || !canExportToDirectory ? (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                void downloadPngSequence()
-              }}
-              disabled={exporting || !canExport}
-              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+          {exportNotice ? (
+            <div
+              role={exportNotice.kind === "error" ? "alert" : "status"}
+              aria-live="polite"
+              className={cn(
+                "rounded-md border px-3 py-2 text-xs font-medium",
+                exportNotice.kind === "error"
+                  ? "border-destructive/35 bg-destructive/10 text-destructive"
+                  : "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              )}
             >
-              Download PNG files individually
-            </Button>
+              {exportNotice.message}
+            </div>
           ) : null}
         </div>
       </DialogContent>
     </Dialog>
   )
-}
-
-function FormatCard({
-  selected,
-  onSelect,
-  icon,
-  title,
-  description,
-  badge,
-}: {
-  selected: boolean
-  onSelect: () => void
-  icon: ReactNode
-  title: string
-  description: string
-  badge?: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "relative flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150",
-        selected
-          ? "border-primary bg-primary/8 shadow-[0_0_0_1px] shadow-primary/20"
-          : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/30"
-      )}
-    >
-      <div
-        className={cn(
-          "absolute top-2.5 right-2.5 h-4 w-4 rounded-full border-2 transition-all",
-          selected
-            ? "border-primary bg-primary"
-            : "border-border/60 bg-transparent"
-        )}
-      >
-        {selected ? (
-          <svg
-            className="absolute inset-0 m-auto"
-            width="8"
-            height="8"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-        ) : null}
-      </div>
-
-      <div
-        className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-          selected
-            ? "bg-primary/20 text-primary"
-            : "bg-muted text-muted-foreground"
-        )}
-      >
-        {icon}
-      </div>
-
-      <div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-foreground">{title}</span>
-          {badge ? (
-            <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-bold tracking-wide text-primary uppercase">
-              {badge}
-            </span>
-          ) : null}
-        </div>
-        <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </div>
-    </button>
-  )
-}
-
-function loadImages(
-  frames: Array<{ imageUrl?: string | null }>
-): Promise<HTMLImageElement[]> {
-  return Promise.all(
-    frames.map((frame) => {
-      if (!frame.imageUrl) {
-        return Promise.reject(new Error("A frame is missing its image data."))
-      }
-
-      return loadImage(frame.imageUrl)
-    })
-  )
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image()
-    image.crossOrigin = "anonymous"
-    image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error(`Failed to load frame: ${src}`))
-    image.src = src
-  })
-}
-
-function createExportCanvas(width: number, height: number) {
-  const canvas = document.createElement("canvas")
-  canvas.width = width
-  canvas.height = height
-  return canvas
-}
-
-function drawBlankFrame(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  background: string
-) {
-  context.clearRect(0, 0, width, height)
-  context.fillStyle = background
-  context.fillRect(0, 0, width, height)
-}
-
-function drawImageFrame(
-  context: CanvasRenderingContext2D,
-  image: CanvasImageSource,
-  width: number,
-  height: number,
-  background: string
-) {
-  drawBlankFrame(context, width, height, background)
-  context.imageSmoothingEnabled = true
-  context.imageSmoothingQuality = "high"
-  context.drawImage(image, 0, 0, width, height)
-}
-
-function getFrameDuration(duration: number | undefined, fps: number) {
-  if (
-    typeof duration === "number" &&
-    Number.isFinite(duration) &&
-    duration > 0
-  ) {
-    return duration
-  }
-
-  return Math.max(16, Math.round(1000 / Math.max(fps, 1)))
-}
-
-function mapQualityToGifSample(quality: number) {
-  const normalized = Math.min(100, Math.max(1, quality))
-  return Math.max(1, Math.round(31 - normalized * 0.3))
-}
-
-function estimateVideoBitrate(
-  width: number,
-  height: number,
-  quality: number,
-  fps: number
-) {
-  const qualityFactor = 0.35 + quality / 100
-  return Math.round(width * height * Math.max(fps, 1) * qualityFactor)
-}
-
-function estimateExportSizeMb({
-  frameCount,
-  width,
-  height,
-  durationMs,
-  format,
-  quality,
-}: {
-  frameCount: number
-  width: number
-  height: number
-  durationMs: number
-  format: ExportFormat
-  quality: number
-}) {
-  const megapixels = (width * height) / 1_000_000
-  const durationSec = Math.max(durationMs / 1000, frameCount / 12, 0.1)
-  const qualityFactor = 0.35 + quality / 100
-
-  const estimatedMb =
-    format === "gif"
-      ? frameCount * megapixels * (0.4 + qualityFactor * 0.45)
-      : format === "frames"
-        ? frameCount * megapixels * 1.35
-        : durationSec * megapixels * (0.7 + qualityFactor * 0.6)
-
-  return estimatedMb.toFixed(1)
-}
-
-function getSupportedWebmMimeType() {
-  return WEBM_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type))
-}
-
-function createBaseFileName(projectName: string) {
-  const normalized = projectName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-
-  return normalized || "animation"
-}
-
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement("a")
-  anchor.href = url
-  anchor.download = fileName
-  anchor.click()
-
-  window.setTimeout(() => {
-    URL.revokeObjectURL(url)
-  }, 1000)
-}
-
-function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Failed to encode the canvas output."))
-        return
-      }
-
-      resolve(blob)
-    }, type)
-  })
-}
-
-async function processPngSequenceFrames({
-  images,
-  width,
-  height,
-  background,
-  baseFileName,
-  onFrame,
-}: {
-  images: HTMLImageElement[]
-  width: number
-  height: number
-  background: string
-  baseFileName: string
-  onFrame: (params: {
-    blob: Blob
-    fileName: string
-    index: number
-    total: number
-  }) => Promise<void>
-}) {
-  const canvas = createExportCanvas(width, height)
-  const context = canvas.getContext("2d")
-
-  if (!context) {
-    throw new Error("Canvas export is unavailable.")
-  }
-
-  for (let index = 0; index < images.length; index += 1) {
-    drawImageFrame(context, images[index], width, height, background)
-
-    await onFrame({
-      blob: await canvasToBlob(canvas, "image/png"),
-      fileName: createSequenceFileName(baseFileName, index),
-      index,
-      total: images.length,
-    })
-  }
-}
-
-async function writeFileHandle(
-  directoryHandle: ExportDirectoryHandle,
-  fileName: string,
-  contents: Blob
-) {
-  const fileHandle = await directoryHandle.getFileHandle(fileName, {
-    create: true,
-  })
-  const writable = await fileHandle.createWritable()
-  await writable.write(contents)
-  await writable.close()
-}
-
-function createFrameSequenceManifest({
-  baseFileName,
-  fps,
-  frameCount,
-  frames,
-  animationName,
-  height,
-  projectName,
-  width,
-}: {
-  baseFileName: string
-  fps: number
-  frameCount: number
-  frames: Array<{ duration?: number | undefined }>
-  animationName: string
-  height: number
-  projectName: string
-  width: number
-}) {
-  return {
-    projectName,
-    animationName,
-    filePrefix: baseFileName,
-    format: "png-sequence",
-    fps,
-    frameCount,
-    width,
-    height,
-    exportedAt: new Date().toISOString(),
-    frames: frames.map((frame, index) => ({
-      index: index + 1,
-      fileName: createSequenceFileName(baseFileName, index),
-      durationMs: getFrameDuration(frame.duration, fps),
-    })),
-  }
-}
-
-function createSequenceFileName(baseFileName: string, index: number) {
-  return `${baseFileName}-${String(index + 1).padStart(3, "0")}.png`
-}
-
-function createSequenceFolderName(
-  projectBaseFileName: string,
-  animationBaseFileName: string
-) {
-  return `${projectBaseFileName}-${animationBaseFileName}-frames-${Date.now()}`
-}
-
-function supportsDirectoryExport() {
-  const pickerWindow = window as DirectoryPickerWindow
-  return typeof pickerWindow.showDirectoryPicker === "function"
-}
-
-function isUserCancelledExport(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError"
-}
-
-function getExportOutputLabel(
-  format: ExportFormat,
-  frameCount: number,
-  estimatedSizeMb: string
-) {
-  if (format === "frames") {
-    return `1 folder | ${frameCount} PNG files | ~${estimatedSizeMb} MB`
-  }
-
-  return `1 ${format.toUpperCase()} file | ~${estimatedSizeMb} MB`
-}
-
-function getPrimaryExportLabel(format: ExportFormat) {
-  if (format === "gif") return "Export GIF"
-  if (format === "webm") return "Export WebM"
-  return "Export Frames Folder"
-}
-
-function sleep(durationMs: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, durationMs)
-  })
-}
-
-function waitForNextFrame() {
-  return new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve())
-  })
 }

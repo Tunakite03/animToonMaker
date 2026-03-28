@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { CanvasEditor } from "@/components/canvas-editor"
 import { AnimationTimeline } from "@/components/animation-timeline"
@@ -7,11 +8,13 @@ import { Toolbar } from "@/components/toolbar"
 import { ExportPanel } from "@/components/export-panel"
 import { ProjectLibrary } from "@/components/project-library"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { FilmIcon, SaveIcon, SettingsIcon } from "@/components/icons"
+import { CheckIcon, FilmIcon, SaveIcon, SettingsIcon } from "@/components/icons"
 import { useAnimationStore } from "@/store/animation-store"
 import { useProjectLibraryStore } from "@/store/project-library-store"
 import { useSettingsStore } from "@/store/settings-store"
-import { useUndoShortcuts } from "@/hooks/use-undo-shortcuts"
+import { formatShortcutLabel } from "@/lib/shortcuts"
+import { useEditorShortcuts } from "@/hooks/use-undo-shortcuts"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -43,16 +46,37 @@ export function EditorLayout() {
   const saveProject = useProjectLibraryStore((s) => s.saveProject)
   const aiProvider = useSettingsStore((s) => s.aiProvider)
   const apiKey = useSettingsStore((s) => s.apiKey)
+  const saveShortcut = useSettingsStore((s) => s.shortcutBindings.saveProject)
+  const [saveNoticeAt, setSaveNoticeAt] = useState<number | null>(null)
 
   const isConnected = aiProvider !== "placeholder" && apiKey.length > 0
   const providerLabel = PROVIDER_LABELS[aiProvider] ?? aiProvider
 
-  useUndoShortcuts()
+  const handleQuickSave = useCallback(() => {
+    void (async () => {
+      const saved = await toSavedProject()
+      saveProject(saved)
+      setSaveNoticeAt(Date.now())
+    })()
+  }, [saveProject, toSavedProject])
 
-  const handleQuickSave = () => {
-    const saved = toSavedProject()
-    saveProject(saved)
-  }
+  useEditorShortcuts({ onSaveProject: handleQuickSave })
+
+  useEffect(() => {
+    if (!saveNoticeAt) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveNoticeAt(null)
+    }, 2400)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [saveNoticeAt])
+
+  const saveTooltip = saveShortcut
+    ? `Save project (${formatShortcutLabel(saveShortcut)})`
+    : "Save project"
 
   return (
     <div className="flex h-svh flex-col overflow-hidden bg-background">
@@ -123,6 +147,21 @@ export function EditorLayout() {
           <ProjectLibrary />
 
           {/* Quick save */}
+          {saveNoticeAt && (
+            <Badge
+              variant="secondary"
+              className="mr-1 gap-1.5 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
+            >
+              <CheckIcon className="size-3" />
+              Saved at{" "}
+              {new Date(saveNoticeAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </Badge>
+          )}
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon-sm" onClick={handleQuickSave}>
@@ -130,7 +169,7 @@ export function EditorLayout() {
                 <span className="sr-only">Save project</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Save project</TooltipContent>
+            <TooltipContent side="bottom">{saveTooltip}</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="mx-1.5 h-4 opacity-60" />
@@ -197,9 +236,14 @@ export function EditorLayout() {
           maxSize="45%"
         >
           <aside className="flex h-full flex-col overflow-hidden border-l border-border/50 bg-card/50">
-            <ResizablePanelGroup orientation="vertical">
+            <ResizablePanelGroup orientation="vertical" className="min-h-0">
               {/* Frame editor / prompt panel */}
-              <ResizablePanel id="frame-editor" defaultSize="55%" minSize="25%">
+              <ResizablePanel
+                id="frame-editor"
+                defaultSize="55%"
+                minSize="25%"
+                className="min-h-0 overflow-hidden"
+              >
                 <FramePromptPanel />
               </ResizablePanel>
 
@@ -211,6 +255,7 @@ export function EditorLayout() {
                 defaultSize="30%"
                 minSize="15%"
                 maxSize="40%"
+                className="min-h-0 overflow-hidden"
               >
                 <AnimationsPanel />
               </ResizablePanel>
