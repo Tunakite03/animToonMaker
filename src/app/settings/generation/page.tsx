@@ -1,18 +1,31 @@
 import { useSettingsStore } from "@/store/settings-store"
-import { AutoIcon, BlockIcon, PaletteIcon, TipIcon } from "@/components/icons"
+import { getFrameGenerationCapabilities } from "@/services/generate-frame"
+import { getMotionStrengthProfile, getProviderLabel } from "@/lib/ai-generation"
+import { BlockIcon, PaletteIcon, TipIcon } from "@/components/icons"
+import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 
 const PROMPT_LIMIT = 1000
 
 export default function GenerationSettingsPage() {
+  const aiProvider = useSettingsStore((s) => s.aiProvider)
+  const aiModel = useSettingsStore((s) => s.aiModel)
   const styleSuffix = useSettingsStore((s) => s.styleSuffix)
   const negativePrompt = useSettingsStore((s) => s.negativePrompt)
-  const autoGenerate = useSettingsStore((s) => s.autoGenerate)
+  const motionStrength = useSettingsStore((s) => s.motionStrength)
   const setStyleSuffix = useSettingsStore((s) => s.setStyleSuffix)
   const setNegativePrompt = useSettingsStore((s) => s.setNegativePrompt)
-  const setAutoGenerate = useSettingsStore((s) => s.setAutoGenerate)
+  const setMotionStrength = useSettingsStore((s) => s.setMotionStrength)
+  const providerLabel = getProviderLabel(aiProvider)
+  const generationCapabilities = getFrameGenerationCapabilities(
+    aiProvider,
+    aiModel || undefined
+  )
+  const motionStrengthProfile = getMotionStrengthProfile(motionStrength)
+  const continuityAvailable = generationCapabilities.supportsReferenceFrame
 
   return (
     <div className="space-y-8">
@@ -21,6 +34,31 @@ export default function GenerationSettingsPage() {
         <h2 className="text-2xl font-bold tracking-tight">Generation</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Configure how AI generates your animation frames.
+        </p>
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-border p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant={continuityAvailable ? "default" : "secondary"}
+            className="h-6"
+          >
+            {continuityAvailable
+              ? "Reference continuity available"
+              : "Independent generation only"}
+          </Badge>
+          <Badge variant="outline" className="h-6">
+            Provider: {providerLabel}
+            {aiModel ? ` • ${aiModel}` : ""}
+          </Badge>
+          <Badge variant="outline" className="h-6">
+            Negative prompt: Prompt guidance
+          </Badge>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {continuityAvailable
+            ? `${providerLabel} can reuse the previous completed frame as a visual reference. Motion Strength is active for adjacent-frame continuity.`
+            : `${providerLabel} currently generates each frame independently. Motion Strength stays disabled until you switch to a provider with reference-frame support.`}
         </p>
       </div>
 
@@ -58,7 +96,7 @@ export default function GenerationSettingsPage() {
               setStyleSuffix(e.target.value.slice(0, PROMPT_LIMIT))
             }
             placeholder=", cartoon style, flat color, consistent lighting"
-            className="min-h-[80px] font-mono text-xs"
+            className="min-h-20 font-mono text-xs"
           />
           <div className="flex items-start gap-1.5 rounded-md bg-muted/50 px-2.5 py-2 text-[11px] text-muted-foreground">
             <TipIcon />
@@ -99,34 +137,64 @@ export default function GenerationSettingsPage() {
               setNegativePrompt(e.target.value.slice(0, PROMPT_LIMIT))
             }
             placeholder="blurry, low quality, text, watermark, deformed..."
-            className="min-h-[80px] font-mono text-xs"
+            className="min-h-20 font-mono text-xs"
           />
+          <div className="flex items-start gap-1.5 rounded-md bg-muted/50 px-2.5 py-2 text-[11px] text-muted-foreground">
+            <TipIcon />
+            <span>
+              Negative Prompt is currently appended as prompt guidance. Some
+              providers may not treat it like a native negative-prompt
+              parameter.
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Behavior */}
+      {/* Continuity */}
       <div className="space-y-4 rounded-xl border border-border p-5">
         <div className="flex gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-            <AutoIcon />
-          </div>
           <div className="flex-1">
-            <Label className="text-sm font-semibold">Behavior</Label>
+            <Label className="text-sm font-semibold">Continuity</Label>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Automation settings for frame generation.
+              Tune how strongly each new frame can diverge from the previous one
+              when continuity mode is available.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-4 py-3">
+        <div
+          className={cn(
+            "space-y-3 rounded-lg border border-border bg-background/50 px-4 py-3",
+            !continuityAvailable && "opacity-70"
+          )}
+        >
           <div>
-            <Label className="text-sm">Auto-generate on Add</Label>
+            <Label className="text-sm">
+              Motion Strength: {Math.round(motionStrength * 100)}%
+              <span className="ml-2 text-xs font-medium text-muted-foreground">
+                {motionStrengthProfile.label}
+              </span>
+            </Label>
             <p className="text-xs text-muted-foreground">
-              Automatically start generating when a new frame is added with a
-              prompt.
+              {motionStrengthProfile.description}
             </p>
           </div>
-          <Switch checked={autoGenerate} onCheckedChange={setAutoGenerate} />
+          <Slider
+            value={[motionStrength]}
+            onValueChange={([value]) => setMotionStrength(value)}
+            min={0.05}
+            max={0.95}
+            step={0.05}
+            disabled={!continuityAvailable}
+          />
+          <div className="flex items-start gap-1.5 rounded-md bg-muted/50 px-2.5 py-2 text-[11px] text-muted-foreground">
+            <TipIcon />
+            <span>
+              {continuityAvailable
+                ? "Continuity mode currently uses the previous completed frame as a visual reference when the selected provider supports it."
+                : `Switch to Gemini image generation to turn Motion Strength back on and reuse the previous frame as a visual reference.`}
+            </span>
+          </div>
         </div>
       </div>
     </div>

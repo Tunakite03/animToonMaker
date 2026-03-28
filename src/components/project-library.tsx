@@ -50,16 +50,18 @@ export function ProjectLibrary() {
 
   const handleLoad = useCallback(
     (id: string) => {
-      // Auto-save current project before loading
-      const current = toSavedProject()
-      if (current.frameCount > 0) {
-        saveProject(current)
-      }
-      const project = useProjectLibraryStore.getState().getProject(id)
-      if (project) {
-        loadProject(project)
-        setOpen(false)
-      }
+      void (async () => {
+        // Auto-save current project before loading
+        const current = await toSavedProject()
+        if (current.frameCount > 0) {
+          saveProject(current)
+        }
+        const project = useProjectLibraryStore.getState().getProject(id)
+        if (project) {
+          loadProject(project)
+          setOpen(false)
+        }
+      })()
     },
     [toSavedProject, saveProject, loadProject]
   )
@@ -73,13 +75,15 @@ export function ProjectLibrary() {
   )
 
   const handleNewProject = useCallback(() => {
-    // Auto-save current project before creating new
-    const current = toSavedProject()
-    if (current.frameCount > 0) {
-      saveProject(current)
-    }
-    newProject()
-    setOpen(false)
+    void (async () => {
+      // Auto-save current project before creating new
+      const current = await toSavedProject()
+      if (current.frameCount > 0) {
+        saveProject(current)
+      }
+      newProject()
+      setOpen(false)
+    })()
   }, [toSavedProject, saveProject, newProject])
 
   return (

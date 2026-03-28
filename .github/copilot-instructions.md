@@ -1,152 +1,72 @@
-# AnimToon Maker — Project Guidelines
+# Copilot Instructions
 
-> AI-powered frame-by-frame animation editor (desktop app). Users write prompts per frame, AI generates images, frames play back as smooth animation, and the result exports as GIF/WebM.
+Use this file as the concise rule set for GitHub Copilot. For fuller guidance, see `AGENTS.md`.
 
-## Tech Stack
+## Workflow
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Desktop Shell | Tauri v2 (Rust backend, WebView2) | 2.x |
-| Bundler | Vite | 6.x |
-| Language | TypeScript (strict mode) | 5.x |
-| UI | React | 19.x |
-| Routing | React Router (HashRouter) | 7.x |
-| Styling | Tailwind CSS v4 + tw-animate-css | 4.x |
-| Components | shadcn/ui (Radix primitives) | latest |
-| Icons | Lucice react icons | latest |
-| State | Zustand (persist middleware) | 5.x |
-| DnD | @dnd-kit (core + sortable) | latest |
-| HTTP | @tauri-apps/plugin-http (CORS-free) | 2.x |
-| Export | gif.js (Web Worker) | 0.2.x |
-| IDs | nanoid | 5.x |
-| Package Manager | pnpm | latest |
+- For non-trivial code tasks, start with `mcp__vexp__run_pipeline`.
+- Use `mcp__vexp__get_skeleton` for single-file inspection when needed.
+- Use `Context7` for current framework, API, and library guidance before coding.
+- Prefer the smallest complete change that solves the task end to end.
+- Mention what you verified and what you could not verify.
 
-## Project Structure
+## Framework Detection
 
-```
-index.html                  # Vite entry point (Google Fonts, root div)
-vite.config.ts              # Vite config with Tauri dev settings
-src/
-├── main.tsx                # React root — HashRouter + App
-├── App.tsx                 # React Router routes definition
-├── app/
-│   ├── globals.css         # Tailwind v4 + shadcn theme
-│   └── settings/           # Settings pages (ai-provider, canvas, editor, export, generation)
-├── components/             # Reusable UI components
-│   ├── ui/                 # shadcn/ui primitives (button, dialog, input, etc.)
-│   ├── animation-player.tsx    # Canvas-based frame playback
-│   ├── animation-timeline.tsx  # Horizontal frame strip with DnD
-│   ├── editor-layout.tsx       # Main editor shell
-│   ├── export-panel.tsx        # GIF/WebM export UI
-│   ├── frame-prompt-panel.tsx  # Per-frame prompt editing
-│   ├── theme-provider.tsx      # Custom theme provider (light/dark/system)
-│   └── toolbar.tsx             # Playback controls
-├── hooks/                  # Custom React hooks
-│   ├── use-frame-generator.ts  # AI generation with abort support
-│   └── use-playback.ts         # requestAnimationFrame-based playback
-├── lib/                    # Shared utilities & constants
-│   ├── constants.ts        # FPS, dimensions, style suffix, limits
-│   └── utils.ts            # cn() helper (clsx + tailwind-merge)
-├── services/
-│   └── generate-frame.ts   # AI provider API calls (via Tauri HTTP plugin)
-├── store/                  # Zustand stores
-│   ├── animation-store.ts  # Frames, project state, playback
-│   ├── project-library-store.ts  # Saved projects (persisted)
-│   └── settings-store.ts   # AI provider, canvas, export settings (persisted)
-├── types/
-│   └── animation.ts        # Frame, AnimationProject, PlaybackState types
-src-tauri/
-├── Cargo.toml              # Rust dependencies (tauri, tauri-plugin-http)
-├── tauri.conf.json         # Tauri window config, CSP, build commands
-├── capabilities/
-│   └── default.json        # HTTP permissions for AI provider URLs
-├── src/
-│   ├── main.rs             # Tauri entry point
-│   └── lib.rs              # Plugin registration (opener, http)
-public/
-└── gif.worker.js           # gif.js Web Worker
-```
+- Read `package.json` first.
+- If `next` or `next.config.*` exists, use `Next.js mode`.
+- If `vite` exists and `next` does not, use `Vite/SPA mode`.
+- If `src-tauri` exists, apply `Tauri/Desktop` rules on top of the web mode.
+- Do not import patterns from another framework unless the repo already uses them.
 
-## Code Style & Conventions
+## Next.js Mode
 
-- **TypeScript strict mode** — always enabled; never use `any` unless truly unavoidable
-- **Naming**: `kebab-case` files, `PascalCase` components/types, `camelCase` functions/variables, `UPPER_SNAKE_CASE` constants
-- **Imports**: use `@/*` path alias (maps to `src/`); prefer named exports for utilities, default exports for page/layout components
-- **Components**: all components are client-side (no Server Components in Tauri/Vite)
-- **Semicolons**: always use them
-- **Formatting**: Prettier + prettier-plugin-tailwindcss for class sorting
-- **Linting**: ESLint with typescript-eslint
+- Default to App Router unless the repo clearly uses Pages Router.
+- Prefer Server Components by default.
+- Add `"use client"` only when interactivity, browser APIs, or client-only hooks are required.
+- Prefer server-side data fetching and avoid client-side waterfalls.
+- Use framework primitives such as `layout`, `page`, `loading`, `error`, Route Handlers, and Server Actions when appropriate.
+- Keep client bundles lean and be careful about server/client boundaries and serialization.
 
-## Architecture Rules
+## Vite/SPA Mode
 
-### Server vs Client Boundary
-- API calls go directly from the WebView using Tauri HTTP plugin — **no server-side API routes**
-- API keys are stored in Zustand settings store (persisted to localStorage)
-- AI provider logic lives in `src/services/generate-frame.ts`
-- Tauri CSP and HTTP capabilities restrict which external URLs can be accessed
+- Treat the app as client-rendered unless the repo already has a backend/runtime layer for the feature.
+- Prefer local component, hook, and service boundaries over server-oriented abstractions.
 
-### State Management (Zustand)
-- `animation-store.ts` — project state, frames CRUD, playback (no persistence)
-- `settings-store.ts` — user preferences with `persist` middleware (localStorage)
-- Access store outside React with `useStore.getState()` only in hooks/callbacks, never in render
+## Tauri/Desktop Rules
 
-### AI Generation Pipeline (Client-Side via Tauri HTTP)
-- AI API calls happen client-side using `@tauri-apps/plugin-http` (CORS-free native fetch)
-- `src/services/generate-frame.ts` handles all provider routing
-- API keys are stored in Zustand settings store (localStorage)
-- `use-frame-generator` hook imports the service directly (no API route)
-1. User writes prompt → hook calls `generateFrame()` service
-2. Service appends `STYLE_SUFFIX` for visual consistency
-3. Service routes to fal.ai / Replicate / OpenAI / Stability / Together / Gemini
-4. Returns `{ imageUrl }` or falls back to SVG placeholder
-5. Frame status: `idle` → `generating` → `done` | `error`
-6. Batch generation is sequential to avoid rate limits
+- Treat browser APIs and desktop APIs as separate capability layers.
+- Guard desktop-only features such as filesystem or native dialogs.
+- Keep shared UI usable in browser context unless the feature is explicitly desktop-only.
 
-### Animation Playback
-- Use `requestAnimationFrame` for smooth, stutter-free playback
-- Pre-load all frame images before playing
-- Respect per-frame `duration` (derived from FPS)
-- Canvas rendering for performance — no DOM-based frame switching
+## UI And Component Rules
 
-### Export Pipeline
-- GIF export via `gif.js` using Web Worker (`public/gif.worker.js`)
-- Draw frames to offscreen canvas at export scale, then encode
+- Preserve the existing visual language; avoid generic template-like UI.
+- Include loading, empty, error, disabled, and success states where relevant.
+- Keep keyboard access, focus states, and labels intact.
+- Prefer existing UI primitives and utilities before creating new ones.
+- Keep changes surgical in already-large components.
+- Do not add memoization or new dependencies by default.
 
-## Build & Development
+## Data And Performance
 
-```bash
-pnpm dev          # Start Tauri dev (Vite + native window)
-pnpm dev:vite     # Start Vite dev server only (browser)
-pnpm build        # Build Tauri app (production binary)
-pnpm build:vite   # Build frontend only
-pnpm lint         # ESLint
-pnpm lint:fix     # ESLint auto-fix
-pnpm format       # Prettier format
-pnpm typecheck    # tsc --noEmit
-pnpm check        # lint + typecheck + build (CI)
-```
+- Parallelize independent async work.
+- Start async work early and await it as late as correctness allows.
+- Prefer derived state during render over effect-driven synchronization when possible.
+- Avoid oversized client bundles, heavy barrel imports, and unnecessary client-only code.
 
-## Environment Variables
+## Verification
 
-API keys are configured in the Settings UI and stored in localStorage (Zustand persist).
-No `.env` files are needed for AI provider keys.
+- Prefer the narrowest meaningful verification first.
+- In `Next.js` repos, usually run `pnpm lint`, `pnpm typecheck`, and `pnpm build`.
+- In `Vite` repos, usually run `pnpm typecheck`, `pnpm lint`, and `pnpm build:vite` when present.
+- For `Tauri`, verify the web layer first, then native integration only if affected.
 
-## Critical Constraints
+## Constraints
 
-- **Max 120 frames** per project (`MAX_FRAMES` in constants)
-- **Default canvas**: 512×512px, 12 FPS
-- **Prompt limit**: 1000 characters (sanitized client-side)
-- **Frame duration** auto-recalculates when FPS changes
-- **AbortController** per frame generation — always support cancellation
-- **Onion skin** feature for animation continuity (opacity configurable)
+- Prefer existing dependencies and patterns already in the repo.
+- Do not introduce a new router, state library, form library, or styling approach without clear need.
+- For review tasks, prioritize bugs, regressions, edge cases, and missing verification over summaries.
 
-## When Modifying This Project
-
-1. Check `src/types/animation.ts` for data shapes before changing stores or components
-2. Keep AI provider logic in `src/services/generate-frame.ts` — use Tauri HTTP plugin for CORS-free requests
-3. Preserve the `STYLE_SUFFIX` pattern for visual frame consistency
-4. Test playback smoothness after any change to animation-player or use-playback
-5. Run `pnpm check` before considering any change complete
 
 ## vexp context tools <!-- vexp v1.2.30 -->
 

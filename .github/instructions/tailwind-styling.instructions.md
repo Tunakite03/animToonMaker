@@ -3,7 +3,7 @@ description: "Use when writing styles, CSS, or Tailwind classes. Covers Tailwind
 applyTo: "**/*.css, **/*.tsx"
 ---
 
-# Tailwind CSS v4 + shadcn/ui Styling
+# Tailwind CSS v4 + shadcnUI Styling
 
 ## Tailwind v4 Changes
 - No `tailwind.config.js` — configuration is done in CSS with `@theme` directive
@@ -18,9 +18,9 @@ applyTo: "**/*.css, **/*.tsx"
 - Use `h-svh` instead of `h-screen` for mobile-safe viewport height
 
 ## Dark Mode
-- Handled via `next-themes` ThemeProvider with class strategy
-- All color tokens auto-switch between light/dark — use semantic tokens, not hardcoded colors
-- Test both themes when adding new UI
+- Follow the theme provider already used by the repo; do not assume `next-themes` unless it is actually installed.
+- Use semantic tokens instead of hardcoded light/dark colors whenever the design system supports them.
+- Test both themes when adding or changing UI that depends on color contrast.
 
 ## Responsive Design
 - Mobile-first: write base styles for small screens, use `sm:`, `md:`, `lg:` for larger

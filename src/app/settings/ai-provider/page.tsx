@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { useSettingsStore, type AIProvider } from "@/store/settings-store"
+import { generateFrame } from "@/services/generate-frame"
+import { getErrorMessage } from "@/lib/error-message"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -154,6 +156,8 @@ export default function AIProviderPage() {
   const currentProvider =
     providers.find((p) => p.id === aiProvider) ?? providers[0]
   const needsKey = aiProvider !== "placeholder"
+  const isDesktopRuntime =
+    typeof window !== "undefined" && "__TAURI_INTERNALS__" in window
 
   const handleProviderChange = (value: string) => {
     const newProvider = value as AIProvider
@@ -178,30 +182,24 @@ export default function AIProviderPage() {
     setTestMessage("")
 
     try {
-      const res = await fetch("/api/generate-frame", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: "test connection",
-          width: 64,
-          height: 64,
-          provider: aiProvider,
-          apiKey: apiKey,
-          model: aiModel || undefined,
-        }),
+      await generateFrame({
+        prompt: "test connection",
+        width: 64,
+        height: 64,
+        provider: aiProvider,
+        apiKey,
+        model: aiModel || undefined,
       })
-
-      if (res.ok) {
-        setTestStatus("success")
-        setTestMessage("Connection successful! AI generation is working.")
-      } else {
-        const data = await res.json().catch(() => ({}))
-        setTestStatus("error")
-        setTestMessage(data.error || `Request failed with status ${res.status}`)
-      }
-    } catch {
+      setTestStatus("success")
+      setTestMessage("Connection successful! AI generation is working.")
+    } catch (error) {
       setTestStatus("error")
-      setTestMessage("Network error — check your connection.")
+      setTestMessage(
+        getErrorMessage(
+          error,
+          "Connection failed — check your key and network."
+        )
+      )
     }
   }
 
@@ -292,7 +290,9 @@ export default function AIProviderPage() {
           <div className="space-y-3">
             <Label className="text-sm font-semibold">API Key</Label>
             <p className="text-xs text-muted-foreground">
-              Stored locally in your browser — sent only to your server.
+              {isDesktopRuntime
+                ? "Stored in desktop appData via Tauri backend."
+                : "Stored locally in your browser (localStorage)."}
             </p>
             <div className="relative">
               <Input
@@ -381,12 +381,10 @@ export default function AIProviderPage() {
         <div>
           <p className="text-xs font-semibold">Security</p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-            Your API key is stored in your browser&apos;s localStorage and is
-            only sent to your own Next.js server route (
-            <code className="rounded bg-muted px-1 text-[10px]">
-              /api/generate-frame
-            </code>
-            ). The key never leaves your machine directly.
+            {isDesktopRuntime
+              ? "API keys are stored by the desktop backend in your appData folder, not in browser localStorage."
+              : "API keys are stored in your browser localStorage for web mode."}{" "}
+            Keys are only used to call the selected AI provider API.
           </p>
         </div>
       </div>

@@ -6,6 +6,7 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "dialog:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -14,6 +15,8 @@
         { "url": "https://api.openai.com/**" },
         { "url": "https://api.stability.ai/**" },
         { "url": "https://api.together.xyz/**" },
+        { "url": "https://api.together.ai/**" },
+        { "url": "https://*.together.ai/**" },
         { "url": "https://generativelanguage.googleapis.com/**" },
         { "url": "https://fonts.googleapis.com/**" },
         { "url": "https://fonts.gstatic.com/**" }

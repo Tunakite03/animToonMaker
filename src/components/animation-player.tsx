@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from "react"
-import { useAnimationStore } from "@/store/animation-store"
+import { useShallow } from "zustand/react/shallow"
+import {
+  selectActiveAnimation,
+  selectActiveFrames,
+  useAnimationStore,
+} from "@/store/animation-store"
 import { useSettingsStore } from "@/store/settings-store"
 import { useImagePreloader, usePlaybackLoop } from "@/hooks/use-playback"
 import { EmptyCanvasIcon } from "@/components/icons"
-import { CANVAS_BG } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 const GRID_BACKGROUND = {
@@ -22,33 +26,30 @@ type AnimationPlayerProps = {
 export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  const frames = useAnimationStore((state) => {
-    const anim = state.project.animations.find(
-      (a) => a.id === state.project.selectedAnimationId
-    )
-    return anim?.frames ?? []
-  })
-  const loop = useAnimationStore((state) => {
-    const anim = state.project.animations.find(
-      (a) => a.id === state.project.selectedAnimationId
-    )
-    return anim?.loop ?? false
-  })
-  const isPlaying = useAnimationStore((state) => state.playback.isPlaying)
-  const setCurrentFrameIndex = useAnimationStore(
-    (state) => state.setCurrentFrameIndex
+  const frames = useAnimationStore(selectActiveFrames)
+  const {
+    loop,
+    isPlaying,
+    setCurrentFrameIndex,
+    setPlaying,
+    currentFrameIndex,
+    selectedFrameId,
+    selectFrame,
+  } = useAnimationStore(
+    useShallow((state) => ({
+      loop: selectActiveAnimation(state)?.loop ?? false,
+      isPlaying: state.playback.isPlaying,
+      setCurrentFrameIndex: state.setCurrentFrameIndex,
+      setPlaying: state.setPlaying,
+      currentFrameIndex: state.playback.currentFrameIndex,
+      selectedFrameId: state.project.selectedFrameId,
+      selectFrame: state.selectFrame,
+    }))
   )
-  const setPlaying = useAnimationStore((state) => state.setPlaying)
-  const currentFrameIndex = useAnimationStore(
-    (state) => state.playback.currentFrameIndex
-  )
-  const selectedFrameId = useAnimationStore(
-    (state) => state.project.selectedFrameId
-  )
-  const selectFrame = useAnimationStore((state) => state.selectFrame)
 
   const canvasWidth = useSettingsStore((state) => state.canvasWidth)
   const canvasHeight = useSettingsStore((state) => state.canvasHeight)
+  const canvasBackground = useSettingsStore((state) => state.canvasBackground)
   const canvasQuality = useSettingsStore((state) => state.canvasQuality)
   const showGrid = useSettingsStore((state) => state.showGrid)
 
@@ -91,13 +92,15 @@ export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
 
       const frame = playableFrames[index]
       if (!frame?.imageUrl) {
-        ctx.fillStyle = CANVAS_BG
+        ctx.fillStyle = canvasBackground
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         return
       }
 
       const drawImage = (image: CanvasImageSource) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = canvasBackground
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
       }
 
@@ -156,14 +159,18 @@ export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
   useEffect(() => {
     if (isPlaying) return
 
-    if (selectedFrame && !selectedFrame.imageUrl) {
+    if (
+      selectedFrame &&
+      !selectedFrame.imageUrl &&
+      !selectedFrame.imageAssetId
+    ) {
       const canvas = canvasRef.current
       if (!canvas) return
 
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
-      ctx.fillStyle = CANVAS_BG
+      ctx.fillStyle = canvasBackground
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       return
     }
@@ -200,9 +207,9 @@ export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    ctx.fillStyle = CANVAS_BG
+    ctx.fillStyle = canvasBackground
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-  }, [canvasHeight, canvasWidth, playableFrames.length])
+  }, [canvasBackground, canvasHeight, canvasWidth, playableFrames.length])
 
   const currentDisplay = Math.min(
     currentFrameIndex + 1,
@@ -235,6 +242,7 @@ export function AnimationPlayer({ children, zoom = 1 }: AnimationPlayerProps) {
             "shadow-[0_4px_24px_rgba(0,0,0,0.28),0_1px_4px_rgba(0,0,0,0.18)] ring-1",
             isPlaying ? "ring-primary/40" : "ring-border/60"
           )}
+          style={{ backgroundColor: canvasBackground }}
         />
 
         {showGrid ? (

@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { ColorField } from "@/components/ui/color-field"
 import {
   Select,
   SelectContent,
@@ -13,6 +14,9 @@ import {
 import { LinkIcon } from "@/components/icons"
 
 const presets = [
+  { w: 128, h: 128, label: "128²", ratio: "1:1" },
+
+  { w: 256, h: 256, label: "256²", ratio: "1:1" },
   { w: 512, h: 512, label: "512²", ratio: "1:1" },
   { w: 768, h: 768, label: "768²", ratio: "1:1" },
   { w: 1024, h: 1024, label: "1024²", ratio: "1:1" },
@@ -168,25 +172,7 @@ export default function CanvasSettingsPage() {
               Canvas background when no frame is displayed
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="color"
-                value={bg}
-                onChange={(e) => setBg(e.target.value)}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-              />
-              <div
-                className="h-9 w-9 rounded-lg border border-border shadow-sm transition-shadow hover:shadow-md"
-                style={{ backgroundColor: bg }}
-              />
-            </div>
-            <Input
-              value={bg}
-              onChange={(e) => setBg(e.target.value)}
-              className="h-9 w-24 font-mono text-xs"
-            />
-          </div>
+          <ColorField value={bg} onChange={setBg} />
         </div>
 
         <div className="h-px bg-border" />

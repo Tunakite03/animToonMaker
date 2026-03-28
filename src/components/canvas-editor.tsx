@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useAnimationStore } from "@/store/animation-store"
+import { nanoid } from "nanoid"
+import { useShallow } from "zustand/react/shallow"
+import {
+  selectActiveAnimation,
+  selectActiveFrame,
+  selectActiveFrames,
+  useAnimationStore,
+} from "@/store/animation-store"
 import { useSettingsStore } from "@/store/settings-store"
 import { AnimationPlayer } from "@/components/animation-player"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import {
@@ -19,12 +27,20 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import type { FrameKeypoint } from "@/types/animation"
+import {
+  buildFrameMotionGuidance,
+  describeKeypointRegion,
+  getDefaultKeypointColor,
+  getDefaultKeypointLabel,
+} from "@/lib/keypoint-guidance"
 import {
   createSolidColorImage,
   flipImage,
   removeBackground,
   rotateImage,
 } from "@/lib/image-utils"
+import { saveImageSourceAsAsset } from "@/lib/image-assets"
 import { readImageFile, readImagePath } from "@/lib/import-utils"
 import { MIN_FPS, MAX_FPS } from "@/lib/constants"
 import {
@@ -37,9 +53,12 @@ import {
   PaintBucketIcon,
   PauseIcon,
   PlayIcon,
+  PlusIcon,
   RepeatIcon,
   RotateCcwIcon,
   RotateCwIcon,
+  TargetIcon,
+  Trash2Icon,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react"
@@ -59,49 +78,53 @@ const BLANK_FRAME_QUICK_COLORS = [
   "#f9a8d4",
 ]
 
+const TOOLBAR_ICON_CLASS = "h-4 w-4 shrink-0"
+const TOOLBAR_BUTTON_CLASS =
+  "h-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[11px] font-medium"
+const TOOLBAR_ICON_BUTTON_CLASS =
+  "h-7 w-7 rounded-[min(var(--radius-md),12px)] p-0 text-muted-foreground hover:text-foreground"
+
 function clampZoom(value: number) {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
 }
 
+function clampNormalized(value: number) {
+  return Math.min(1, Math.max(0, value))
+}
+
 export function CanvasEditor() {
   // ── Frame / playback state ──────────────────────────────────────────────────
-  const selectedFrame = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    const frames = anim?.frames ?? []
-    return frames.find((f) => f.id === s.project.selectedFrameId) ?? null
-  })
-  const isPlaying = useAnimationStore((s) => s.playback.isPlaying)
-  const fps = useAnimationStore((s) => s.project.fps)
-  const loop = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    return anim?.loop ?? false
-  })
-  const frames = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    return anim?.frames ?? []
-  })
-  const selectedAnimationId = useAnimationStore(
-    (s) => s.project.selectedAnimationId
+  const selectedFrame = useAnimationStore(selectActiveFrame)
+  const frames = useAnimationStore(selectActiveFrames)
+  const {
+    isPlaying,
+    fps,
+    loop,
+    selectedAnimationId,
+    projectWidth,
+    projectHeight,
+    currentFrameIndex,
+    updateFrame,
+    setFps,
+    updateAnimationProperty,
+    setPlaying,
+    setCurrentFrameIndex,
+  } = useAnimationStore(
+    useShallow((s) => ({
+      isPlaying: s.playback.isPlaying,
+      fps: s.project.fps,
+      loop: selectActiveAnimation(s)?.loop ?? false,
+      selectedAnimationId: s.project.selectedAnimationId,
+      projectWidth: s.project.width,
+      projectHeight: s.project.height,
+      currentFrameIndex: s.playback.currentFrameIndex,
+      updateFrame: s.updateFrame,
+      setFps: s.setFps,
+      updateAnimationProperty: s.updateAnimationProperty,
+      setPlaying: s.setPlaying,
+      setCurrentFrameIndex: s.setCurrentFrameIndex,
+    }))
   )
-  const projectWidth = useAnimationStore((s) => s.project.width)
-  const projectHeight = useAnimationStore((s) => s.project.height)
-  const currentFrameIndex = useAnimationStore(
-    (s) => s.playback.currentFrameIndex
-  )
-
-  const updateFrame = useAnimationStore((s) => s.updateFrame)
-  const setFps = useAnimationStore((s) => s.setFps)
-  const updateAnimationProperty = useAnimationStore(
-    (s) => s.updateAnimationProperty
-  )
-  const setPlaying = useAnimationStore((s) => s.setPlaying)
-  const setCurrentFrameIndex = useAnimationStore((s) => s.setCurrentFrameIndex)
   const showOnionSkin = useSettingsStore((s) => s.showOnionSkin)
   const onionSkinOpacity = useSettingsStore((s) => s.onionSkinOpacity)
 
@@ -112,11 +135,26 @@ export function CanvasEditor() {
   const [isCanvasImageDragOver, setIsCanvasImageDragOver] = useState(false)
   const canvasViewportRef = useRef<HTMLElement>(null)
   const blankFrameInputRef = useRef<HTMLInputElement>(null)
+  const keypointOverlayRef = useRef<HTMLDivElement>(null)
+  const [isAwaitingKeypointPlacement, setIsAwaitingKeypointPlacement] =
+    useState(false)
+  const [activeKeypointId, setActiveKeypointId] = useState<string | null>(null)
+  const [isMotionPinsPopoverOpen, setIsMotionPinsPopoverOpen] = useState(false)
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const hasImage = !!selectedFrame?.imageUrl
+  const hasImage = Boolean(
+    selectedFrame?.imageUrl || selectedFrame?.imageAssetId
+  )
   const showFrameActions = !isPlaying && Boolean(selectedFrame)
   const showTools = showFrameActions && hasImage && !selectedFrame?.isBlank
+  const showMotionPinTools = showFrameActions && Boolean(selectedFrame)
+  const selectedFrameIndex = selectedFrame
+    ? frames.findIndex((frame) => frame.id === selectedFrame.id)
+    : -1
+  const previousFrame =
+    selectedFrameIndex > 0 ? (frames[selectedFrameIndex - 1] ?? null) : null
+  const selectedKeypoints = selectedFrame?.keypoints ?? []
+  const motionGuidance = buildFrameMotionGuidance(selectedFrame, previousFrame)
 
   const playableFrames = frames.filter((f) => f.imageUrl)
   const playableCount = playableFrames.length
@@ -178,7 +216,12 @@ export function CanvasEditor() {
       setIsProcessing(true)
       try {
         const result = await rotateImage(selectedFrame.imageUrl, degrees)
-        updateFrame(selectedFrame.id, { imageUrl: result, isBlank: false })
+        const asset = await saveImageSourceAsAsset(result)
+        updateFrame(selectedFrame.id, {
+          imageAssetId: asset.assetId,
+          imageUrl: asset.imageUrl,
+          isBlank: false,
+        })
       } finally {
         setIsProcessing(false)
       }
@@ -193,7 +236,12 @@ export function CanvasEditor() {
       setIsProcessing(true)
       try {
         const result = await flipImage(selectedFrame.imageUrl, horizontal)
-        updateFrame(selectedFrame.id, { imageUrl: result, isBlank: false })
+        const asset = await saveImageSourceAsAsset(result)
+        updateFrame(selectedFrame.id, {
+          imageAssetId: asset.assetId,
+          imageUrl: asset.imageUrl,
+          isBlank: false,
+        })
       } finally {
         setIsProcessing(false)
       }
@@ -207,7 +255,12 @@ export function CanvasEditor() {
     setIsProcessing(true)
     try {
       const result = await removeBackground(selectedFrame.imageUrl)
-      updateFrame(selectedFrame.id, { imageUrl: result, isBlank: false })
+      const asset = await saveImageSourceAsAsset(result)
+      updateFrame(selectedFrame.id, {
+        imageAssetId: asset.assetId,
+        imageUrl: asset.imageUrl,
+        isBlank: false,
+      })
     } finally {
       setIsProcessing(false)
     }
@@ -226,6 +279,157 @@ export function CanvasEditor() {
     setZoom(DEFAULT_ZOOM)
   }, [])
 
+  const commitKeypoints = useCallback(
+    (nextKeypoints: FrameKeypoint[]) => {
+      if (!selectedFrame) return
+
+      updateFrame(selectedFrame.id, {
+        keypoints: nextKeypoints.length > 0 ? nextKeypoints : undefined,
+      })
+    },
+    [selectedFrame, updateFrame]
+  )
+
+  const getNormalizedCanvasPoint = useCallback(
+    (clientX: number, clientY: number) => {
+      const rect = keypointOverlayRef.current?.getBoundingClientRect()
+      if (!rect || rect.width === 0 || rect.height === 0) {
+        return null
+      }
+
+      return {
+        x: clampNormalized((clientX - rect.left) / rect.width),
+        y: clampNormalized((clientY - rect.top) / rect.height),
+      }
+    },
+    []
+  )
+
+  const handleBeginKeypointPlacement = useCallback(() => {
+    if (!selectedFrame) return
+    setIsAwaitingKeypointPlacement(true)
+    setActiveKeypointId(null)
+    setIsMotionPinsPopoverOpen(false)
+  }, [selectedFrame])
+
+  const handleCanvasKeypointPlacement = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!selectedFrame || !isAwaitingKeypointPlacement) return
+
+      const point = getNormalizedCanvasPoint(event.clientX, event.clientY)
+      if (!point) return
+
+      const nextIndex = selectedKeypoints.length
+      const nextKeypoint: FrameKeypoint = {
+        id: nanoid(),
+        x: point.x,
+        y: point.y,
+        label: getDefaultKeypointLabel(nextIndex),
+        color: getDefaultKeypointColor(nextIndex),
+      }
+
+      commitKeypoints([...selectedKeypoints, nextKeypoint])
+      setActiveKeypointId(nextKeypoint.id)
+      setIsAwaitingKeypointPlacement(false)
+    },
+    [
+      commitKeypoints,
+      getNormalizedCanvasPoint,
+      isAwaitingKeypointPlacement,
+      selectedFrame,
+      selectedKeypoints,
+    ]
+  )
+
+  const updateKeypointPosition = useCallback(
+    (keypointId: string, clientX: number, clientY: number) => {
+      const point = getNormalizedCanvasPoint(clientX, clientY)
+      if (!point) return
+
+      commitKeypoints(
+        selectedKeypoints.map((keypoint) =>
+          keypoint.id === keypointId
+            ? { ...keypoint, x: point.x, y: point.y }
+            : keypoint
+        )
+      )
+    },
+    [commitKeypoints, getNormalizedCanvasPoint, selectedKeypoints]
+  )
+
+  const handleKeypointPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>, keypointId: string) => {
+      event.preventDefault()
+      event.stopPropagation()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setActiveKeypointId(keypointId)
+      updateKeypointPosition(keypointId, event.clientX, event.clientY)
+    },
+    [updateKeypointPosition]
+  )
+
+  const handleKeypointPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>, keypointId: string) => {
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
+      event.preventDefault()
+      event.stopPropagation()
+      updateKeypointPosition(keypointId, event.clientX, event.clientY)
+    },
+    [updateKeypointPosition]
+  )
+
+  const handleKeypointPointerUp = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+    },
+    []
+  )
+
+  const handleKeypointLabelChange = useCallback(
+    (keypointId: string, label: string) => {
+      commitKeypoints(
+        selectedKeypoints.map((keypoint) =>
+          keypoint.id === keypointId ? { ...keypoint, label } : keypoint
+        )
+      )
+    },
+    [commitKeypoints, selectedKeypoints]
+  )
+
+  const handleRemoveKeypoint = useCallback(
+    (keypointId: string) => {
+      commitKeypoints(
+        selectedKeypoints.filter((keypoint) => keypoint.id !== keypointId)
+      )
+      setActiveKeypointId((current) =>
+        current === keypointId ? null : current
+      )
+    },
+    [commitKeypoints, selectedKeypoints]
+  )
+
+  const handleCopyPreviousKeypoints = useCallback(() => {
+    if (!previousFrame?.keypoints?.length) return
+
+    const copiedKeypoints = previousFrame.keypoints.map((keypoint, index) => ({
+      ...keypoint,
+      id: nanoid(),
+      color: keypoint.color || getDefaultKeypointColor(index),
+    }))
+
+    commitKeypoints(copiedKeypoints)
+    setActiveKeypointId(copiedKeypoints[0]?.id ?? null)
+    setIsAwaitingKeypointPlacement(false)
+  }, [commitKeypoints, previousFrame])
+
+  const handleClearKeypoints = useCallback(() => {
+    commitKeypoints([])
+    setActiveKeypointId(null)
+    setIsAwaitingKeypointPlacement(false)
+  }, [commitKeypoints])
+
   const applyImportedImageToSelectedFrame = useCallback(
     async (files: File[]) => {
       if (!selectedFrame) return
@@ -239,6 +443,7 @@ export function CanvasEditor() {
       if (!imported) return
 
       updateFrame(selectedFrame.id, {
+        imageAssetId: imported.imageAssetId,
         imageUrl: imported.imageUrl,
         prompt: selectedFrame.prompt.trim()
           ? selectedFrame.prompt
@@ -262,7 +467,7 @@ export function CanvasEditor() {
     [applyImportedImageToSelectedFrame]
   )
 
-  const handleBlankFrameFill = useCallback(() => {
+  const handleBlankFrameFill = useCallback(async () => {
     if (!selectedFrame) return
 
     const imageUrl = createSolidColorImage(
@@ -270,9 +475,11 @@ export function CanvasEditor() {
       projectWidth,
       projectHeight
     )
+    const asset = await saveImageSourceAsAsset(imageUrl)
 
     updateFrame(selectedFrame.id, {
-      imageUrl,
+      imageAssetId: asset.assetId,
+      imageUrl: asset.imageUrl,
       status: "done",
       errorMessage: undefined,
       isBlank: false,
@@ -323,6 +530,12 @@ export function CanvasEditor() {
       setIsCanvasImageDragOver(false)
     }
   }, [showFrameActions])
+
+  useEffect(() => {
+    setIsAwaitingKeypointPlacement(false)
+    setActiveKeypointId(null)
+    setIsMotionPinsPopoverOpen(false)
+  }, [selectedFrame?.id])
 
   // ── Tauri OS file-drop handler ──────────────────────────────────────────────
   // In Tauri v2, WebView2 intercepts OS file drops at the native level before
@@ -413,6 +626,7 @@ export function CanvasEditor() {
 
               const { updateFrame } = useAnimationStore.getState()
               updateFrame(frame.id, {
+                imageAssetId: imported.imageAssetId,
                 imageUrl: imported.imageUrl,
                 prompt: frame.prompt.trim() ? frame.prompt : imported.prompt,
                 status: "done",
@@ -467,13 +681,16 @@ export function CanvasEditor() {
                   variant="ghost"
                   onClick={() => blankFrameInputRef.current?.click()}
                   className={cn(
-                    "h-7 gap-1.5 px-2.5 text-[11px] font-medium transition-colors",
+                    TOOLBAR_ICON_BUTTON_CLASS,
+                    "transition-colors",
                     isCanvasImageDragOver
                       ? "bg-primary/10 text-primary hover:bg-primary/14 hover:text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      : ""
                   )}
                 >
-                  <ImportIcon className="h-3.5 w-3.5 text-current" />
+                  <ImportIcon
+                    className={cn(TOOLBAR_ICON_CLASS, "text-current")}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -490,12 +707,12 @@ export function CanvasEditor() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1.5 px-2.5 text-[11px] font-medium"
+                      className={TOOLBAR_ICON_BUTTON_CLASS}
                     >
-                      <span className="relative flex h-5 w-5 items-center justify-center">
-                        <PaintBucketIcon className="h-3.5 w-3.5 text-current" />
+                      <span className="relative flex h-4 w-4 items-center justify-center">
+                        <PaintBucketIcon className="h-4 w-4 text-current" />
                         <span
-                          className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-black/80 shadow-sm"
+                          className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border border-black/80 shadow-sm"
                           style={{ backgroundColor: blankFrameFillColor }}
                         />
                       </span>
@@ -576,6 +793,153 @@ export function CanvasEditor() {
                 </Button>
               </PopoverContent>
             </Popover>
+
+            <Popover
+              open={isMotionPinsPopoverOpen}
+              onOpenChange={setIsMotionPinsPopoverOpen}
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={cn(
+                        TOOLBAR_BUTTON_CLASS,
+                        selectedKeypoints.length > 0
+                          ? "text-sky-700 hover:text-sky-800 dark:text-sky-300 dark:hover:text-sky-200"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <TargetIcon className={TOOLBAR_ICON_CLASS} />
+                      <span>Pins</span>
+                      {selectedKeypoints.length > 0 ? (
+                        <span className="rounded bg-sky-500/12 px-1 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-200">
+                          {selectedKeypoints.length}
+                        </span>
+                      ) : null}
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  Manage motion pins without covering the canvas
+                </TooltipContent>
+              </Tooltip>
+
+              <PopoverContent
+                align="start"
+                side="bottom"
+                className="w-80 rounded-2xl border border-border/70 bg-background/96 p-4 shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
+              >
+                <PopoverHeader className="gap-1">
+                  <PopoverTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+                      <TargetIcon className="h-4 w-4" />
+                    </span>
+                    Motion Pins
+                  </PopoverTitle>
+                  <PopoverDescription className="text-xs leading-relaxed">
+                    Matching labels across nearby frames become motion guidance
+                    for AI generation.
+                  </PopoverDescription>
+                </PopoverHeader>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={
+                      isAwaitingKeypointPlacement ? "default" : "outline"
+                    }
+                    onClick={handleBeginKeypointPlacement}
+                    className="h-8 gap-1.5 text-xs"
+                  >
+                    <PlusIcon className={TOOLBAR_ICON_CLASS} />
+                    {isAwaitingKeypointPlacement ? "Click canvas…" : "Add pin"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopyPreviousKeypoints}
+                    disabled={!previousFrame?.keypoints?.length}
+                    className="h-8 gap-1.5 text-xs"
+                  >
+                    <TargetIcon className={TOOLBAR_ICON_CLASS} />
+                    Copy prev
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleClearKeypoints}
+                    disabled={selectedKeypoints.length === 0}
+                    className="h-8 gap-1.5 text-xs"
+                  >
+                    <Trash2Icon className={TOOLBAR_ICON_CLASS} />
+                    Clear
+                  </Button>
+                </div>
+
+                {motionGuidance ? (
+                  <div className="mt-3 rounded-xl border border-sky-500/20 bg-sky-500/6 px-3 py-2 text-[11px] leading-relaxed text-sky-950 dark:text-sky-50">
+                    {motionGuidance.matchedCount > 0
+                      ? `${motionGuidance.matchedCount} matched pin${motionGuidance.matchedCount === 1 ? "" : "s"} will contribute pose-change guidance for this frame.`
+                      : `${motionGuidance.pinCount} pin${motionGuidance.pinCount === 1 ? "" : "s"} will anchor composition for this frame.`}
+                  </div>
+                ) : null}
+
+                {selectedKeypoints.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {selectedKeypoints.map((keypoint, index) => {
+                      const isActive = keypoint.id === activeKeypointId
+                      return (
+                        <div
+                          key={keypoint.id}
+                          className={cn(
+                            "rounded-xl border border-border/60 bg-muted/20 px-3 py-2",
+                            isActive && "border-sky-500/40 bg-sky-500/6"
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="h-3 w-3 rounded-full border border-black/10"
+                              style={{ backgroundColor: keypoint.color }}
+                            />
+                            <Input
+                              value={keypoint.label}
+                              onChange={(event) =>
+                                handleKeypointLabelChange(
+                                  keypoint.id,
+                                  event.target.value
+                                )
+                              }
+                              className="h-8 border-border/60 bg-background/70 text-xs"
+                              placeholder={getDefaultKeypointLabel(index)}
+                            />
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              onClick={() => handleRemoveKeypoint(keypoint.id)}
+                              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2Icon className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <div className="mt-2 text-[10px] text-muted-foreground">
+                            Target zone:{" "}
+                            {describeKeypointRegion(keypoint.x, keypoint.y)}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-dashed border-border/60 px-3 py-3 text-[11px] leading-relaxed text-muted-foreground">
+                    Add pins for landmarks like head, hands, feet, or props.
+                    Then reuse the same labels on adjacent frames to steer
+                    motion.
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
         )}
 
@@ -591,9 +955,9 @@ export function CanvasEditor() {
                     variant="ghost"
                     onClick={() => handleRotate(-90)}
                     disabled={isProcessing}
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className={TOOLBAR_ICON_BUTTON_CLASS}
                   >
-                    <RotateCcwIcon />
+                    <RotateCcwIcon className={TOOLBAR_ICON_CLASS} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Rotate 90° left</TooltipContent>
@@ -606,9 +970,9 @@ export function CanvasEditor() {
                     variant="ghost"
                     onClick={() => handleRotate(90)}
                     disabled={isProcessing}
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className={TOOLBAR_ICON_BUTTON_CLASS}
                   >
-                    <RotateCwIcon />
+                    <RotateCwIcon className={TOOLBAR_ICON_CLASS} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Rotate 90° right</TooltipContent>
@@ -626,9 +990,9 @@ export function CanvasEditor() {
                     variant="ghost"
                     onClick={() => handleFlip(true)}
                     disabled={isProcessing}
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className={TOOLBAR_ICON_BUTTON_CLASS}
                   >
-                    <FlipHorizontalIcon />
+                    <FlipHorizontalIcon className={TOOLBAR_ICON_CLASS} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Flip horizontal</TooltipContent>
@@ -641,9 +1005,9 @@ export function CanvasEditor() {
                     variant="ghost"
                     onClick={() => handleFlip(false)}
                     disabled={isProcessing}
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className={TOOLBAR_ICON_BUTTON_CLASS}
                   >
-                    <FlipVerticalIcon />
+                    <FlipVerticalIcon className={TOOLBAR_ICON_CLASS} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Flip vertical</TooltipContent>
@@ -663,9 +1027,16 @@ export function CanvasEditor() {
                   variant="ghost"
                   onClick={handleRemoveBg}
                   disabled={isProcessing}
-                  className="h-7 gap-1.5 px-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                  className={cn(
+                    TOOLBAR_BUTTON_CLASS,
+                    "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {isProcessing ? <LoaderIcon /> : <EraserIcon />}
+                  {isProcessing ? (
+                    <LoaderIcon className={TOOLBAR_ICON_CLASS} />
+                  ) : (
+                    <EraserIcon className={TOOLBAR_ICON_CLASS} />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
@@ -684,13 +1055,17 @@ export function CanvasEditor() {
                 onClick={handlePlay}
                 disabled={playableCount < 2}
                 className={cn(
-                  "h-7 w-7 rounded-full shadow-sm transition-all",
+                  "h-7 w-7 rounded-full p-0 shadow-sm transition-all",
                   isPlaying
                     ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     : "bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90 disabled:opacity-30"
                 )}
               >
-                {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                {isPlaying ? (
+                  <PauseIcon className={TOOLBAR_ICON_CLASS} />
+                ) : (
+                  <PlayIcon className={TOOLBAR_ICON_CLASS} />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -716,13 +1091,13 @@ export function CanvasEditor() {
                   }
                 }}
                 className={cn(
-                  "h-7 w-7 transition-colors",
+                  "h-7 w-7 p-0 transition-colors",
                   loop
                     ? "text-primary hover:text-primary/80"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <RepeatIcon />
+                <RepeatIcon className={TOOLBAR_ICON_CLASS} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -769,55 +1144,6 @@ export function CanvasEditor() {
               {fps}
             </span>
           </div>
-
-          <Separator orientation="vertical" className="mx-1.5 h-4 opacity-60" />
-
-          {/* Zoom controls */}
-          <div className="flex items-center gap-0.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={handleZoomOut}
-                  disabled={zoom <= MIN_ZOOM}
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ZoomOutIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Zoom out</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleZoomReset}
-                  className="h-7 min-w-11 px-2 text-[11px] text-muted-foreground tabular-nums hover:text-foreground"
-                >
-                  {zoomPercent}%
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Reset zoom</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= MAX_ZOOM}
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ZoomInIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Zoom in</TooltipContent>
-            </Tooltip>
-          </div>
         </div>
       </div>
 
@@ -827,7 +1153,7 @@ export function CanvasEditor() {
         className="flex min-h-0 flex-1 flex-col overflow-auto p-3"
       >
         <div
-          className="flex min-h-0 flex-1"
+          className="relative flex min-h-0 flex-1"
           onDragOver={handleCanvasImageDragOver}
           onDragLeave={handleCanvasImageDragLeave}
           onDrop={handleCanvasImageDrop}
@@ -872,7 +1198,102 @@ export function CanvasEditor() {
                 </div>
               </div>
             ) : null}
+
+            {showMotionPinTools ? (
+              <div
+                ref={keypointOverlayRef}
+                className="pointer-events-none absolute inset-0 z-20 rounded-lg"
+              >
+                {isAwaitingKeypointPlacement ? (
+                  <div
+                    className="pointer-events-auto absolute inset-0 cursor-crosshair rounded-lg border border-sky-500/35 bg-sky-500/6"
+                    onClick={handleCanvasKeypointPlacement}
+                  />
+                ) : null}
+
+                {selectedKeypoints.map((keypoint) => {
+                  const isActive = keypoint.id === activeKeypointId
+                  return (
+                    <button
+                      key={keypoint.id}
+                      type="button"
+                      onClick={() => setActiveKeypointId(keypoint.id)}
+                      onPointerDown={(event) =>
+                        handleKeypointPointerDown(event, keypoint.id)
+                      }
+                      onPointerMove={(event) =>
+                        handleKeypointPointerMove(event, keypoint.id)
+                      }
+                      onPointerUp={handleKeypointPointerUp}
+                      className={cn(
+                        "pointer-events-auto absolute flex h-5 min-w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 text-[8px] font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)] transition-transform outline-none",
+                        isActive && "scale-115"
+                      )}
+                      style={{
+                        left: `${keypoint.x * 100}%`,
+                        top: `${keypoint.y * 100}%`,
+                        backgroundColor: keypoint.color,
+                        borderColor: isActive
+                          ? "rgba(255,255,255,0.95)"
+                          : "rgba(15,23,42,0.45)",
+                      }}
+                      aria-label={`Motion pin ${keypoint.label}`}
+                    >
+                      {keypoint.label.trim().slice(0, 1).toUpperCase() || "•"}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
           </AnimationPlayer>
+
+          <div className="pointer-events-none absolute top-4 right-4 z-40">
+            <div className="pointer-events-auto flex items-center gap-0 rounded-md border border-border/50 bg-background/78 p-0.5 shadow-sm backdrop-blur-md">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={handleZoomOut}
+                    disabled={zoom <= MIN_ZOOM}
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  >
+                    <ZoomOutIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Zoom out</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={handleZoomReset}
+                    className="h-6 min-w-9 px-1.5 text-[10px] text-muted-foreground tabular-nums hover:text-foreground"
+                  >
+                    {zoomPercent}%
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Reset zoom</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={handleZoomIn}
+                    disabled={zoom >= MAX_ZOOM}
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  >
+                    <ZoomInIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Zoom in</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
         </div>
       </main>
     </div>

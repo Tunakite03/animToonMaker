@@ -1,12 +1,5 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useShallow } from "zustand/react/shallow"
 import { createPortal } from "react-dom"
 import {
   DndContext,
@@ -17,21 +10,12 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
-import {
-  SortableContext,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { useAnimationStore } from "@/store/animation-store"
-import type { Frame } from "@/types/animation"
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
+import { selectActiveFrames, useAnimationStore } from "@/store/animation-store"
+import { useSettingsStore } from "@/store/settings-store"
+import { getFrameGenerationCapabilities } from "@/services/generate-frame"
 import { cn } from "@/lib/utils"
 import { MAX_FRAMES } from "@/lib/constants"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import {
   processImageFiles,
   processImagePaths,
@@ -40,283 +24,61 @@ import {
 } from "@/lib/import-utils"
 import {
   AddFramesIcon,
-  CloseMenuIcon,
   CopyFrameIcon,
   CutFrameIcon,
   DuplicateIcon,
-  EmptyFrameIcon,
-  ErrorCircleIcon as ErrorIcon,
   FilmStripIcon,
   PasteFrameIcon,
   PlusSmIcon,
   TrashFrameIcon,
 } from "@/components/icons"
-
-// ── Frame thumbnail size ──────────────────────────────────────────────────────
-const FRAME_W = 80 // px — matches 512×512 square canvas aspect
-
-type TimelineMenuState = {
-  frameId: string | null
-  x: number
-  y: number
-}
-
-function SortableFrame({
-  frame,
-  index,
-  isSelected,
-  isPlaying,
-  onSelect,
-  onDelete,
-  onOpenContextMenu,
-  isDropTarget,
-  onFrameImageDragOver,
-  onFrameImageDragLeave,
-  onFrameImageDrop,
-}: {
-  frame: Frame
-  index: number
-  isSelected: boolean
-  isPlaying: boolean
-  onSelect: (id: string) => void
-  onDelete: (id: string) => void
-  onOpenContextMenu: (event: React.MouseEvent, frameId: string) => void
-  isDropTarget: boolean
-  onFrameImageDragOver: (event: React.DragEvent, frameId: string) => void
-  onFrameImageDragLeave: (event: React.DragEvent, frameId: string) => void
-  onFrameImageDrop: (event: React.DragEvent, frameId: string) => void
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: frame.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition ?? "transform 180ms ease",
-    zIndex: isDragging ? 50 : undefined,
-    width: FRAME_W,
-  }
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onDelete(frame.id)
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      data-frame-id={frame.id}
-      {...attributes}
-      {...listeners}
-      onClick={() => onSelect(frame.id)}
-      onContextMenu={(event) => onOpenContextMenu(event, frame.id)}
-      onDragOver={(event) => onFrameImageDragOver(event, frame.id)}
-      onDragLeave={(event) => onFrameImageDragLeave(event, frame.id)}
-      onDrop={(event) => onFrameImageDrop(event, frame.id)}
-      className={cn(
-        "group/frame relative shrink-0 cursor-pointer overflow-hidden rounded-md border transition-all duration-150 select-none",
-        // height fills the track
-        "h-full",
-        isSelected
-          ? "border-primary shadow-[0_0_0_2px] shadow-primary/30"
-          : "border-border/50 hover:border-primary/40 hover:shadow-sm",
-        isPlaying &&
-          isSelected &&
-          "border-amber-400/80 shadow-[0_0_0_2px] shadow-amber-400/25",
-        isDragging && "scale-95 opacity-50 shadow-xl",
-        isDropTarget && "border-primary shadow-[0_0_0_2px] shadow-primary/25"
-      )}
-    >
-      {/* ── Thumbnail ──────────────────────────────────────────────── */}
-      {frame.isBlank ? (
-        <div
-          className={cn(
-            "bg-checker flex h-full w-full flex-col items-center justify-center gap-1 px-1.5 text-center",
-            "ring-1 ring-border/30 ring-inset",
-            isDropTarget && "bg-primary/10 ring-primary/40"
-          )}
-        >
-          {frame.status === "generating" ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-[9px] text-muted-foreground">Gen…</span>
-            </>
-          ) : frame.status === "error" ? (
-            <>
-              <ErrorIcon />
-              <span className="text-[9px] text-destructive">Error</span>
-            </>
-          ) : (
-            <>
-              <EmptyFrameIcon />
-              <span className="text-[8px] font-semibold tracking-[0.14em] text-muted-foreground/75 uppercase">
-                Blank
-              </span>
-              <span
-                className={cn(
-                  "text-[8px] leading-tight text-muted-foreground/70",
-                  isDropTarget && "text-primary"
-                )}
-              >
-                {isDropTarget ? "Drop to replace" : "Transparent frame"}
-              </span>
-            </>
-          )}
-        </div>
-      ) : frame.imageUrl ? (
-        <img
-          src={frame.imageUrl}
-          alt={`Frame ${index + 1}`}
-          className="h-full w-full object-cover"
-          draggable={false}
-        />
-      ) : (
-        <div
-          className={cn(
-            "flex h-full w-full flex-col items-center justify-center gap-1 bg-muted/50 px-1.5 text-center",
-            isDropTarget && "bg-primary/10"
-          )}
-        >
-          {frame.status === "generating" ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-[9px] text-muted-foreground">Gen…</span>
-            </>
-          ) : frame.status === "error" ? (
-            <>
-              <ErrorIcon />
-              <span className="text-[9px] text-destructive">Error</span>
-            </>
-          ) : (
-            <>
-              <EmptyFrameIcon />
-              <span className="text-[8px] font-semibold tracking-[0.14em] text-muted-foreground/75 uppercase">
-                Blank
-              </span>
-              <span
-                className={cn(
-                  "text-[8px] leading-tight text-muted-foreground/70",
-                  isDropTarget && "text-primary"
-                )}
-              >
-                {isDropTarget ? "Drop to replace" : "Drop image or fill"}
-              </span>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── Bottom strip: frame number ──────────────────────────────── */}
-      <div
-        className={cn(
-          "absolute right-0 bottom-0 left-0 flex items-center justify-between px-1.5 py-0.5",
-          "bg-linear-to-t from-black/70 via-black/30 to-transparent"
-        )}
-      >
-        <span className="text-[9px] leading-none font-semibold text-white/90 tabular-nums">
-          {index + 1}
-        </span>
-        {/* Status dot */}
-        {frame.status === "done" && (
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px] shadow-emerald-400/60" />
-        )}
-        {frame.status === "generating" && (
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-        )}
-        {frame.status === "error" && (
-          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-        )}
-      </div>
-
-      {/* ── Playing indicator bar ───────────────────────────────────── */}
-      {isSelected && isPlaying && (
-        <div className="absolute inset-x-0 top-0 h-0.5 animate-pulse bg-amber-400" />
-      )}
-
-      {/* ── Selected indicator bar ──────────────────────────────────── */}
-      {isSelected && !isPlaying && (
-        <div className="absolute inset-x-0 top-0 h-0.5 bg-primary" />
-      )}
-
-      {/* ── Delete button (hover) ───────────────────────────────────── */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={handleDelete}
-            className={cn(
-              "absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-sm",
-              "bg-black/60 text-white/70 opacity-0 transition-all",
-              "hover:bg-destructive hover:text-white",
-              "group-hover/frame:opacity-100"
-            )}
-          >
-            <svg
-              width="9"
-              height="9"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-[10px]">
-          Delete frame
-        </TooltipContent>
-      </Tooltip>
-
-      {/* ── Drag handle overlay (invisible, just for cursor feel) ────── */}
-      {!isDragging && (
-        <div className="pointer-events-none absolute inset-0 opacity-0 group-hover/frame:opacity-100">
-          <div className="absolute inset-x-0 bottom-6 flex items-center justify-center">
-            <div className="flex gap-0.5 opacity-40">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-0.5 w-3 rounded-full bg-white" />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+import { SortableFrame } from "@/components/animation-timeline/sortable-frame"
+import {
+  TimelineContextMenu,
+  TimelineContextMenuDivider,
+  TimelineContextMenuItem,
+  type TimelineMenuState,
+} from "@/components/animation-timeline/context-menu"
 
 // ── Main timeline component ───────────────────────────────────────────────────
 
 export function AnimationTimeline() {
-  const frames = useAnimationStore((s) => {
-    const anim = s.project.animations.find(
-      (a) => a.id === s.project.selectedAnimationId
-    )
-    return anim?.frames ?? []
-  })
-  const selectedFrameId = useAnimationStore((s) => s.project.selectedFrameId)
-  const isPlaying = useAnimationStore((s) => s.playback.isPlaying)
-  const currentFrameIndex = useAnimationStore(
-    (s) => s.playback.currentFrameIndex
+  const frames = useAnimationStore(selectActiveFrames)
+  const aiProvider = useSettingsStore((s) => s.aiProvider)
+  const aiModel = useSettingsStore((s) => s.aiModel)
+  const {
+    selectedFrameId,
+    isPlaying,
+    currentFrameIndex,
+    selectFrame,
+    reorderFrames,
+    removeFrame,
+    updateFrame,
+    addFrameWithImage,
+    insertFrame,
+    duplicateFrame,
+    copyFrame,
+    cutFrame,
+    pasteFrame,
+    frameClipboard,
+  } = useAnimationStore(
+    useShallow((s) => ({
+      selectedFrameId: s.project.selectedFrameId,
+      isPlaying: s.playback.isPlaying,
+      currentFrameIndex: s.playback.currentFrameIndex,
+      selectFrame: s.selectFrame,
+      reorderFrames: s.reorderFrames,
+      removeFrame: s.removeFrame,
+      updateFrame: s.updateFrame,
+      addFrameWithImage: s.addFrameWithImage,
+      insertFrame: s.insertFrame,
+      duplicateFrame: s.duplicateFrame,
+      copyFrame: s.copyFrame,
+      cutFrame: s.cutFrame,
+      pasteFrame: s.pasteFrame,
+      frameClipboard: s.frameClipboard,
+    }))
   )
-
-  const selectFrame = useAnimationStore((s) => s.selectFrame)
-  const reorderFrames = useAnimationStore((s) => s.reorderFrames)
-  const removeFrame = useAnimationStore((s) => s.removeFrame)
-  const updateFrame = useAnimationStore((s) => s.updateFrame)
-  const addFrameWithImage = useAnimationStore((s) => s.addFrameWithImage)
-  const insertFrame = useAnimationStore((s) => s.insertFrame)
-  const duplicateFrame = useAnimationStore((s) => s.duplicateFrame)
-  const copyFrame = useAnimationStore((s) => s.copyFrame)
-  const cutFrame = useAnimationStore((s) => s.cutFrame)
-  const pasteFrame = useAnimationStore((s) => s.pasteFrame)
-  const frameClipboard = useAnimationStore((s) => s.frameClipboard)
 
   const [isDragOver, setIsDragOver] = useState(false)
   const [dropTargetFrameId, setDropTargetFrameId] = useState<string | null>(
@@ -355,6 +117,20 @@ export function AnimationTimeline() {
     () => frames.filter((f) => f.imageUrl),
     [frames]
   )
+  const staleFrameCount = useMemo(
+    () => frames.filter((frame) => frame.continuityStale).length,
+    [frames]
+  )
+  const generationCapabilities = getFrameGenerationCapabilities(
+    aiProvider,
+    aiModel || undefined
+  )
+  const staleBadgeLabel = generationCapabilities.supportsReferenceFrame
+    ? "Refresh"
+    : "Stale"
+  const staleSummaryLabel = generationCapabilities.supportsReferenceFrame
+    ? `${staleFrameCount} need refresh`
+    : `${staleFrameCount} continuity stale`
   const currentPlayableId = playableFrames[currentFrameIndex]?.id
   const hasFrameClipboard = Boolean(frameClipboard)
   const canCreateFrame = frames.length < MAX_FRAMES
@@ -391,12 +167,17 @@ export function AnimationTimeline() {
   )
 
   const replaceFrameImage = useCallback(
-    (frameId: string, imageUrl: string, prompt: string) => {
+    (
+      frameId: string,
+      image: { imageUrl: string; imageAssetId: string },
+      prompt: string
+    ) => {
       const targetFrame = frames.find((frame) => frame.id === frameId)
       if (!targetFrame || !targetFrame.isBlank) return false
 
       updateFrame(frameId, {
-        imageUrl,
+        imageAssetId: image.imageAssetId,
+        imageUrl: image.imageUrl,
         prompt: targetFrame.prompt.trim() ? targetFrame.prompt : prompt,
         status: "done",
         errorMessage: undefined,
@@ -419,7 +200,10 @@ export function AnimationTimeline() {
 
       const replaced = replaceFrameImage(
         frameId,
-        imported.imageUrl,
+        {
+          imageUrl: imported.imageUrl,
+          imageAssetId: imported.imageAssetId,
+        },
         imported.prompt
       )
       if (!replaced) return false
@@ -447,7 +231,10 @@ export function AnimationTimeline() {
 
       const replaced = replaceFrameImage(
         frameId,
-        imported.imageUrl,
+        {
+          imageUrl: imported.imageUrl,
+          imageAssetId: imported.imageAssetId,
+        },
         imported.prompt
       )
       if (!replaced) return false
@@ -1020,6 +807,7 @@ export function AnimationTimeline() {
                   index={idx}
                   isSelected={frame.id === selectedFrameId}
                   isPlaying={isPlaying && frame.id === currentPlayableId}
+                  staleLabel={staleBadgeLabel}
                   isDropTarget={frame.id === dropTargetFrameId}
                   onSelect={selectFrame}
                   onDelete={removeFrame}
@@ -1038,6 +826,11 @@ export function AnimationTimeline() {
 
       {/* ── Frame count badge ───────────────────────────────────────── */}
       <div className="pointer-events-none absolute top-1.5 right-2 flex items-center gap-1 rounded-md bg-background/70 px-1.5 py-0.5 backdrop-blur-sm">
+        {staleFrameCount > 0 && (
+          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:text-amber-300">
+            {staleSummaryLabel}
+          </span>
+        )}
         <span className="text-[9px] font-medium text-muted-foreground tabular-nums">
           {frames.length} / {MAX_FRAMES}
         </span>
@@ -1045,110 +838,4 @@ export function AnimationTimeline() {
       {contextMenu}
     </div>
   )
-}
-
-// ── Add frame button at end of strip ─────────────────────────────────────────
-
-const timelineContextMenuItemBase =
-  "flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition-colors"
-
-type TimelineContextMenuProps = {
-  children: ReactNode
-  left: number
-  top: number
-  title: string
-  onClose: () => void
-}
-
-const TimelineContextMenu = forwardRef<
-  HTMLDivElement,
-  TimelineContextMenuProps
->(({ children, left, top, title, onClose }, ref) => {
-  return (
-    <div
-      ref={ref}
-      role="menu"
-      onContextMenu={(event) => event.preventDefault()}
-      className={cn(
-        "fixed z-50 w-64 rounded-2xl border border-border/70 bg-popover/95 p-1.5 text-popover-foreground shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-xl",
-        "ring-1 ring-black/5"
-      )}
-      style={{ left, top }}
-    >
-      <div className="flex items-center justify-between px-2.5 pt-1 pb-1">
-        <span className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-          {title}
-        </span>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Close timeline menu"
-        >
-          <CloseMenuIcon />
-        </button>
-      </div>
-      <div className="space-y-0.5">{children}</div>
-    </div>
-  )
-})
-
-TimelineContextMenu.displayName = "TimelineContextMenu"
-
-function TimelineContextMenuItem({
-  label,
-  description,
-  icon,
-  disabled = false,
-  onClick,
-  tone = "default",
-}: {
-  label: string
-  description: string
-  icon: ReactNode
-  disabled?: boolean
-  onClick: () => void
-  tone?: "default" | "danger"
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        timelineContextMenuItemBase,
-        tone === "danger"
-          ? "text-destructive hover:bg-destructive/10 disabled:text-destructive/50"
-          : "text-foreground hover:bg-accent disabled:text-muted-foreground/45",
-        "disabled:cursor-not-allowed disabled:hover:bg-transparent"
-      )}
-    >
-      <span
-        className={cn(
-          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
-          tone === "danger"
-            ? "border-destructive/15 bg-destructive/10"
-            : "border-border/60 bg-background/80"
-        )}
-      >
-        {icon}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[11px] leading-none font-medium">{label}</span>
-        <span
-          className={cn(
-            "text-[10px] leading-snug",
-            tone === "danger" ? "text-destructive/75" : "text-muted-foreground"
-          )}
-        >
-          {description}
-        </span>
-      </span>
-    </button>
-  )
-}
-
-function TimelineContextMenuDivider() {
-  return <div className="my-1 h-px bg-border/70" />
 }

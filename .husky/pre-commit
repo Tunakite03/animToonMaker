@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -e
+
+pnpm lint
+pnpm typecheck
+
+if git diff --cached --name-only | grep -E '^src-tauri/' > /dev/null 2>&1; then
+	cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+fi

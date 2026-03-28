@@ -121,7 +121,7 @@ export function AnimationsPanel() {
                       if (e.key === "Enter") handleFinishRename()
                       if (e.key === "Escape") setEditingId(null)
                     }}
-                    className="h-5 flex-1 border-none bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
+                    className="h-5 flex-1 border-none bg-transparent px-2 text-xs shadow-none"
                   />
                 ) : (
                   <span className="flex-1 truncate">{anim.name}</span>
