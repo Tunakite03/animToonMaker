@@ -13,6 +13,19 @@ import {
 import { buildFrameMotionGuidance } from "@/lib/keypoint-guidance"
 import { getErrorMessage, isAbortError } from "@/lib/error-message"
 
+/**
+ * Derive a deterministic seed from a string (e.g. animation ID).
+ * Keeps the random starting point consistent across frames in the
+ * same animation so text-only providers produce more coherent results.
+ */
+function hashToSeed(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash) % 2147483647
+}
+
 interface FrameGenerationExecutionResult {
   success: boolean
   cancelled: boolean
@@ -93,10 +106,13 @@ export function useFrameGenerator() {
         styleSuffix,
         negativePrompt,
         motionStrength,
+        sceneDescription,
       } = useSettingsStore.getState()
 
       try {
         const frames = useAnimationStore.getState().getCurrentFrames()
+        const animationId =
+          useAnimationStore.getState().project.selectedAnimationId
         const currentIndex = frames.findIndex((frame) => frame.id === frameId)
         const currentFrame = currentIndex >= 0 ? frames[currentIndex] : null
         const previousTimelineFrame =
@@ -123,6 +139,8 @@ export function useFrameGenerator() {
               previousTimelineFrame?.prompt?.trim() || undefined,
             frameIndex: currentIndex >= 0 ? currentIndex : undefined,
             totalFrames: frames.length,
+            sceneDescription: sceneDescription || undefined,
+            seed: animationId ? hashToSeed(animationId) : undefined,
           },
           controller.signal
         )

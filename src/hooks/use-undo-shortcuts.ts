@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent } from "react"
+import { MAX_FRAMES } from "@/lib/constants"
 import { matchesShortcut, shouldIgnoreShortcutEvent } from "@/lib/shortcuts"
 import { useAnimationStore } from "@/store/animation-store"
 import { useSettingsStore } from "@/store/settings-store"
@@ -63,6 +64,62 @@ export function useEditorShortcuts({
     if (!event.repeat && matchesShortcut(event, shortcutBindings.redo)) {
       event.preventDefault()
       useUndoStore.getState().redo()
+      return
+    }
+
+    if (!event.repeat && matchesShortcut(event, "Ctrl+C")) {
+      const { project, copyFrame } = useAnimationStore.getState()
+      if (!project.selectedFrameId) {
+        return
+      }
+
+      event.preventDefault()
+      copyFrame(project.selectedFrameId)
+      return
+    }
+
+    if (!event.repeat && matchesShortcut(event, "Ctrl+X")) {
+      const { project, cutFrame } = useAnimationStore.getState()
+      if (!project.selectedFrameId) {
+        return
+      }
+
+      event.preventDefault()
+      cutFrame(project.selectedFrameId)
+      return
+    }
+
+    if (!event.repeat && matchesShortcut(event, "Ctrl+V")) {
+      const { project, getCurrentFrames, pasteFrame, frameClipboard } =
+        useAnimationStore.getState()
+      if (!frameClipboard) {
+        return
+      }
+
+      if (getCurrentFrames().length >= MAX_FRAMES) {
+        return
+      }
+
+      event.preventDefault()
+      pasteFrame(project.selectedFrameId, "after")
+      return
+    }
+
+    if (
+      !event.repeat &&
+      event.key === "Delete" &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      !event.shiftKey
+    ) {
+      const { project, removeFrame } = useAnimationStore.getState()
+      if (!project.selectedFrameId) {
+        return
+      }
+
+      event.preventDefault()
+      removeFrame(project.selectedFrameId)
       return
     }
 

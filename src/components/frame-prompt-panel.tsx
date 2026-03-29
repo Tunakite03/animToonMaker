@@ -6,6 +6,7 @@ import {
   useAnimationStore,
 } from "@/store/animation-store"
 import { useFrameGenerator } from "@/hooks/use-frame-generator"
+import { useImageDescriber } from "@/hooks/use-image-describer"
 import { useSettingsStore, type AIProvider } from "@/store/settings-store"
 import {
   AlertIcon,
@@ -19,7 +20,9 @@ import {
   TrashIcon,
   XIcon,
 } from "@/components/icons"
+import { ScanEye, LoaderCircle } from "lucide-react"
 import { getFrameGenerationCapabilities } from "@/services/generate-frame"
+import { AUTO_DESCRIBE_BASE_PROMPT } from "@/services/describe-image"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Tooltip,
   TooltipContent,
@@ -95,10 +103,22 @@ function buildQuickAnimationPrompt(
     return trimmed
   }
 
+  const progress = index / (total - 1) // 0→1 across the sequence
+  const motionPhase =
+    progress < 0.25
+      ? "beginning of the motion"
+      : progress < 0.5
+        ? "early-middle of the motion"
+        : progress < 0.75
+          ? "late-middle of the motion"
+          : "completing the motion"
+
   return [
     trimmed,
-    "Keep the same subject, style, and camera as the previous frame.",
-    `Advance the motion slightly for the next animation step (${index + 1}/${total}).`,
+    `This is frame ${index + 1} of ${total} (${motionPhase}).`,
+    "IMPORTANT: Keep the EXACT same character design, face, outfit, color palette, art style, line weight, and background as frame 1.",
+    "Only advance the pose/action by one small animation step from the previous frame.",
+    "Do NOT redesign or reinterpret the character — maintain pixel-level visual identity.",
   ].join(" ")
 }
 
@@ -126,6 +146,21 @@ export function FramePromptPanel() {
 
   const { generateFrame, generateBatch, cancelGeneration, isGenerating } =
     useFrameGenerator()
+
+  const {
+    describeCurrentFrame,
+    isDescribing,
+    error: describeError,
+    hasVisionProvider,
+  } = useImageDescriber()
+  const setSceneDescription = useSettingsStore((s) => s.setSceneDescription)
+
+  const handleAutoDescribe = async () => {
+    const description = await describeCurrentFrame()
+    if (description) {
+      setSceneDescription(description.slice(0, PROMPT_MAX))
+    }
+  }
 
   const [batchPrompt, setBatchPrompt] = useState("")
   const [batchCount, setBatchCount] = useState(6)
@@ -458,7 +493,7 @@ export function FramePromptPanel() {
                     <p className="text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
                       {generationCapabilities.supportsReferenceFrame
                         ? "An earlier frame changed. Regenerate this frame or run Generate All Pending to refresh the continuity chain."
-                        : `An earlier frame changed. This frame was part of a reference-based continuity chain, but ${providerLabel} generates independently. Switch to Gemini to rebuild the chain, or keep generating this frame independently.`}
+                        : `An earlier frame changed. ${providerLabel} generates independently — use Scene & Character Lock (Generation settings) for consistency, or switch to a provider with image-to-image support (Gemini, fal, Stability).`}
                     </p>
                   </div>
                 ) : selectedIndex > 1 ? (
@@ -469,7 +504,7 @@ export function FramePromptPanel() {
                         : previousFrameIsStale
                           ? "The previous frame still needs a continuity refresh, so this frame would generate independently until the chain is repaired."
                           : "No completed previous frame is available yet, so this frame will generate independently."
-                      : `${providerLabel} currently generates frames independently, so frame-to-frame drift can still happen.`}
+                      : `${providerLabel} generates frames independently — fill in Scene & Character Lock in Generation settings with a detailed character description to reduce frame-to-frame drift.`}
                   </div>
                 ) : generationCapabilities.supportsReferenceFrame ? (
                   <div className="rounded-md border border-border/60 bg-background/50 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
@@ -566,6 +601,76 @@ export function FramePromptPanel() {
                     <TooltipContent side="bottom">Delete frame</TooltipContent>
                   </Tooltip>
                 </div>
+
+                {/* Auto-describe: scan frame image → fill Scene & Character Lock */}
+                {selectedFrame.status === "done" && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 flex-1 gap-1.5 border-emerald-500/30 text-xs text-emerald-700 hover:border-emerald-500/60 hover:bg-emerald-500/5 dark:text-emerald-400"
+                            onClick={handleAutoDescribe}
+                            disabled={isDescribing || !hasVisionProvider()}
+                          >
+                            {isDescribing ? (
+                              <>
+                                <LoaderCircle
+                                  size={12}
+                                  className="animate-spin"
+                                />
+                                Scanning frame…
+                              </>
+                            ) : (
+                              <>
+                                <ScanEye size={12} />
+                                Auto-describe → Scene Lock
+                              </>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-56">
+                          {hasVisionProvider()
+                            ? "AI will analyze this frame's image and write a detailed character/scene description into Scene & Character Lock (Generation settings)."
+                            : "Requires a Gemini or OpenAI API key configured in Settings."}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 shrink-0 px-2 text-[10px] text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground"
+                          >
+                            Base prompt
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          side="bottom"
+                          align="end"
+                          className="w-80 max-w-[calc(100vw-2rem)] space-y-2 p-3"
+                        >
+                          <p className="text-[11px] font-semibold tracking-wide text-foreground/80">
+                            Auto-describe base prompt
+                          </p>
+                          <ScrollArea className="h-56 rounded-md border border-border/60 bg-muted/20 p-2.5">
+                            <pre className="m-0 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                              {AUTO_DESCRIBE_BASE_PROMPT}
+                            </pre>
+                          </ScrollArea>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {describeError && (
+                      <p className="text-[10px] leading-relaxed text-destructive/80">
+                        {describeError}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               /* ── Empty state ── */
@@ -689,7 +794,7 @@ export function FramePromptPanel() {
               <p className="text-[10px] leading-relaxed text-muted-foreground/50">
                 {generationCapabilities.supportsReferenceFrame
                   ? `Creates ${batchCount} prompts and generates them sequentially, reusing each finished frame as the visual reference for the next one.`
-                  : `Creates ${batchCount} prompts and generates them sequentially. ${providerLabel} currently does not reuse the previous frame as a visual reference.`}
+                  : `Creates ${batchCount} prompts and generates them sequentially. ${providerLabel} does not reuse the previous frame as a visual reference — a consistent seed and Scene & Character Lock are used to reduce drift.`}
               </p>
             </div>
           </div>

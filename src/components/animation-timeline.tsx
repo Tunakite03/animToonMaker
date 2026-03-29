@@ -61,6 +61,8 @@ export function AnimationTimeline() {
     cutFrame,
     pasteFrame,
     frameClipboard,
+    frameActionNotice,
+    clearFrameActionNotice,
   } = useAnimationStore(
     useShallow((s) => ({
       selectedFrameId: s.project.selectedFrameId,
@@ -77,6 +79,8 @@ export function AnimationTimeline() {
       cutFrame: s.cutFrame,
       pasteFrame: s.pasteFrame,
       frameClipboard: s.frameClipboard,
+      frameActionNotice: s.frameActionNotice,
+      clearFrameActionNotice: s.clearFrameActionNotice,
     }))
   )
 
@@ -136,6 +140,29 @@ export function AnimationTimeline() {
   const canCreateFrame = frames.length < MAX_FRAMES
   const clipboardPasteLabel =
     frameClipboard?.mode === "cut" ? "Paste cut frame" : "Paste frame"
+  const frameActionNoticeMessage = frameActionNotice?.message ?? null
+
+  useEffect(() => {
+    if (!frameActionNotice) return
+
+    const timeoutId = window.setTimeout(() => {
+      const activeNotice = useAnimationStore.getState().frameActionNotice
+      if (activeNotice?.id !== frameActionNotice.id) return
+      clearFrameActionNotice()
+    }, 1800)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [clearFrameActionNotice, frameActionNotice])
+
+  const frameActionNoticeBanner = frameActionNoticeMessage ? (
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none absolute bottom-1.5 left-2 z-30 rounded-md border border-border/60 bg-background/95 px-2 py-1 text-[10px] font-medium text-foreground shadow-sm backdrop-blur-sm"
+    >
+      {frameActionNoticeMessage}
+    </div>
+  ) : null
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -716,7 +743,7 @@ export function AnimationTimeline() {
           onDrop={handleExternalDrop}
           onContextMenu={handleTimelineContextMenu}
           className={cn(
-            "flex h-full items-center justify-center rounded-lg border border-dashed text-sm transition-all duration-200",
+            "relative flex h-full items-center justify-center rounded-lg border border-dashed text-sm transition-all duration-200",
             isDragOver
               ? "scale-[0.99] border-primary bg-primary/5 text-primary"
               : "border-border/40 bg-muted/10 text-muted-foreground"
@@ -736,6 +763,7 @@ export function AnimationTimeline() {
             </span>
           </div>
         </div>
+        {frameActionNoticeBanner}
         {contextMenu}
       </>
     )
@@ -835,6 +863,7 @@ export function AnimationTimeline() {
           {frames.length} / {MAX_FRAMES}
         </span>
       </div>
+      {frameActionNoticeBanner}
       {contextMenu}
     </div>
   )

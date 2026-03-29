@@ -20,6 +20,10 @@ export interface GenerateFrameParams {
   frameIndex?: number
   /** Total number of frames in the current animation */
   totalFrames?: number
+  /** Persistent character / scene description injected for visual consistency */
+  sceneDescription?: string
+  /** Deterministic seed — helps text-only providers maintain consistency */
+  seed?: number
 }
 
 export interface GenerateFrameResult {
@@ -91,6 +95,8 @@ export async function generateFrame(
     previousFramePrompt,
     frameIndex,
     totalFrames,
+    sceneDescription,
+    seed,
   } = params
 
   if (!prompt || typeof prompt !== "string") {
@@ -112,6 +118,7 @@ export async function generateFrame(
     previousFramePrompt,
     frameIndex,
     totalFrames,
+    sceneDescription,
   })
 
   try {
@@ -169,7 +176,8 @@ export async function generateFrame(
         signal,
         model,
         initImage,
-        strength
+        strength,
+        seed
       )
     } else if (provider === "gemini" && apiKey) {
       result = await generateWithGemini(
@@ -508,7 +516,8 @@ async function generateWithTogether(
   signal?: AbortSignal,
   model?: string,
   _initImage?: string,
-  _strength?: number
+  _strength?: number,
+  seed?: number
 ): Promise<GenerateFrameResult> {
   // Together AI image endpoints don't support native img2img yet.
   // Continuity is handled entirely through the enhanced prompt text.
@@ -517,20 +526,27 @@ async function generateWithTogether(
 
   const togetherModel = model || "black-forest-labs/FLUX.1-schnell"
 
+  const body: Record<string, unknown> = {
+    model: togetherModel,
+    prompt,
+    width,
+    height,
+    n: 1,
+    response_format: "base64",
+  }
+
+  // Use a deterministic seed to improve frame-to-frame consistency
+  if (seed !== undefined) {
+    body.seed = seed
+  }
+
   const res = await fetch("https://api.together.xyz/v1/images/generations", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: togetherModel,
-      prompt,
-      width,
-      height,
-      n: 1,
-      response_format: "base64",
-    }),
+    body: JSON.stringify(body),
     signal,
   })
 
@@ -654,6 +670,7 @@ function buildPromptText({
   previousFramePrompt,
   frameIndex,
   totalFrames,
+  sceneDescription,
 }: {
   prompt: string
   styleSuffix?: string
@@ -664,6 +681,7 @@ function buildPromptText({
   previousFramePrompt?: string
   frameIndex?: number
   totalFrames?: number
+  sceneDescription?: string
 }) {
   const sections = [`Frame description:\n${prompt}`]
   const suffix = (styleSuffix ?? STYLE_SUFFIX).trim()
@@ -675,6 +693,13 @@ function buildPromptText({
     totalFrames !== undefined &&
     totalFrames > 1 &&
     frameIndex > 0
+
+  // ── Scene/character lock (critical for providers without img2img) ──
+  if (sceneDescription?.trim()) {
+    sections.push(
+      `Character & scene lock (apply to EVERY frame):\n${sceneDescription.trim()}`
+    )
+  }
 
   // ── Animation sequence context (helps every provider, even text-only) ──
   if (isSequenceFrame) {
