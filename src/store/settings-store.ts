@@ -56,6 +56,7 @@ interface SettingsState {
   styleSuffix: string
   negativePrompt: string
   motionStrength: number
+  sceneDescription: string
 
   // Export
   exportFormat: ExportFormat
@@ -83,6 +84,7 @@ interface SettingsState {
   setStyleSuffix: (s: string) => void
   setNegativePrompt: (s: string) => void
   setMotionStrength: (v: number) => void
+  setSceneDescription: (s: string) => void
   setExportFormat: (f: ExportFormat) => void
   setExportQuality: (q: number) => void
   setExportScale: (s: number) => void
@@ -109,6 +111,7 @@ const defaults = {
   styleSuffix: STYLE_SUFFIX,
   negativePrompt: "",
   motionStrength: 0.4,
+  sceneDescription: "",
   exportFormat: "gif" as ExportFormat,
   exportQuality: 80,
   exportScale: 1,
@@ -326,6 +329,7 @@ export const useSettingsStore = create<SettingsState>()(
         set({
           motionStrength: Math.max(0.05, Math.min(0.95, motionStrength)),
         }),
+      setSceneDescription: (sceneDescription) => set({ sceneDescription }),
       setExportFormat: (exportFormat) => set({ exportFormat }),
       setExportQuality: (exportQuality) => set({ exportQuality }),
       setExportScale: (exportScale) => set({ exportScale }),

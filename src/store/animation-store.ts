@@ -26,10 +26,16 @@ interface FrameClipboard {
   mode: "copy" | "cut"
 }
 
+interface FrameActionNotice {
+  id: string
+  message: string
+}
+
 interface AnimationStore {
   project: AnimationProject
   playback: PlaybackState
   frameClipboard: FrameClipboard | null
+  frameActionNotice: FrameActionNotice | null
 
   // Project actions
   setProjectName: (name: string) => void
@@ -69,6 +75,7 @@ interface AnimationStore {
   removeFrame: (id: string) => void
   reorderFrames: (fromIndex: number, toIndex: number) => void
   selectFrame: (id: string | null) => void
+  clearFrameActionNotice: () => void
 
   // Playback
   setPlaying: (playing: boolean) => void
@@ -444,6 +451,7 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     currentFrameIndex: 0,
   },
   frameClipboard: null,
+  frameActionNotice: null,
 
   // ── Project actions ───────────────────────────────────────────────────────
 
@@ -653,10 +661,17 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
 
   copyFrame: (id) => {
     const frames = getActiveFrames(get().project)
-    const source = frames.find((frame) => frame.id === id)
-    if (!source) return
+    const index = frames.findIndex((frame) => frame.id === id)
+    if (index === -1) return
 
-    set({ frameClipboard: { frame: cloneFrame(source), mode: "copy" } })
+    const source = frames[index]
+    set({
+      frameClipboard: { frame: cloneFrame(source), mode: "copy" },
+      frameActionNotice: {
+        id: nanoid(),
+        message: `Copied frame ${index + 1}`,
+      },
+    })
   },
 
   cutFrame: (id) =>
@@ -683,6 +698,10 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
           selectedFrameId,
         },
         frameClipboard: { frame: cloneFrame(source), mode: "cut" },
+        frameActionNotice: {
+          id: nanoid(),
+          message: `Cut frame ${index + 1}`,
+        },
       }
     }),
 
@@ -690,6 +709,8 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     const clipboard = get().frameClipboard
     if (!clipboard) return null
 
+    const currentFrames = getActiveFrames(get().project)
+    const insertedIndex = resolveInsertIndex(currentFrames, targetId, position)
     const frame = cloneFrame(clipboard.frame)
     set((s) => ({
       project: {
@@ -702,6 +723,13 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
             : nextFrames
         }),
         selectedFrameId: frame.id,
+      },
+      frameActionNotice: {
+        id: nanoid(),
+        message:
+          clipboard.mode === "cut"
+            ? `Pasted cut frame at ${insertedIndex + 1}`
+            : `Pasted frame at ${insertedIndex + 1}`,
       },
     }))
 
@@ -764,6 +792,10 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
           ),
           selectedFrameId,
         },
+        frameActionNotice: {
+          id: nanoid(),
+          message: `Deleted frame ${removedIndex + 1}`,
+        },
       }
     }),
 
@@ -785,6 +817,8 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
 
   selectFrame: (id) =>
     set((s) => ({ project: { ...s.project, selectedFrameId: id } })),
+
+  clearFrameActionNotice: () => set({ frameActionNotice: null }),
 
   // ── Playback ──────────────────────────────────────────────────────────────
 
@@ -820,6 +854,7 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
         currentFrameIndex: 0,
       },
       frameClipboard: null,
+      frameActionNotice: null,
     })
   },
 
@@ -839,6 +874,7 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
         },
         playback: { isPlaying: false, currentFrameIndex: 0 },
         frameClipboard: null,
+        frameActionNotice: null,
       })
 
       void (async () => {

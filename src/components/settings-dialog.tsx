@@ -185,9 +185,23 @@ function AISettings() {
   const setStyleSuffix = useSettingsStore((s) => s.setStyleSuffix)
   const setNegativePrompt = useSettingsStore((s) => s.setNegativePrompt)
   const setMotionStrength = useSettingsStore((s) => s.setMotionStrength)
+  const sceneDescription = useSettingsStore((s) => s.sceneDescription)
+  const setSceneDescription = useSettingsStore((s) => s.setSceneDescription)
 
   return (
     <>
+      <SettingRow
+        label="Scene & Character Lock"
+        description="Detailed character/scene description injected into every frame for visual consistency"
+      >
+        <Textarea
+          value={sceneDescription}
+          onChange={(e) => setSceneDescription(e.target.value)}
+          className="min-h-15 text-xs"
+          placeholder="e.g. A cartoon soldier with green uniform, brown helmet, chibi proportions..."
+        />
+      </SettingRow>
+
       <SettingRow
         label="Style Suffix"
         description="Appended to every frame prompt for consistent style"
